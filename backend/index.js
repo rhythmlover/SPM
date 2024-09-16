@@ -2,16 +2,17 @@ import "dotenv/config";
 import mysql from "mysql2/promise";
 
 async function main() {
-  // Create the connection to database
-  const connection = await mysql.createConnection({
-    host: process.env.RDS_MYSQL_HOST,
-    database: process.env.RDS_MYSQL_DB_NAME,
-    user: process.env.RDS_MYSQL_USERNAME,
-    password: process.env.RDS_MYSQL_PASSWORD,
-  });
-
   // A simple SELECT query
   try {
+    // Create the connection to database
+    const connection = await mysql.createConnection({
+      host: process.env.RDS_MYSQL_HOST,
+      database: process.env.RDS_MYSQL_DB_NAME,
+      user: process.env.RDS_MYSQL_USERNAME,
+      password: process.env.RDS_MYSQL_PASSWORD,
+      port: process.env.RDS_MYSQL_PORT,
+    });
+
     const [results, fields] = await connection.query("SELECT * FROM `Employee`");
 
     console.log(results); // results contains rows returned by server
