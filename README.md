@@ -1,14 +1,6 @@
-# spm
+# SPM G3T4
 
-This template should help get you started developing with Vue 3 in Vite.
-
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+[![Dev Branch CI status](https://github.com/rhythmlover/SPM/actions/workflows/ci.yml/badge.svg?branch=dev&event=pull_request)](https://github.com/rhythmlover/SPM/actions/workflows/ci.yml)
 
 ## Project Setup
 
@@ -38,4 +30,16 @@ npm run test:unit
 
 ```sh
 npm run lint
+```
+
+### To fix linting issues
+
+```sh
+npm run fix
+```
+
+### Formatting with Prettier
+
+```sh
+npm run format
 ```
