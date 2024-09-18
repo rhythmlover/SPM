@@ -1,0 +1,8 @@
+# Ignore artifacts:
+dist
+public
+node_modules
+
+# Ignore specific files:
+package.json
+package-lock.json

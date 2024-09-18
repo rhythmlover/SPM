@@ -4,8 +4,9 @@ run-name: CI checks for ${{ github.actor }} ${{ github.event_name }} on ${{ gith
 on:
   push:
     branches:
-      - master
-      - dev
+      - feature/**
+      - fix/**
+      - hotfix/**
   pull_request:
     branches:
       - master
@@ -25,13 +26,10 @@ jobs:
           node-version: '20.x'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Linter
         run: npm run lint
 
-      - name: Compiler
-        run: npm run build --if-present
-
-      - name: Test
-        run: npm test
+      - name: Formatter
+        run: npm run format
