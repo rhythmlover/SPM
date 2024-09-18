@@ -1,34 +1,31 @@
 import "dotenv/config";
-import mysql from "mysql2/promise";
+import employee from "./routes/employee.js";
+import express from "express";
+import cors from "cors";
 
-async function main() {
-  // A simple SELECT query
-  try {
-    // Create the connection to database
-    const connection = await mysql.createConnection({
-      host: process.env.RDS_MYSQL_HOST,
-      database: process.env.RDS_MYSQL_DB_NAME,
-      user: process.env.RDS_MYSQL_USERNAME,
-      password: process.env.RDS_MYSQL_PASSWORD,
-      port: process.env.RDS_MYSQL_PORT,
-    });
+const app = express();
+const port = 3000;
 
-    const [results, fields] = await connection.query("SELECT * FROM `Employee`");
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-    console.log(results); // results contains rows returned by server
-    console.log(fields); // fields contains extra meta data about results, if available
-  } catch (err) {
-    console.log(err);
+// Routes
+app.use("/employee", employee);
+app.get("/", (req, res) => {
+  res.send("Tesing Ping Success!");
+});
+
+// Error Middleware
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
   }
+  console.error(err, err.stack);
+  res.status(500).json({ message: err.message, stack: err.stack });
+});
 
-  //   // Using placeholders
-  //   try {
-  //     const [results] = await connection.query("SELECT * FROM `table` WHERE `name` = ? AND `age` > ?", ["Page", 45]);
-
-  //     console.log(results);
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-}
-
-main();
+// Start Server
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
+});
