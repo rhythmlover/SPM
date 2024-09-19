@@ -13,6 +13,8 @@
     "format": "eslint-config-prettier src/**/*.{vue,js,jsx,cjs,mjs}"
   },
   "dependencies": {
+    "bootstrap": "^5.3.3",
+    "bootstrap-vue-next": "^0.24.18",
     "pinia": "^2.1.7",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3"
@@ -24,6 +26,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-vue": "^9.23.0",
     "jsdom": "^24.1.0",
+    "unplugin-vue-components": "^0.27.4",
     "vite": "^5.3.1",
     "vitest": "^1.6.0"
   }
