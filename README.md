@@ -1,9 +1,11 @@
 # SPM G3T4
 
-[![Dev Branch CI status](https://github.com/rhythmlover/SPM/actions/workflows/ci.yml/badge.svg?branch=dev&event=pull_request)](https://github.com/rhythmlover/SPM/actions/workflows/ci.yml)
+### Dev Branch Status
+[![Dev Branch CI status](https://github.com/rhythmlover/SPM/actions/workflows/ci.yml/badge.svg?branch=dev&event=push)](https://github.com/rhythmlover/SPM/actions/workflows/ci.yml)
 
-## Project Setup
+# Project Setup
 
+### Install Dependencies
 ```sh
 npm install
 ```
@@ -20,13 +22,16 @@ npm run dev
 npm run build
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+# For Dev Checks
+You can run `localchecks.bat` to run all CI checks locally before a push, or you can run the following checks individually
+
+### Run Unit Tests
 
 ```sh
-npm run test:unit
+npm run test
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+### Run ESLint
 
 ```sh
 npm run lint

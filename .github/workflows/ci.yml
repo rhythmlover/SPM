@@ -33,3 +33,6 @@ jobs:
 
       - name: Formatter
         run: npm run format
+
+      - name: Unit Tests
+        run: npm run test
