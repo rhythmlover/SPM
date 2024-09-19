@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "bootstrap": "^5.3.3",
+    "bootstrap-vue-next": "^0.24.18"
+  },
+  "devDependencies": {
+    "unplugin-vue-components": "^0.27.4"
+  }
+}
