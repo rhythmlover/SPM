@@ -1,8 +1,8 @@
 # SPM G3T4
 
-### Dev Branch Status
 [![Dev Branch CI status](https://github.com/rhythmlover/SPM/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/rhythmlover/SPM/actions/workflows/ci.yml)
-[![Master Branch Deployment Status](https://github.com/rhythmlover/SPM/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/rhythmlover/SPM/actions/workflows/cd_prod.yml)
+[![Dev Branch CD status](https://github.com/rhythmlover/SPM/actions/workflows/cd_preview.yml/badge.svg?branch=dev)](https://github.com/rhythmlover/SPM/actions/workflows/cd_preview.yml)
+[![Master Branch CD Status](https://github.com/rhythmlover/SPM/actions/workflows/cd_prod.yml/badge.svg?branch=master)](https://github.com/rhythmlover/SPM/actions/workflows/cd_prod.yml)
 
 # Project Setup
 
