@@ -1,5 +1,5 @@
-import express from "express";
-import { executeQuery } from "../mysqlConnection.js";
+import express from 'express';
+import { executeQuery } from '../mysqlConnection.js';
 
 const router = express.Router();
 
@@ -10,18 +10,41 @@ const router = express.Router();
 // }
 // router.use(timeLog)
 
-router.get("/error", async (req, res, next) => {
+router.get('/error', async (req, res, next) => {
   try {
-    throw new Error("Employee table error!");
+    throw new Error('Employee table error!');
   } catch (error) {
     next(error);
   }
 });
 
-router.get("/all", async (req, res, next) => {
+router.get('/login', async (req, res, next) => {
+  const userID = req.query.userID;
   try {
-    let [results, fields] = await executeQuery("SELECT * FROM `Employee`");
-    console.log(results);
+    // Fetch employee information
+    let [results] = await executeQuery(`SELECT * FROM Employee WHERE Staff_ID = ${userID}`);
+    let employee = results[0];
+
+    // Fetch other info
+    let [deptresults] = await executeQuery(
+      `SELECT * FROM Department WHERE Dept_ID = ${employee['Dept_ID']}`,
+    );
+    let [roleresults] = await executeQuery(
+      `SELECT * FROM Role WHERE Role_ID = ${employee['Role_ID']}`,
+    );
+
+    employee['Dept'] = deptresults[0];
+    employee['Role'] = roleresults[0];
+
+    res.json({ ...employee });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/all', async (req, res, next) => {
+  try {
+    let [results] = await executeQuery('SELECT * FROM `Employee`');
     res.json({ results });
   } catch (error) {
     next(error);

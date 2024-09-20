@@ -1,7 +1,8 @@
-import "dotenv/config";
-import employee from "./routes/employee.js";
-import express from "express";
-import cors from "cors";
+import 'dotenv/config';
+import employee from './routes/employee.js';
+import wfh_request from './routes/wfh_request.js';
+import express from 'express';
+import cors from 'cors';
 
 const app = express();
 const port = 3000;
@@ -11,9 +12,10 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/employee", employee);
-app.get("/", (req, res) => {
-  res.send("Tesing Ping Success!");
+app.use('/employee', employee);
+app.use('/wfh_request', wfh_request);
+app.get('/', (req, res) => {
+  res.send('Tesing Ping Success!');
 });
 
 // Error Middleware
@@ -22,7 +24,7 @@ app.use((err, req, res, next) => {
     return next(err);
   }
   console.error(err, err.stack);
-  res.status(500).json({ message: err.message, stack: err.stack });
+  res.status(500).json({ error: true, message: err.message, stack: err.stack });
 });
 
 // Start Server
