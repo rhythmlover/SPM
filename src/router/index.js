@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import staffMySchedule from '../views/staffMySchedule.vue';
+import staffMySchedule from '../views/staff/StaffMySchedule.vue';
 import HomeView from '../views/HomeView.vue';
 import StaffView from '../views/StaffView.vue';
 import TestView from '@/views/TestView.vue';
@@ -16,7 +16,6 @@ const router = createRouter({
       path: '/staff',
       name: 'staff',
       component: StaffView,
-      // component: () => import('../views/StaffView.vue'),
     },
     {
       path: '/test',
@@ -24,25 +23,25 @@ const router = createRouter({
       component: TestView,
     },
     {
-      path: '/staffMySchedule',
-      name: 'staffMySchedule',
+      path: '/staffmyschedule',
+      name: 'staffmyschedule',
       component: staffMySchedule,
     },
     {
-      path: '/staffTeamSchedule',
-      name: 'staffTeamSchedule',
+      path: '/staffteamschedule',
+      name: 'staffteamschedule',
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('../views/staffTeamSchedule.vue'),
+      component: () => import('../views/staff/StaffTeamSchedule.vue'),
     },
     {
-      path: '/staffRequestStatus',
-      name: 'staffRequestStatus',
+      path: '/staffrequeststatus',
+      name: 'staffrequeststatus',
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('../views/StaffRequestStatus.vue'),
+      component: () => import('../views/staff/StaffRequestStatus.vue'),
     },
   ],
 });
