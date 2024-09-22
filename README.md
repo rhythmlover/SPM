@@ -7,6 +7,7 @@
 # Project Setup
 
 ### Install Dependencies
+
 ```sh
 npm install
 ```
@@ -24,7 +25,12 @@ npm run build
 ```
 
 # For Dev Checks
-You can run `localchecks.bat` to run all CI checks locally before a push, or you can run the following checks individually
+
+You can run command below to run all CI checks locally before a push, or you can run the following checks individually
+
+```sh
+npm run checkall
+```
 
 ### Run Unit Tests
 
@@ -49,3 +55,9 @@ npm run fix
 ```sh
 npm run format
 ```
+
+# Tech Stack
+
+- Vue (Composition API)
+- [Bootstrap-vue-next](https://bootstrap-vue-next.github.io/bootstrap-vue-next/)
+- Express.js

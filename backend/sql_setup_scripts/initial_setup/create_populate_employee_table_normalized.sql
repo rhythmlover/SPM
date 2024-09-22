@@ -691,6 +691,14 @@ FROM Temp_Employee e
 JOIN Department d ON e.Dept = d.Dept_Name
 JOIN Role r ON e.Role = r.Role_Name;
 
+UPDATE Role
+SET Role_Name = CASE
+    WHEN Role_Name = '1' THEN 'HR'
+    WHEN Role_Name = '2' THEN 'IT'
+    WHEN Role_Name = '3' THEN 'Finance'
+    ELSE 'Unknown'
+END;
+
 -- Enable foreign key checks
 SET foreign_key_checks = 1;
 

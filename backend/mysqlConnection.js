@@ -1,4 +1,4 @@
-import mysql from "mysql2/promise";
+import mysql from 'mysql2/promise';
 
 var connection = null;
 try {
@@ -15,7 +15,7 @@ try {
 }
 
 const executeQuery = async (query) => {
-  if (!connection) [console.log("Connection is null! Aborting executeQuery().")];
+  if (!connection) [console.log('Connection is null! Aborting executeQuery().')];
   try {
     const [results, fields] = await connection.query(query);
 
@@ -31,33 +31,3 @@ const executeQuery = async (query) => {
 };
 
 export { executeQuery };
-
-// async function main() {
-//   // A simple SELECT query
-//   try {
-//     // Create the connection to database
-//     const connection = await mysql.createConnection({
-//       host: process.env.RDS_MYSQL_HOST,
-//       database: process.env.RDS_MYSQL_DB_NAME,
-//       user: process.env.RDS_MYSQL_USERNAME,
-//       password: process.env.RDS_MYSQL_PASSWORD,
-//       port: process.env.RDS_MYSQL_PORT,
-//     });
-
-//     const [results, fields] = await connection.query("SELECT * FROM `Employee`");
-
-//     console.log(results); // results contains rows returned by server
-//     console.log(fields); // fields contains extra meta data about results, if available
-//   } catch (err) {
-//     console.log(err);
-//   }
-
-//   //   // Using placeholders
-//   //   try {
-//   //     const [results] = await connection.query("SELECT * FROM `table` WHERE `name` = ? AND `age` > ?", ["Page", 45]);
-
-//   //     console.log(results);
-//   //   } catch (err) {
-//   //     console.log(err);
-//   //   }
-// }

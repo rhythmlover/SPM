@@ -1,18 +1,14 @@
 <script setup>
-import { RouterLink, RouterView } from "vue-router";
+import { RouterLink, RouterView } from 'vue-router';
+
+// const route = useRoute();
 </script>
 
 <template>
-  <!-- <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-    </div>
-  </header> -->
   <nav>
-    <!-- <RouterLink to="/">Home</RouterLink> -->
+    <RouterLink to="/">Home</RouterLink>
+    <RouterLink to="/staff">Staff</RouterLink>
+    <RouterLink to="/test">Test</RouterLink>
     <RouterLink to="/staffMySchedule">My Schedule</RouterLink>
     <RouterLink to="/staffTeamSchedule">My Team's Schedule</RouterLink>
     <RouterLink to="/staffRequestStatus">All Requests</RouterLink>
@@ -35,11 +31,10 @@ nav {
   width: 100%;
   font-size: 12px;
   text-align: center;
-  margin-top: 2rem;
 }
 
 nav a.router-link-exact-active {
-  color: var(--color-text);
+  background-color: var(--color-border);
 }
 
 nav a.router-link-exact-active:hover {
@@ -77,9 +72,6 @@ nav a:first-of-type {
     text-align: left;
     margin-left: -1rem;
     font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
   }
 }
 </style>
