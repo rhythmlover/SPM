@@ -11,7 +11,9 @@ const employeeID = ref('');
 
 const login = async () => {
   try {
-    let API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
+    let API_ROUTE = import.meta.env.DEV
+      ? import.meta.env.VITE_LOCAL_API_ENDPOINT
+      : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
     const res = await axios.get(API_ROUTE + '/employee/login', {
       params: { userID: employeeID.value },
     });
