@@ -8,6 +8,10 @@ const reportingManagerId = 130002;
 // Refs to hold the employee data and WFH requests
 const employees = ref([]);
 const wfhRequests = ref([]);
+const combinedRequests = ref([]); // Combine all data from above
+// TO DO: add refs for previouslyAccepted and previouslyRejected from the DB
+// TO DO: read from these two refs, and do a v-if and v-for statement for the tables under them
+// TO DO: make sure table can read MULTIPLE date and time requested by an employee
 
 // Function to fetch all employees and filter by Reporting Manager
 const fetchEmployees = async () => {
@@ -19,10 +23,11 @@ const fetchEmployees = async () => {
 
     // Fetch all employees
     const res = await axios.get(`${API_ROUTE}/employee/all`);
-
+    console.log('Employee data: ', res.data);
     // Filter employees by Reporting Manager ID
-    employees.value = res.data.results.filter(employee => employee.Reporting_Manager === reportingManagerId);
-
+    employees.value = res.data.results.filter(
+      (employee) => employee.Reporting_Manager === reportingManagerId
+    );
   } catch (error) {
     console.error('Error fetching employees:', error);
   }
@@ -38,7 +43,7 @@ const fetchWFHRequests = async () => {
     }
 
     // Extract Staff_IDs of the employees
-    const staffIds = employees.value.map(employee => employee.Staff_ID);
+    const staffIds = employees.value.map((employee) => employee.Staff_ID);
 
     // Fetch all WFH Requests
     let API_ROUTE = import.meta.env.DEV
@@ -48,12 +53,50 @@ const fetchWFHRequests = async () => {
     const res = await axios.get(`${API_ROUTE}/wfh_request/all`);
 
     // Filter WFH requests by Staff_IDs
-    wfhRequests.value = res.data.results.filter(request => staffIds.includes(request.Staff_ID));
+    wfhRequests.value = res.data.results.filter((request) =>
+      staffIds.includes(request.Staff_ID)
+    );
 
+    // Join employees to WFH requests based on Staff_ID
+    joinEmployeesToWFHRequests();
   } catch (error) {
     console.error('Error fetching WFH requests:', error);
   }
 };
+
+// Function to join employees data to WFH requests
+const joinEmployeesToWFHRequests = () => {
+  combinedRequests.value = wfhRequests.value.map((request) => {
+    // Find the corresponding employee based on Staff_ID
+    const employee = employees.value.find(
+      (emp) => emp.Staff_ID === request.Staff_ID
+    );
+
+    // Merge employee details into the WFH request
+    return {
+      ...request, // Include all properties of the WFH request
+      ...employee, // Include all properties of the matching employee
+    };
+  });
+
+  console.log('Combined WFH Requests with Employee Data:', combinedRequests.value);
+};
+
+function formatRequestDate(isoDate) {
+  // Create a Date object from the ISO string, parsed as UTC
+  const date = new Date(isoDate);
+
+  // Extract the day, month, year, and weekday
+  const day = date.getUTCDate(); // Use getUTCDate to avoid local time adjustments
+  const month = date.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' });
+  const year = date.getUTCFullYear();
+  const weekday = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' });
+
+  // Combine into the desired format: Month Day, Year (Weekday)
+  const formattedDate = `${month} ${day}, ${year} (${weekday})`;
+
+  return formattedDate;
+}
 
 // Call both functions when the component is mounted
 onMounted(async () => {
@@ -63,36 +106,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <!-- TO DELETE -->
-  <br>
-  <div>
-    <h2>WFH Requests for Employees managed by Reporting Manager 130002</h2>
-    <div v-if="employees.length === 0">
-      <p>No employees found for this manager.</p>
-    </div>
-    <div v-else>
-      <h3>Employees</h3>
-      <ul>
-        <li v-for="employee in employees" :key="employee.Staff_ID">
-          {{ employee.Name }} (ID: {{ employee.Staff_ID }})
-        </li>
-      </ul>
-    </div>
-
-    <div v-if="wfhRequests.length === 0">
-      <p>No WFH requests found.</p>
-    </div>
-    <div v-else>
-      <h3>WFH Requests</h3>
-      <ul>
-        <li v-for="request in wfhRequests" :key="request.Request_ID">
-          {{ request.Staff_ID }} - WFH on {{ request.WFH_Date }}
-        </li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- my codes -->
   <div class="container">
     <h2 class="header">Pending Requests of my Direct Subordinates</h2>
 
@@ -147,15 +160,17 @@ onMounted(async () => {
           </thead>
         </table>
       </div>
-
-      <div class="action-table">
+      <div class="action-table" v-if="employees.length === 0">
+        <p>No employees found for this manager.</p>
+      </div>
+      <div class="action-table" v-else>
         <table class="table">
           <tbody>
-            <tr>
-              <td class="col-2">Derek Tan</td>
-              <td class="col-3">Will be returning from work trip late in the same morning</td>
-              <td class="col-2">23/9/2024</td>
-              <td class="col-2">19/9/2024</td>
+            <tr v-for="request in combinedRequests" :key="request.Request_ID">
+              <td class="col-2">{{request.Staff_FName}} {{request.Staff_LName}}</td>
+              <td class="col-3">{{request.Reason}}</td>
+              <td class="col-2">{{formatRequestDate(request.Request_Date)}}</td>
+              <td class="col-2">{{formatRequestDate(request.Request_Date)}}</td>
               <td class="col-3 text-nowrap d-flex justify-content-between">
                 <button class="btn btn-success">Accept</button>
                 <button class="btn btn-danger">Reject</button>
@@ -168,7 +183,10 @@ onMounted(async () => {
 
     <!-- When "Previously Accepted" is active -->
     <div id="previouslyaccepted" v-if="isActive('/previously-accepted')">
-      <div class="request-table">
+      <div class="action-table" v-if="employees.length === 0">
+        <p>No employees found for this manager.</p>
+      </div>
+      <div class="request-table" v-else>
         <table class="table">
           <thead>
             <tr>
