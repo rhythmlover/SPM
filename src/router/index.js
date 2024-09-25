@@ -44,6 +44,11 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/StaffRequestStatus.vue'),
     },
+    {
+      path: "/pending-requests",
+      name: "pending-requests",
+      component: () => import("../views/direct_supervisor_pending_requests.vue"),
+    },
   ],
 });
 
