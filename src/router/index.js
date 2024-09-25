@@ -47,7 +47,7 @@ const router = createRouter({
     {
       path: "/pending-requests",
       name: "pending-requests",
-      component: () => import("../views/direct_supervisor_pending_requests.vue"),
+      component: () => import("../views/DSPendingRequests.vue"),
     },
   ],
 });
