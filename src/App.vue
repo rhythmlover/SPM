@@ -1,4 +1,5 @@
 <script setup>
+import { provide } from 'vue';
 import { RouterView } from 'vue-router';
 import StaffNavbar from './components/StaffNavbar.vue';
 import ManagerNavbar from './components/ManagerNavbar.vue';
@@ -6,6 +7,12 @@ import { useUserStore } from '@/stores/user';
 // const route = useRoute();
 
 const userStore = useUserStore();
+provide(
+  'API_ROUTE',
+  import.meta.env.DEV
+    ? import.meta.env.VITE_LOCAL_API_ENDPOINT
+    : import.meta.env.VITE_DEPLOYED_API_ENDPOINT,
+);
 </script>
 
 <template>

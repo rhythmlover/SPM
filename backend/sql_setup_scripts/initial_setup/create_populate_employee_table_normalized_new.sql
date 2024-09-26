@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS `WFH_Request_Dates` (
     `Request_Date_ID` INT PRIMARY KEY AUTO_INCREMENT,
     `Request_ID` INT,  -- Foreign key to WFH_Request
     `WFH_Date` DATE   -- Specific WFH date
+    `WFH_Time` VARCHAR(20) CHARACTER SET utf8,   -- Specific WFH time (AM, PM, FULL)
 );
 
 CREATE TABLE IF NOT EXISTS `WFH_Approval` (

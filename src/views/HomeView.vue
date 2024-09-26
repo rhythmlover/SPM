@@ -15,7 +15,7 @@ const login = async () => {
       ? import.meta.env.VITE_LOCAL_API_ENDPOINT
       : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
     const res = await axios.get(API_ROUTE + '/employee/login', {
-      params: { userID: employeeID.value },
+      params: { staffID: employeeID.value },
     });
     console.log('Staff details:', res.data);
     // Set userStore

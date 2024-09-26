@@ -7,6 +7,22 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
+    BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
+    BCard: typeof import('bootstrap-vue-next/components/BCard')['BCard']
+    BCol: typeof import('bootstrap-vue-next/components/BContainer')['BCol']
+    BCollapse: typeof import('bootstrap-vue-next/components/BCollapse')['BCollapse']
+    BContainer: typeof import('bootstrap-vue-next/components/BContainer')['BContainer']
+    BDropdown: typeof import('bootstrap-vue-next/components/BDropdown')['BDropdown']
+    BDropdownItem: typeof import('bootstrap-vue-next/components/BDropdown')['BDropdownItem']
+    BListGroup: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroup']
+    BListGroupItem: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroupItem']
+    BNavbar: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbar']
+    BNavbarBrand: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbarBrand']
+    BNavbarNav: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbarNav']
+    BNavbarToggle: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbarToggle']
+    BNavItem: typeof import('bootstrap-vue-next/components/BNav')['BNavItem']
+    BRow: typeof import('bootstrap-vue-next/components/BContainer')['BRow']
     IconCommunity: typeof import('./src/components/icons/IconCommunity.vue')['default']
     IconDocumentation: typeof import('./src/components/icons/IconDocumentation.vue')['default']
     IconEcosystem: typeof import('./src/components/icons/IconEcosystem.vue')['default']
@@ -16,5 +32,9 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StaffNavbar: typeof import('./src/components/StaffNavbar.vue')['default']
+  }
+  export interface ComponentCustomProperties {
+    vBColorMode: typeof import('bootstrap-vue-next/directives/BColorMode')['vBColorMode']
+    vBToggle: typeof import('bootstrap-vue-next/directives/BToggle')['vBToggle']
   }
 }
