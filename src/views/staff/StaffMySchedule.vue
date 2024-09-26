@@ -1,7 +1,8 @@
 <script setup>
 import axios from 'axios';
-import { onMounted, computed, ref } from 'vue';
+import { inject, onMounted, computed, ref } from 'vue';
 import { useUserStore } from '@/stores/user';
+import IBiUpArrow from '~icons/bi/caret-up-fill';
 
 const userStore = useUserStore();
 // Get the current date and viewing date
@@ -10,6 +11,7 @@ const viewingDate = ref(new Date());
 const monthDiff = ref(0);
 const currentMonth = computed(() => viewingDate.value.toLocaleString('default', { month: 'long' }));
 const datesInMonth = ref({});
+const API_ROUTE = inject('API_ROUTE');
 
 // Handle changing month click
 const disablePreviousMonthButton = computed(() => monthDiff.value - 1 < -2);
@@ -32,17 +34,14 @@ const handleChangeMonthClick = async (movement) => {
 // Get WFH Requests
 const getWFHRequests = async () => {
   try {
-    let API_ROUTE = import.meta.env.DEV
-      ? import.meta.env.VITE_LOCAL_API_ENDPOINT
-      : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
     const res = await axios.get(API_ROUTE + '/wfh_request/user', {
-      params: { userID: userStore.userInfo.Staff_ID },
+      params: { staffID: userStore.userInfo.Staff_ID },
     });
     // Convert the string date into Date object
     for (let requestObj of res.data.results) {
       for (let dateObj of requestObj['Dates']) {
         dateObj['WFH_Date'] = new Date(dateObj['WFH_Date']).toLocaleDateString('en-CA');
-        dateObj['WFH_Time'] = dateObj['WFH_Time'].split(',');
+        // dateObj['WFH_Time'] = dateObj['WFH_Time'].split(',');
       }
     }
     // Return requests
@@ -86,18 +85,42 @@ const getDatesInMonth = async () => {
 
   // Get all requests in month
   let requests = await getWFHRequests();
-  // Add requests to the datesInMonth object
   for (let requestObj of requests) {
+    let newRequestObj = { ...requestObj };
+    delete newRequestObj['Dates'];
+    // Add dates of requests to the datesInMonth object with the same date
     for (let requestDate of requestObj['Dates']) {
       if (!(requestDate['WFH_Date'] in datesInMonth.value)) {
         continue;
       }
-      // Add request
-      datesInMonth.value[requestDate['WFH_Date']]['requests'].push(requestObj);
+      // Add request's date
+      datesInMonth.value[requestDate['WFH_Date']]['requests'].push({
+        ...newRequestObj,
+        Date: requestDate,
+      });
       // console.log('requestDate["WFH_Date"]: ', requestDate['WFH_Date']);
       // console.log(datesInMonth.value[requestDate['WFH_Date']]);
     }
   }
+};
+
+// Get status color for pill
+const getStatusPillColor = (status) => {
+  switch (status.toLowerCase()) {
+    case 'approved':
+      return 'success';
+    case 'pending':
+      return 'Warning';
+    default:
+      return 'secondary';
+  }
+};
+// Get CSS to rotate icon
+const getDateCollapseIconRotated = (visible) => {
+  return {
+    transform: visible ? 'rotateZ(180deg)' : 'rotateZ(0deg)',
+    transition: 'transform 0.2s ease',
+  };
 };
 
 // Use onMounted to initialize currentDate once
@@ -148,18 +171,49 @@ onMounted(async () => {
     <BRow>
       <!-- Render all dates in month -->
       <BCol>
-        <div v-for="(dateValueObject, dateKeyStr) in datesInMonth" :key="dateKeyStr">
-          <BButton v-b-toggle="dateKeyStr" class="m-1">
-            {{ dateValueObject['formattedDate'] }}
-          </BButton>
+        <div v-for="(dateValueObject, dateKeyStr) in datesInMonth" :key="dateKeyStr" class="my-3">
+          <!-- <div class="d-block" role="button" v-b-toggle="dateKeyStr">
+            <div class="d-flex justify-content-between">
+              {{ dateValueObject['formattedDate'] }}
+              <IBiUpArrow style="">
+            </div>
+          </div> -->
+
           <!-- Element to collapse -->
           <BCollapse :id="dateKeyStr">
-            <!-- <BCard>I am collapsible content!</BCard> -->
-            <BCard
-              v-for="requestObj in dateValueObject['requests']"
-              :key="requestObj['Request_ID']"
-            >
-              {{ requestObj['Reason'] }}
+            <template #header="{ visible, toggle, id }">
+              <div
+                class="d-block"
+                role="button"
+                :aria-expanded="visible"
+                :aria-controls="id"
+                @click="toggle"
+              >
+                <div class="d-flex justify-content-between border-bottom border-2 fw-bold">
+                  {{ dateValueObject['formattedDate'] }}
+                  <IBiUpArrow :style="getDateCollapseIconRotated(visible)" />
+                </div>
+              </div>
+            </template>
+
+            <BCard>
+              <BListGroup>
+                <BListGroupItem
+                  v-for="requestObj in dateValueObject['requests']"
+                  :key="requestObj['Request_ID']"
+                >
+                  <div>
+                    {{
+                      `${requestObj['Staff']['Staff_FName']} ${requestObj['Staff']['Staff_LName']}`
+                    }}
+                    {{ requestObj['Staff']['Position'] }}
+                    {{ requestObj['Date']['WFH_Time'] }}
+                    <BBadge :variant="getStatusPillColor(requestObj['Status'])" pill>{{
+                      requestObj['Status']
+                    }}</BBadge>
+                  </div>
+                </BListGroupItem>
+              </BListGroup>
             </BCard>
           </BCollapse>
         </div>
