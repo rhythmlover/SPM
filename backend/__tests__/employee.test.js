@@ -170,7 +170,7 @@ describe('Employee Endpoint', () => {
 
     const response = await request(app)
       .get('/employee/login')
-      .query({ userID: newEmployee['Staff_ID'] });
+      .query({ staffID: newEmployee['Staff_ID'] });
 
     expect(response.status).toBe(200); // Adjust based on your API
     expect(response.body).toEqual(expect.objectContaining(newEmployee));

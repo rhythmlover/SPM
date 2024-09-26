@@ -35,6 +35,5 @@ declare module 'vue' {
   }
   export interface ComponentCustomProperties {
     vBColorMode: typeof import('bootstrap-vue-next/directives/BColorMode')['vBColorMode']
-    vBToggle: typeof import('bootstrap-vue-next/directives/BToggle')['vBToggle']
   }
 }
