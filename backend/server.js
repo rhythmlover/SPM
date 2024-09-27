@@ -14,7 +14,7 @@ app.use(express.json());
 app.use('/employee', employee);
 app.use('/wfh_request', wfh_request);
 app.get('/', (req, res) => {
-  res.json({ message: 'Tesing Ping Success!' });
+  res.json({ message: 'Testing Ping Success!' });
 });
 
 // Error Middleware

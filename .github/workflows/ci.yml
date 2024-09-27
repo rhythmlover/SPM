@@ -34,5 +34,12 @@ jobs:
       - name: Formatter
         run: npm run format
 
-      - name: Unit Tests
+      - name: Decode Service Account JSON
+        run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" | base64 --decode > service-account.json
+
+      - name: Run tests
         run: npm run test
+
+      - name: Clean up
+        if: always()
+        run: rm -f service-account.json
