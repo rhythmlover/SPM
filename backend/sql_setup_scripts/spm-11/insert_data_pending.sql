@@ -8,7 +8,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- Insert dummy data
 INSERT INTO `WFH_Request` (Staff_ID, Request_Date, Reason, `Status`, Approver_ID) VALUES (171015,'2024-10-15','Some comments here','Approved',171018);
-INSERT INTO `WFH_Request_Dates` (Request_ID, WFH_Date, WFH_Time) VALUES (1,'2024-10-15', '10:00-12:00,12:00-18:00');
+INSERT INTO `WFH_Request_Dates` (Request_ID, WFH_Date, WFH_Time) VALUES (LAST_INSERT_ID(),'2024-10-15', 'FULL');
 
 SELECT * from WFH_Request;
 SELECT * from WFH_Request_Dates;

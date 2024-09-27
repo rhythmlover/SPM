@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS `WFH_Request_Dates` (
     `Request_Date_ID` INT PRIMARY KEY AUTO_INCREMENT,
     `Request_ID` INT,  -- Foreign key to WFH_Request
     `WFH_Date` DATE   -- Specific WFH date
+    `WFH_Time` VARCHAR(20) CHARACTER SET utf8,   -- Specific WFH time (AM, PM, FULL)
 );
 
 CREATE TABLE IF NOT EXISTS `WFH_Approval` (
@@ -706,3 +707,52 @@ END;
 SET foreign_key_checks = 1;
 
 DROP TABLE Temp_Employee;
+
+
+-- -- Create the Subordinate_Mapping table
+-- CREATE TABLE IF NOT EXISTS `Subordinate_Mapping` (
+--     `Manager_ID` INT,          -- Manager or supervisor's Staff ID
+--     `Subordinate_ID` INT,      -- Subordinate's Staff ID
+--     PRIMARY KEY (`Manager_ID`, `Subordinate_ID`),   -- Composite primary key
+--     FOREIGN KEY (`Manager_ID`) REFERENCES `Employee`(`Staff_ID`) ON DELETE CASCADE,
+--     FOREIGN KEY (`Subordinate_ID`) REFERENCES `Employee`(`Staff_ID`) ON DELETE CASCADE
+-- );
+-- -- Insert mappings into the Subordinate_Mapping table
+-- INSERT INTO `Subordinate_Mapping` (Manager_ID, Subordinate_ID)
+-- SELECT 
+--     e1.Staff_ID AS Manager_ID,
+--     e2.Staff_ID AS Subordinate_ID
+-- FROM 
+--     Employee e1
+-- JOIN 
+--     Employee e2 ON e1.Staff_ID = e2.Reporting_Manager
+-- WHERE 
+--     e1.Position LIKE '%MD%'
+--     OR e1.Position LIKE '%Director%'
+--     OR e1.Position LIKE '%Manager%';
+
+
+-- Increase the GROUP_CONCAT max length limit
+SET SESSION group_concat_max_len = 1000000;
+-- Create the Manager_Subordinates table
+DROP TABLE IF EXISTS `Manager_Subordinates`;
+CREATE TABLE IF NOT EXISTS `Manager_Subordinates` (
+    `Manager_ID` INT PRIMARY KEY,         -- Manager's Staff ID
+    `Subordinates` TEXT,                  -- Concatenated list of subordinates
+    FOREIGN KEY (`Manager_ID`) REFERENCES `Employee`(`Staff_ID`) ON DELETE CASCADE
+);
+-- Insert mappings into the Manager_Subordinates table
+INSERT INTO `Manager_Subordinates` (Manager_ID, Subordinates)
+SELECT 
+    e1.Staff_ID AS Manager_ID,
+    GROUP_CONCAT(e2.Staff_ID, ' ', e2.Staff_ID ORDER BY e2.Staff_ID SEPARATOR ', ') AS Subordinates
+FROM 
+    Employee e1
+JOIN 
+    Employee e2 ON e1.Staff_ID = e2.Reporting_Manager
+WHERE 
+    e1.Position LIKE '%MD%'
+    OR e1.Position LIKE '%Director%'
+    OR e1.Position LIKE '%Manager%'
+GROUP BY 
+    e1.Staff_ID;
