@@ -48,7 +48,6 @@ const joinEmployeesToWFHRequests = () => {
   pendingRequests.value = [];
   acceptedRequests.value = [];
   rejectedRequests.value = [];
-
   wfhRequests.value.forEach((request) => {
     const employee = employees.value.find(
       (emp) => emp.Staff_ID === request.Staff_ID
