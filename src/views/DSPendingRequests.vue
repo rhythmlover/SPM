@@ -8,10 +8,9 @@ const reportingManagerId = 130002;
 // Refs to hold the employee data and WFH requests
 const employees = ref([]);
 const wfhRequests = ref([]);
-const combinedRequests = ref([]); // Combine all data from above
-// TO DO: add refs for previouslyAccepted and previouslyRejected from the DB
-// TO DO: read from these two refs, and do a v-if and v-for statement for the tables under them
-// TO DO: make sure table can read MULTIPLE date and time requested by an employee
+const pendingRequests = ref([]);
+const acceptedRequests = ref([]); 
+const rejectedRequests = ref([]);
 
 // Function to fetch all employees and filter by Reporting Manager
 const fetchEmployees = async () => {
@@ -66,22 +65,95 @@ const fetchWFHRequests = async () => {
 
 // Function to join employees data to WFH requests
 const joinEmployeesToWFHRequests = () => {
-  combinedRequests.value = wfhRequests.value.map((request) => {
+  // Combine all WFH requests
+  wfhRequests.value.forEach((request) => {
     // Find the corresponding employee based on Staff_ID
     const employee = employees.value.find(
       (emp) => emp.Staff_ID === request.Staff_ID
     );
 
     // Merge employee details into the WFH request
-    return {
+    const combinedRequest = {
       ...request, // Include all properties of the WFH request
       ...employee, // Include all properties of the matching employee
     };
+
+    // Sort into appropriate status categories
+    switch (combinedRequest.Status) {
+      case "Pending":
+        pendingRequests.value.push(combinedRequest);
+        break;
+      case "Withdrawn":
+      case "Approved":
+        acceptedRequests.value.push(combinedRequest); 
+        break;
+      case "Rejected":
+        rejectedRequests.value.push(combinedRequest);
+        break;
+      default:
+        break;
+    }
   });
 
-  console.log('Combined WFH Requests with Employee Data:', combinedRequests.value);
+  console.log('Pending Requests:', pendingRequests.value);
+  console.log('Accepted Requests:', acceptedRequests.value);
+  console.log('Rejected Requests:', rejectedRequests.value);
 };
 
+// Function to fetch WFH dates and append them to requests
+const fetchWFHDates = async () => {
+  try {
+    let API_ROUTE = import.meta.env.DEV
+      ? import.meta.env.VITE_LOCAL_API_ENDPOINT
+      : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
+
+    const res = await axios.get(`${API_ROUTE}/wfh_request/wfh-dates`);
+
+    // Log the raw WFH dates received
+    console.log('WFH Dates Data:', res.data.results);
+
+    const wfhDates = res.data.results;
+
+    // Append WFH dates to pending, accepted, and rejected requests
+    appendWFHDatesToRequests(pendingRequests, wfhDates);
+    appendWFHDatesToRequests(acceptedRequests, wfhDates);
+    appendWFHDatesToRequests(rejectedRequests, wfhDates);
+    
+    // Log the updated requests after appending
+    console.log('Pending Requests After Update:', pendingRequests.value);
+    console.log('Accepted Requests After Update:', acceptedRequests.value);
+    console.log('Rejected Requests After Update:', rejectedRequests.value);
+  } catch (error) {
+    console.error('Error fetching WFH dates:', error);
+  }
+};
+
+// Function to append WFH dates to requests
+const appendWFHDatesToRequests = (requestsRef, wfhDates) => {
+  if (!requestsRef.value || requestsRef.value.length === 0) {
+    console.warn('No requests to append WFH dates to.');
+    return;
+  }
+
+  requestsRef.value.forEach(request => {
+    // Find the matched date for the current request
+    const matchedDate = wfhDates.find(date => date.Request_ID === request.Request_ID);
+    
+    // If a match is found, append WFH_Date and WFH_Time as separate properties
+    if (matchedDate) {
+      request.WFH_Date = formatRequestDate(matchedDate.WFH_Date); // Format WFH_Date
+      request.WFH_Time = matchedDate.WFH_Time; // Keep WFH_Time as is
+
+      // Log the updated request with WFH_Date and WFH_Time appended
+      console.log(`Updated request for Request_ID ${request.Request_ID}:`, request);
+    }
+  });
+
+  // Log the updated requests to verify the changes
+  console.log(`Updated requests in ${requestsRef} ref:`, requestsRef.value);
+};
+
+// Function to format dates
 function formatRequestDate(isoDate) {
   // Create a Date object from the ISO string, parsed as UTC
   const date = new Date(isoDate);
@@ -102,8 +174,11 @@ function formatRequestDate(isoDate) {
 onMounted(async () => {
   await fetchEmployees(); // Fetch employees first
   await fetchWFHRequests(); // Then fetch WFH requests based on employees
+  await fetchWFHDates(); // Fetch WFH dates after requests
 });
 </script>
+
+
 
 <template>
   <div class="container">
@@ -160,16 +235,16 @@ onMounted(async () => {
           </thead>
         </table>
       </div>
-      <div class="action-table" v-if="employees.length === 0">
-        <p>No employees found for this manager.</p>
+      <div class="action-table" v-if="pendingRequests.length === 0">
+        <p>No pending WFH requests.</p>
       </div>
       <div class="action-table" v-else>
         <table class="table">
           <tbody>
-            <tr v-for="request in combinedRequests" :key="request.Request_ID">
+            <tr v-for="request in pendingRequests" :key="request.Request_ID">
               <td class="col-2">{{request.Staff_FName}} {{request.Staff_LName}}</td>
               <td class="col-3">{{request.Reason}}</td>
-              <td class="col-2">{{formatRequestDate(request.Request_Date)}}</td>
+              <td class="col-2">{{request.WFH_Date}}</td>
               <td class="col-2">{{formatRequestDate(request.Request_Date)}}</td>
               <td class="col-3 text-nowrap d-flex justify-content-between">
                 <button class="btn btn-success">Accept</button>
@@ -183,16 +258,13 @@ onMounted(async () => {
 
     <!-- When "Previously Accepted" is active -->
     <div id="previouslyaccepted" v-if="isActive('/previously-accepted')">
-      <div class="action-table" v-if="employees.length === 0">
-        <p>No employees found for this manager.</p>
-      </div>
-      <div class="request-table" v-else>
+      <div class="request-table">
         <table class="table">
           <thead>
             <tr>
               <th class="col-2">Name</th>
-              <th class="col-3">Reason for Request</th>
-              <th class="col-1">WFH Date</th>
+              <th class="col-2">Reason for Request</th>
+              <th class="col-2">WFH Date</th>
               <th class="col-2">Requested On</th>
               <th class="col-2">Accepted On</th>
               <th class="col-2"></th>
@@ -200,18 +272,21 @@ onMounted(async () => {
           </thead>
         </table>
       </div>
-
-      <div class="action-table">
+      <div class="action-table" v-if="acceptedRequests.length === 0">
+        <p>No previously accepted WFH requests.</p>
+      </div>
+      <div class="action-table" v-else>
         <table class="table">
           <tbody>
-            <tr>
-              <td class="col-2">Derek Tan</td>
-              <td class="col-3">Will be returning from work trip late in the same morning</td>
-              <td class="col-1">23/9/2024</td>
-              <td class="col-2">19/9/2024</td>
+            <tr v-for="request in acceptedRequests" :key="request.Request_ID">
+              <td class="col-2">{{request.Staff_FName}} {{request.Staff_LName}}</td>
+              <td class="col-2">{{request.Reason}}</td>
+              <td class="col-2">{{request.WFH_Date}}</td>
+              <td class="col-2">{{formatRequestDate(request.Request_Date)}}</td>
               <td class="col-2">19/9/2024</td>
               <td class="col-2">
-                <button class="btn btn-success">Withdraw</button>
+                <button v-if="request.Status ==='Withdrawn'" class="btn btn-success">Withdraw</button>
+                <button v-if="request.Status ==='Approved'" class="btn btn-outline-success" disabled>Withdraw</button>
               </td>
             </tr>
           </tbody>
@@ -226,8 +301,8 @@ onMounted(async () => {
           <thead>
             <tr>
               <th class="col-2">Name</th>
-              <th class="col-3">Reason for Request</th>
-              <th class="col-1">WFH Date</th>
+              <th class="col-2">Reason for Request</th>
+              <th class="col-2">WFH Date</th>
               <th class="col-2">Requested On</th>
               <th class="col-2">Rejected On</th>
               <th class="col-2">Reason</th>
@@ -235,17 +310,19 @@ onMounted(async () => {
           </thead>
         </table>
       </div>
-
+      <div class="action-table" v-if="rejectedRequests.length === 0">
+        <p>No previously rejected WFH requests.</p>
+      </div>
       <div class="action-table">
         <table class="table">
           <tbody>
-            <tr>
-              <td class="col-2">Derek Tan</td>
-              <td class="col-3">Will be returning from work trip late in the same morning</td>
-              <td class="col-1">23/9/2024</td>
+            <tr v-for="request in rejectedRequests" :key="request.Request_ID">
+              <td class="col-2">{{request.Staff_FName}} {{request.Staff_LName}}</td>
+              <td class="col-2">{{request.Reason}}</td>
+              <td class="col-2">{{request.WFH_Date}}</td>
+              <td class="col-2">{{formatRequestDate(request.Request_Date)}}</td>
               <td class="col-2">19/9/2024</td>
-              <td class="col-2">19/9/2024</td>
-              <td class="col-2">Rejected as high-stake client meeting for that day.</td>
+              <td class="col-2">{{request.Comments}}</td>
             </tr>
           </tbody>
         </table>
