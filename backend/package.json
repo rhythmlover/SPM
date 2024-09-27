@@ -16,12 +16,15 @@
     "transform": {
       "^.+\\.js$": "babel-jest"
     },
-    "setupFiles": ["<rootDir>/jest.setup.js"]
-  },  
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ]
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
+    "googleapis": "^144.0.0",
     "mysql2": "^3.11.0"
   },
   "devDependencies": {

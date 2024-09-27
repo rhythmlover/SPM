@@ -22,7 +22,17 @@ jobs:
           node-version: "20.x"
 
       - name: Install dependencies
-        run: npm install --include dev
+        run: npm install
+
+      - name: Install googleapis dependency from root
+        run: npm install --prefix .. googleapis
+
+      - name: Decode Service Account JSON
+        run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" | base64 --decode > ../service-account.json
 
       - name: Run tests
         run: npm run test
+
+      - name: Clean up
+        if: always()
+        run: rm -f ../service-account.json
