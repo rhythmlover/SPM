@@ -99,6 +99,22 @@ router.post('/apply', async (req, res, next) => {
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: 'Application Submission Failed', error: error.message });
+  }
+});
+
+router.put('/request/status', async (req, res, next) => {
+  const requestID = req.query.requestID;
+  const newStatus = req.body.status;
+
+  try {
+    let [result] = await executeQuery(`UPDATE WFH_Request SET Status = '${newStatus}' WHERE Request_ID = ${requestID}`);
+
+    if (result.affectedRows > 0) {
+      res.json({ message: "Request status updated successfully", requestID, newStatus });
+    } else {
+      res.status(404).json({ message: "Request not found" });
+    }
+  } catch (error) {
     next(error);
   }
 });

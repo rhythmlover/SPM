@@ -69,7 +69,7 @@ export async function updateSheet(testId, status) {
         range: 'Sprint1!A:P',
         valueInputOption: 'USER_ENTERED',
         resource: {
-          values: [[testId, , , , , , , , , , status, , , dateTimeGMT8, ,dateTimeGMT8]]
+          values: [[testId, , , , , , , , , , status, , , dateTimeGMT8, , dateTimeGMT8]]
         }
       });
       console.log(`Test case ${testId} added successfully.`);
@@ -81,7 +81,7 @@ export async function updateSheet(testId, status) {
       range: 'Sprint1!A:P',
       valueInputOption: 'USER_ENTERED',
       resource: {
-        values: [[testId, , , , , , , , , , status, , , dateTimeGMT8, ,dateTimeGMT8]]
+        values: [[testId, , , , , , , , , , status, , , dateTimeGMT8, , dateTimeGMT8]]
       }
     });
     console.log(`Test case ${testId} added as the first entry.`);
