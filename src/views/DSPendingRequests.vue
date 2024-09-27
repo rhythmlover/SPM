@@ -1,29 +1,21 @@
 <script setup>
 import axios from 'axios';
-import { ref, onMounted } from 'vue';
+import { inject, ref, onMounted } from 'vue';
 
-// Reporting Manager ID to filter employees
-const reportingManagerId = 130002;
+const reportingManagerId = 130002;  // Hardcoded Reporting Manager ID
 
-// Refs to hold the employee data and WFH requests
 const employees = ref([]);
 const wfhRequests = ref([]);
 const pendingRequests = ref([]);
-const acceptedRequests = ref([]); 
+const acceptedRequests = ref([]);
 const rejectedRequests = ref([]);
 
-// Function to fetch all employees and filter by Reporting Manager
+const API_ROUTE = inject('API_ROUTE');
+
 const fetchEmployees = async () => {
   try {
-    // Define the API route (local or deployed)
-    let API_ROUTE = import.meta.env.DEV
-      ? import.meta.env.VITE_LOCAL_API_ENDPOINT
-      : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
-
-    // Fetch all employees
     const res = await axios.get(`${API_ROUTE}/employee/all`);
     console.log('Employee data: ', res.data);
-    // Filter employees by Reporting Manager ID
     employees.value = res.data.results.filter(
       (employee) => employee.Reporting_Manager === reportingManagerId
     );
@@ -32,60 +24,49 @@ const fetchEmployees = async () => {
   }
 };
 
-// Function to fetch all WFH Requests and filter by Staff_IDs
 const fetchWFHRequests = async () => {
   try {
-    // Ensure there are employees before fetching WFH requests
     if (employees.value.length === 0) {
       console.error('No employees found for the reporting manager.');
       return;
     }
 
-    // Extract Staff_IDs of the employees
     const staffIds = employees.value.map((employee) => employee.Staff_ID);
-
-    // Fetch all WFH Requests
-    let API_ROUTE = import.meta.env.DEV
-      ? import.meta.env.VITE_LOCAL_API_ENDPOINT
-      : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
 
     const res = await axios.get(`${API_ROUTE}/wfh_request/all`);
 
-    // Filter WFH requests by Staff_IDs
     wfhRequests.value = res.data.results.filter((request) =>
       staffIds.includes(request.Staff_ID)
     );
 
-    // Join employees to WFH requests based on Staff_ID
     joinEmployeesToWFHRequests();
   } catch (error) {
-    console.error('Error fetching WFH requests:', error);
+    console.error('Error fetching sWFH requests:', error);
   }
 };
 
-// Function to join employees data to WFH requests
 const joinEmployeesToWFHRequests = () => {
-  // Combine all WFH requests
+  pendingRequests.value = [];
+  acceptedRequests.value = [];
+  rejectedRequests.value = [];
+  
   wfhRequests.value.forEach((request) => {
-    // Find the corresponding employee based on Staff_ID
     const employee = employees.value.find(
       (emp) => emp.Staff_ID === request.Staff_ID
     );
 
-    // Merge employee details into the WFH request
     const combinedRequest = {
-      ...request, // Include all properties of the WFH request
-      ...employee, // Include all properties of the matching employee
+      ...request,
+      ...employee,
     };
 
-    // Sort into appropriate status categories
     switch (combinedRequest.Status) {
       case "Pending":
         pendingRequests.value.push(combinedRequest);
         break;
       case "Withdrawn":
       case "Approved":
-        acceptedRequests.value.push(combinedRequest); 
+        acceptedRequests.value.push(combinedRequest);
         break;
       case "Rejected":
         rejectedRequests.value.push(combinedRequest);
@@ -103,10 +84,6 @@ const joinEmployeesToWFHRequests = () => {
 // Function to fetch WFH dates and append them to requests
 const fetchWFHDates = async () => {
   try {
-    let API_ROUTE = import.meta.env.DEV
-      ? import.meta.env.VITE_LOCAL_API_ENDPOINT
-      : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
-
     const res = await axios.get(`${API_ROUTE}/wfh_request/wfh-dates`);
 
     // Log the raw WFH dates received
@@ -118,7 +95,7 @@ const fetchWFHDates = async () => {
     appendWFHDatesToRequests(pendingRequests, wfhDates);
     appendWFHDatesToRequests(acceptedRequests, wfhDates);
     appendWFHDatesToRequests(rejectedRequests, wfhDates);
-    
+
     // Log the updated requests after appending
     console.log('Pending Requests After Update:', pendingRequests.value);
     console.log('Accepted Requests After Update:', acceptedRequests.value);
@@ -138,7 +115,7 @@ const appendWFHDatesToRequests = (requestsRef, wfhDates) => {
   requestsRef.value.forEach(request => {
     // Find the matched date for the current request
     const matchedDate = wfhDates.find(date => date.Request_ID === request.Request_ID);
-    
+
     // If a match is found, append WFH_Date and WFH_Time as separate properties
     if (matchedDate) {
       request.WFH_Date = formatRequestDate(matchedDate.WFH_Date); // Format WFH_Date
@@ -154,7 +131,7 @@ const appendWFHDatesToRequests = (requestsRef, wfhDates) => {
 };
 
 // Function to format dates
-function formatRequestDate(isoDate) {
+const formatRequestDate = (isoDate) => {
   // Create a Date object from the ISO string, parsed as UTC
   const date = new Date(isoDate);
 
@@ -170,15 +147,25 @@ function formatRequestDate(isoDate) {
   return formattedDate;
 }
 
-// Call both functions when the component is mounted
+const updateRequestStatus = async (requestID, newStatus) => {
+  try {
+    const response = await axios.put(`${API_ROUTE}/wfh_request/request/status`,
+      { status: newStatus },
+      { params: { requestID } }
+    );
+    console.log('Response:', response.data);
+    await fetchWFHRequests();
+  } catch (error) {
+    console.error('Error updating request status:', error);
+  }
+};
+
 onMounted(async () => {
-  await fetchEmployees(); // Fetch employees first
-  await fetchWFHRequests(); // Then fetch WFH requests based on employees
-  await fetchWFHDates(); // Fetch WFH dates after requests
+  await fetchEmployees();
+  await fetchWFHRequests();
+  await fetchWFHDates();
 });
 </script>
-
-
 
 <template>
   <div class="container">
@@ -187,34 +174,22 @@ onMounted(async () => {
     <!-- Incoming Requests / Previously Accepted / Previously Rejected -->
     <div class="links">
       <div class="link-container">
-        <router-link
-          to="/pending-requests"
-          class="link"
-          :class="{ active: isActive('/incoming-requests') }"
-          @click.prevent="setActiveLink('/incoming-requests')"
-        >
+        <router-link to="/pending-requests" class="link" :class="{ active: isActive('/incoming-requests') }"
+          @click.prevent="setActiveLink('/incoming-requests')">
           Incoming Requests
         </router-link>
       </div>
 
       <div class="link-container">
-        <router-link
-          to="/pending-requests"
-          class="link"
-          :class="{ active: isActive('/previously-accepted') }"
-          @click.prevent="setActiveLink('/previously-accepted')"
-        >
+        <router-link to="/pending-requests" class="link" :class="{ active: isActive('/previously-accepted') }"
+          @click.prevent="setActiveLink('/previously-accepted')">
           Previously Accepted
         </router-link>
       </div>
 
       <div class="link-container">
-        <router-link
-          to="/pending-requests"
-          class="link"
-          :class="{ active: isActive('/previously-rejected') }"
-          @click.prevent="setActiveLink('/previously-rejected')"
-        >
+        <router-link to="/pending-requests" class="link" :class="{ active: isActive('/previously-rejected') }"
+          @click.prevent="setActiveLink('/previously-rejected')">
           Previously Rejected
         </router-link>
       </div>
@@ -242,13 +217,15 @@ onMounted(async () => {
         <table class="table">
           <tbody>
             <tr v-for="request in pendingRequests" :key="request.Request_ID">
-              <td class="col-2">{{request.Staff_FName}} {{request.Staff_LName}}</td>
-              <td class="col-3">{{request.Reason}}</td>
-              <td class="col-2">{{request.WFH_Date}}</td>
-              <td class="col-2">{{formatRequestDate(request.Request_Date)}}</td>
+              <td class="col-2">{{ request.Staff_FName }} {{ request.Staff_LName }}</td>
+              <td class="col-3">{{ request.Reason }}</td>
+              <td class="col-2">{{ request.WFH_Date }}</td>
+              <td class="col-2">{{ formatRequestDate(request.Request_Date) }}</td>
               <td class="col-3 text-nowrap d-flex justify-content-between">
-                <button class="btn btn-success">Accept</button>
-                <button class="btn btn-danger">Reject</button>
+                <button class="btn btn-success"
+                  @click="updateRequestStatus(request.Request_ID, 'Approved')">Accept</button>
+                <button class="btn btn-danger"
+                  @click="updateRequestStatus(request.Request_ID, 'Rejected')">Reject</button>
               </td>
             </tr>
           </tbody>
@@ -279,14 +256,15 @@ onMounted(async () => {
         <table class="table">
           <tbody>
             <tr v-for="request in acceptedRequests" :key="request.Request_ID">
-              <td class="col-2">{{request.Staff_FName}} {{request.Staff_LName}}</td>
-              <td class="col-2">{{request.Reason}}</td>
-              <td class="col-2">{{request.WFH_Date}}</td>
-              <td class="col-2">{{formatRequestDate(request.Request_Date)}}</td>
+              <td class="col-2">{{ request.Staff_FName }} {{ request.Staff_LName }}</td>
+              <td class="col-2">{{ request.Reason }}</td>
+              <td class="col-2">{{ request.WFH_Date }}</td>
+              <td class="col-2">{{ formatRequestDate(request.Request_Date) }}</td>
               <td class="col-2">19/9/2024</td>
               <td class="col-2">
-                <button v-if="request.Status ==='Withdrawn'" class="btn btn-success">Withdraw</button>
-                <button v-if="request.Status ==='Approved'" class="btn btn-outline-success" disabled>Withdraw</button>
+                <button v-if="request.Status === 'Withdrawn'" class="btn btn-success"
+                  @click="updateRequestStatus(request.Request_ID, 'Withdrawn')">Withdraw</button>
+                <button v-if="request.Status === 'Approved'" class="btn btn-outline-success" disabled>Withdraw</button>
               </td>
             </tr>
           </tbody>
@@ -317,12 +295,12 @@ onMounted(async () => {
         <table class="table">
           <tbody>
             <tr v-for="request in rejectedRequests" :key="request.Request_ID">
-              <td class="col-2">{{request.Staff_FName}} {{request.Staff_LName}}</td>
-              <td class="col-2">{{request.Reason}}</td>
-              <td class="col-2">{{request.WFH_Date}}</td>
-              <td class="col-2">{{formatRequestDate(request.Request_Date)}}</td>
+              <td class="col-2">{{ request.Staff_FName }} {{ request.Staff_LName }}</td>
+              <td class="col-2">{{ request.Reason }}</td>
+              <td class="col-2">{{ request.WFH_Date }}</td>
+              <td class="col-2">{{ formatRequestDate(request.Request_Date) }}</td>
               <td class="col-2">19/9/2024</td>
-              <td class="col-2">{{request.Comments}}</td>
+              <td class="col-2">{{ request.Comments }}</td>
             </tr>
           </tbody>
         </table>
@@ -353,10 +331,14 @@ export default {
 <style scoped>
 .container {
   padding: 20px;
-  height: 100vh; /* Full height */
-  width: 100vw; /* Full width */
-  box-sizing: border-box; /* Include padding in height/width */
-  background-color: #F3F3F3; /* Background color */
+  height: 100vh;
+  /* Full height */
+  width: 100vw;
+  /* Full width */
+  box-sizing: border-box;
+  /* Include padding in height/width */
+  background-color: #F3F3F3;
+  /* Background color */
 }
 
 .header {
@@ -369,7 +351,8 @@ export default {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
-  border-bottom: 1px solid #0D6FE5; /* Single line across all links */
+  border-bottom: 1px solid #0D6FE5;
+  /* Single line across all links */
   padding-bottom: 5px;
 }
 
@@ -382,12 +365,14 @@ export default {
   text-decoration: none;
   color: black;
   font-size: 20px;
-  padding: 10px 0; /* Ensure padding for clickable area */
+  padding: 10px 0;
+  /* Ensure padding for clickable area */
 }
 
 .link.active {
   font-weight: bold;
-  border-bottom: 2px solid #0D6FE5; /* Highlight active link */
+  border-bottom: 2px solid #0D6FE5;
+  /* Highlight active link */
 }
 
 /* Styles for the rounded rectangle with shadow */
@@ -432,6 +417,7 @@ export default {
 }
 
 .btn {
-  margin-right: 5px; /* Spacing between buttons */
+  margin-right: 5px;
+  /* Spacing between buttons */
 }
 </style>
