@@ -53,4 +53,29 @@ router.get('/all', async (req, res, next) => {
   }
 });
 
+router.get('/getStaffReportingManager', async (req, res, next) => {
+  const staffID = req.query.staffID;
+  try {
+    let [results] = await executeQuery(
+      `SELECT Reporting_Manager FROM Employee WHERE Staff_ID = ${staffID}`,
+    );
+    res.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/getStaffNameByID', async (req, res, next) => {
+  const staffID = req.query.staffID;
+  try {
+    let [results] = await executeQuery(
+      `SELECT Staff_FName, Staff_LName FROM Employee WHERE Staff_ID = ${staffID}`,
+    );
+    let name = results[0]['Staff_FName'] + ' ' + results[0]['Staff_LName'];
+    res.json({ name });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
