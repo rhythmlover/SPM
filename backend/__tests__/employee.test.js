@@ -145,7 +145,7 @@ describe('Employee Endpoint', () => {
   //   // expect(sum(1, 2)).toBe(3);
   // });
 
-  it('should insert a customer', async () => {
+  it('Login Success', async () => {
     let newEmployee = {
       Staff_ID: 130003,
       Staff_FName: 'Alice',
@@ -174,5 +174,12 @@ describe('Employee Endpoint', () => {
 
     expect(response.status).toBe(200); // Adjust based on your API
     expect(response.body).toEqual(expect.objectContaining(newEmployee));
+  });
+
+  it('Login Failure', async () => {
+    const response = await request(app).get('/employee/login').query({ staffID: 1 });
+
+    expect(response.status).toBe(500); // Adjust based on your API
+    expect(response.body).toEqual(expect.objectContaining({ error: true }));
   });
 });
