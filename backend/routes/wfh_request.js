@@ -56,4 +56,51 @@ router.get('/user', async (req, res, next) => {
   }
 });
 
+router.post('/apply', async (req, res, next) => {
+  try {
+    const { Staff_ID, Request_Date, Request_Period, Reason, Approver_ID } = req.body;
+
+    if (!Staff_ID || !Request_Date || !Request_Period || !Reason) {
+      return res.status(400).json({ message: 'Please fill in all fields' });
+    }
+
+    const requestDate = new Date(Request_Date);
+    const currentDate = new Date();
+    const threeMonthsForward = new Date();
+    threeMonthsForward.setMonth(currentDate.getMonth() + 3);
+    const twoMonthsBack = new Date();
+    twoMonthsBack.setMonth(currentDate.getMonth() - 2);
+
+    if (requestDate > threeMonthsForward || requestDate < twoMonthsBack) {
+      return res
+        .status(400)
+        .json({ message: 'Request date must be within 3 months forward or 2 months back' });
+    }
+
+    const [existingRequests] = await executeQuery(
+      `SELECT * FROM WFH_Request WHERE Staff_ID = ${Staff_ID} AND Request_Date = '${Request_Date}'`,
+    );
+
+    if (existingRequests.length > 0) {
+      return res.status(400).json({ message: 'You already have a request for this date' });
+    }
+
+    const [results] = await executeQuery(
+      `INSERT INTO WFH_Request (Staff_ID, Request_Date, Request_Period, Reason, Status, Approver_ID) VALUES (${Staff_ID}, '${Request_Date}', '${Request_Period}', '${Reason}', 'Pending', ${Approver_ID})`,
+    );
+
+    if (!results) {
+      return res
+        .status(400)
+        .json({ message: 'Application Submission Failed', error: 'Invalid Request' });
+    }
+
+    res.status(200).json({ message: 'Application Submitted Successfully', data: results });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Application Submission Failed', error: error.message });
+    next(error);
+  }
+});
+
 export default router;
