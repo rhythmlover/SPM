@@ -119,4 +119,17 @@ router.put('/request/status', async (req, res, next) => {
   }
 });
 
+router.get('/request/getApprovedRequestsByApproverID', async (req, res, next) => {
+  const Approver_ID = req.query.approverID;
+
+  try {
+    let [results] = await executeQuery(
+      `SELECT * FROM WFH_Request WHERE Approver_ID = ${Approver_ID} AND Status = 'Approved'`,
+    );
+    res.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
