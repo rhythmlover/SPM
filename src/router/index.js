@@ -44,15 +44,10 @@ const router = createRouter({
       component: () => import('../views/staff/StaffRequestStatus.vue'),
     },
     {
-      path: '/pending-requests',
-      name: 'pending-requests',
-      component: () => import('../views/DSPendingRequests.vue'),
-    },
-    {
-      path: '/applyArrangement',
-      name: 'applyArrangement',
-      component: () => import('../views/ApplyView.vue'),
-    },
+      path: "/pending-requests",
+      name: "pending-requests",
+      component: () => import("../views/DSPendingRequests.vue"),
+    }
   ],
 });
 
