@@ -34,7 +34,15 @@ export default {
   components: { StatusButton },
   methods: {
     formatRequestDate(date) {
-      return new Date(date).toLocaleDateString() + ' ' + new Date(date).toLocaleTimeString();
+        return new Date(date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        }) + ' ' + new Date(date).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+        });
     },
     updateStatus(newStatus) {
       this.$emit('updateRequestStatus', this.request.Request_ID, newStatus);
@@ -45,7 +53,7 @@ export default {
 
 <style scoped>
 td {
-  padding: 10px 25px;
+  padding: 20px 25px;
   text-align: left;
   vertical-align: middle;
   font-weight: normal;

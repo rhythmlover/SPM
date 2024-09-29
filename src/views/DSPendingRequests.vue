@@ -134,6 +134,9 @@ const formatRequestDate = (isoDate) => {
 
 const updateRequestStatus = async (requestID, newStatus) => {
   try {
+    if (newStatus === 'Approved') {
+      await checkWFHPolicy(reportingManagerId);
+    }
     const response = await axios.put(`${API_ROUTE}/wfh_request/request/status`,
       { status: newStatus },
       { params: { requestID } }
