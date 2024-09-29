@@ -160,7 +160,7 @@ const updateRequestStatus = async (requestID, newStatus) => {
   }
 };
 
-const checkWFHPolicy = async (requestID) => {
+const checkWFHPolicy = async (reportingManagerID) => {
   try {
     const staffIDs = await axios.get(`${API_ROUTE}/employee/getStaffUnderReportingManager`, {
       params: { reportingManagerID: reportingManagerID }
