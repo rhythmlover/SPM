@@ -25,6 +25,7 @@ provide(
     <RouterLink to="/staffMySchedule">My Schedule</RouterLink>
     <RouterLink to="/staffTeamSchedule">My Team's Schedule</RouterLink>
     <RouterLink to="/staffRequestStatus">All Requests</RouterLink>
+    <RouterLink to="/applyArrangement">Apply</RouterLink>
   </nav>
   <RouterView />
 </template>
