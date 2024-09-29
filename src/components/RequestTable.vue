@@ -24,8 +24,6 @@
 </template>
 
 <script>
-import RequestRow from './RequestRow.vue';
-
 export default {
     name: 'RequestTable',
     props: {
