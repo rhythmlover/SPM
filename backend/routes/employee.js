@@ -64,6 +64,18 @@ router.get('/getStaffReportingManager', async (req, res, next) => {
   }
 });
 
+router.get('/getStaffUnderReportingManager', async (req, res, next) => {
+  const reportingManagerID = req.query.reportingManagerID;
+  try {
+    let [results] = await executeQuery(
+      `SELECT Staff_ID FROM Employee WHERE Reporting_Manager = ${reportingManagerID}`,
+    );
+    res.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/getStaffNameByID', async (req, res, next) => {
   const staffID = req.query.staffID;
   try {
