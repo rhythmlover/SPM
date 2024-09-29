@@ -26,7 +26,7 @@ describe('RequestTable.vue', () => {
         }
     ];
 
-    it('should render the table headers correctly', () => {
+    it('should render the table headers correctly', async () => {
         const testId = 'TC-015';
         try {
             const wrapper = mount(RequestTable, {
@@ -41,14 +41,14 @@ describe('RequestTable.vue', () => {
             expect(headers[2].text()).toBe('WFH Date');
             expect(headers[3].text()).toBe('Requested On');
             expect(headers[4].text()).toBe('Actions');
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should render the correct number of RequestRow components', () => {
+    it('should render the correct number of RequestRow components', async () => {
         const testId = 'TC-016';
         try {
             const wrapper = mount(RequestTable, {
@@ -59,14 +59,14 @@ describe('RequestTable.vue', () => {
             });
             const requestRows = wrapper.findAllComponents(RequestRow);
             expect(requestRows.length).toBe(requests.length);
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should emit updateRequestStatus when a row action is triggered', () => {
+    it('should emit updateRequestStatus when a row action is triggered', async () => {
         const testId = 'TC-017';
         try {
             const wrapper = mount(RequestTable, {
@@ -78,14 +78,14 @@ describe('RequestTable.vue', () => {
             wrapper.findComponent(RequestRow).vm.$emit('updateRequestStatus', 1, 'Approved');
             expect(wrapper.emitted().updateRequestStatus).toBeTruthy();
             expect(wrapper.emitted().updateRequestStatus[0]).toEqual([1, 'Approved']);
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should not display the "Actions" column if status is "rejected"', () => {
+    it('should not display the "Actions" column if status is "rejected"', async () => {
         const testId = 'TC-018';
         try {
             const wrapper = mount(RequestTable, {
@@ -97,14 +97,14 @@ describe('RequestTable.vue', () => {
             const headers = wrapper.findAll('th');
             const actionHeader = headers.find((header) => header.text() === 'Actions');
             expect(actionHeader).toBeUndefined();
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should display the "Reason" column when status is "rejected"', () => {
+    it('should display the "Reason" column when status is "rejected"', async () => {
         const testId = 'TC-019';
         try {
             const wrapper = mount(RequestTable, {
@@ -115,9 +115,9 @@ describe('RequestTable.vue', () => {
             });
             const headers = wrapper.findAll('th');
             expect(headers[4].text()).toBe('Reason');
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });

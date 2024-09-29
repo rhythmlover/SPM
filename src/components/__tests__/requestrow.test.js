@@ -15,7 +15,7 @@ describe('RequestRow.vue', () => {
         Comments: 'Not applicable'
     };
 
-    it('should display staff full name', () => {
+    it('should display staff full name', async () => {
         const testId = 'TC-007';
         try {
             const wrapper = mount(RequestRow, {
@@ -23,14 +23,14 @@ describe('RequestRow.vue', () => {
             });
             const nameText = wrapper.find('td.col-2').text();
             expect(nameText).toContain('John Doe');
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should display the correct reason', () => {
+    it('should display the correct reason', async () => {
         const testId = 'TC-008';
         try {
             const wrapper = mount(RequestRow, {
@@ -38,14 +38,14 @@ describe('RequestRow.vue', () => {
             });
             const reasonText = wrapper.findAll('td.col-4').at(0).text();
             expect(reasonText).toBe('Personal');
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should format the request date correctly', () => {
+    it('should format the request date correctly', async () => {
         const testId = 'TC-009';
         try {
             const wrapper = mount(RequestRow, {
@@ -53,9 +53,9 @@ describe('RequestRow.vue', () => {
             });
             const formattedDate = wrapper.findAll('td.col-2').at(2).text();
             expect(formattedDate).toContain('Aug 25, 2023 10:00 AM');
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
@@ -69,9 +69,9 @@ describe('RequestRow.vue', () => {
             });
             await wrapper.find('button.btn-success').trigger('click');
             expect(wrapper.emitted().updateRequestStatus[0]).toEqual([1, 'Approved']);
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
@@ -85,9 +85,9 @@ describe('RequestRow.vue', () => {
             });
             await wrapper.find('button.btn-danger').trigger('click');
             expect(wrapper.emitted().updateRequestStatus[0]).toEqual([1, 'Rejected']);
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
@@ -101,14 +101,14 @@ describe('RequestRow.vue', () => {
             });
             await wrapper.find('button.btn-outline-success').trigger('click');
             expect(wrapper.emitted().updateRequestStatus[0]).toEqual([1, 'Withdrawn']);
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should display the request comments if status is rejected', () => {
+    it('should display the request comments if status is rejected', async () => {
         const testId = 'TC-013';
         try {
             const wrapper = mount(RequestRow, {
@@ -116,14 +116,14 @@ describe('RequestRow.vue', () => {
             });
             const commentText = wrapper.findAll('td.col-2').at(3).text();
             expect(commentText).toBe('Not applicable');
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should not display action buttons if status is rejected', () => {
+    it('should not display action buttons if status is rejected', async () => {
         const testId = 'TC-014';
         try {
             const wrapper = mount(RequestRow, {
@@ -131,9 +131,9 @@ describe('RequestRow.vue', () => {
             });
             const buttons = wrapper.findAllComponents(StatusButton);
             expect(buttons.length).toBe(0);
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
