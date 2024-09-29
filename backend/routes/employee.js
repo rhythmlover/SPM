@@ -24,8 +24,7 @@ router.get('/login', async (req, res, next) => {
     // Fetch employee information
     let [results] = await executeQuery(`SELECT * FROM Employee WHERE Staff_ID = ${staffID}`);
     let employee = results[0];
-
-    console.log('results', results, 'employee:', employee);
+    // console.log('results', results, 'employee:', employee);
 
     // Fetch other info
     let [deptresults] = await executeQuery(
