@@ -33,7 +33,15 @@ async function createTables(client) {
     );
   `;
 
-  // Execute each statement separately
+  const dropEmployeeTable = `DROP TABLE IF EXISTS \`Employee\`;`;
+  const dropRoleTable = `DROP TABLE IF EXISTS \`Role\`;`;
+  const dropDepartmentTable = `DROP TABLE IF EXISTS \`Department\`;`;
+
+  // Drop tables first
+  await client.query(dropEmployeeTable);
+  await client.query(dropRoleTable);
+  await client.query(dropDepartmentTable);
+  // Add data
   await client.query(createEmployeeTable);
   await client.query(createRoleTable);
   await client.query(createDepartmentTable);
@@ -109,8 +117,8 @@ describe('Employee Endpoint', () => {
       .withExposedPorts(parseInt(process.env.MYSQL_PORT))
       // .withNetwork(network)
       .start();
-    console.log('MySQL host: ', mysqlContainer.getHost());
-    console.log('MySQL port: ', mysqlContainer.getPort());
+    // console.log('MySQL host: ', mysqlContainer.getHost());
+    // console.log('MySQL port: ', mysqlContainer.getPort());
 
     // Create the connection to database
     mysqlClient = await mysql.createConnection({
@@ -122,8 +130,10 @@ describe('Employee Endpoint', () => {
     });
     // Change the port based on Docker
     process.env.MYSQL_PORT = mysqlContainer.getPort();
+  });
 
-    // Create the various tables
+  beforeEach(async () => {
+    // Recreate the various tables for each test in the test suite
     await createTables(mysqlClient);
   });
 
@@ -133,21 +143,31 @@ describe('Employee Endpoint', () => {
     await mysqlContainer.stop();
   });
 
-  // it('should create and return multiple customers', async () => {
-  //   const customer1 = { id: 1, name: 'John Doe' };
-  //   const customer2 = { id: 2, name: 'Jane Doe' };
-
-  //   await createCustomer(mysqlClient, customer1);
-  //   await createCustomer(mysqlClient, customer2);
-
-  //   const customers = await getCustomers(mysqlClient);
-  //   expect(customers).toEqual([customer1, customer2]);
-  //   // expect(sum(1, 2)).toBe(3);
-  // });
-
-  it('should insert a customer', async () => {
+  it('Get All (With Employee)', async () => {
     let newEmployee = {
-      Staff_ID: 130003,
+      Staff_ID: 130000,
+      Staff_FName: 'Alice',
+      Staff_LName: 'Johnson',
+      Dept_ID: 2,
+      Position: 'Developer',
+      Country: 'Singapore',
+      Email: 'alice.johnson@allinone.com.sg',
+      Reporting_Manager: 130002,
+      Role_ID: 1,
+    };
+    await insertEmployee(mysqlClient, newEmployee);
+    await insertDepartment(mysqlClient, { Dept_ID: 2, Dept_Name: 'Test Dept Name' });
+    await insertRole(mysqlClient, { Role_ID: 1, Role_Name: 'Test Role Name' });
+
+    const response = await request(app).get('/employee/all');
+
+    expect(response.status).toBe(200);
+    expect(response.body.results).toEqual(expect.arrayContaining([newEmployee]));
+  });
+
+  it('Login Valid User', async () => {
+    let newEmployee = {
+      Staff_ID: 130000,
       Staff_FName: 'Alice',
       Staff_LName: 'Johnson',
       Dept_ID: 2,
@@ -172,7 +192,14 @@ describe('Employee Endpoint', () => {
       .get('/employee/login')
       .query({ staffID: newEmployee['Staff_ID'] });
 
-    expect(response.status).toBe(200); // Adjust based on your API
+    expect(response.status).toBe(200);
     expect(response.body).toEqual(expect.objectContaining(newEmployee));
+  });
+
+  it('Login Invalid User', async () => {
+    const response = await request(app).get('/employee/login').query({ staffID: 1 });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual(expect.objectContaining({ error: true }));
   });
 });

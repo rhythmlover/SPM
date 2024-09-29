@@ -11,3 +11,11 @@ npm install
 ```sh
 npm run dev
 ```
+
+### Run backend tests
+
+Ensure you have docker running first!
+
+```sh
+npm run test
+```
