@@ -4,38 +4,38 @@ import { describe, it, expect } from 'vitest';
 import { updateSheet } from '../../../updateGoogleSheet';
 
 describe('RequestLinks.vue', () => {
-    it('should set the default active link to "/incoming-requests"', () => {
+    it('should set the default active link to "/incoming-requests"', async () => {
         const testId = 'TC-001';
         try {
             const wrapper = mount(RequestLinks);
             expect(wrapper.vm.activeLink).toBe('/incoming-requests');
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should return true when the active link is "/incoming-requests"', () => {
+    it('should return true when the active link is "/incoming-requests"', async () => {
         const testId = 'TC-002';
         try {
             const wrapper = mount(RequestLinks);
             expect(wrapper.vm.isActive('/incoming-requests')).toBe(true);
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
 
-    it('should return false when the link is not active', () => {
+    it('should return false when the link is not active', async () => {
         const testId = 'TC-003';
         try {
             const wrapper = mount(RequestLinks);
             expect(wrapper.vm.isActive('/previously-accepted')).toBe(false);
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
@@ -46,9 +46,9 @@ describe('RequestLinks.vue', () => {
             const wrapper = mount(RequestLinks);
             wrapper.vm.setActiveLink('/previously-accepted');
             expect(wrapper.vm.activeLink).toBe('/previously-accepted');
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
@@ -60,9 +60,9 @@ describe('RequestLinks.vue', () => {
             wrapper.vm.setActiveLink('/previously-rejected');
             expect(wrapper.emitted().linkChange).toBeTruthy();
             expect(wrapper.emitted().linkChange[0]).toEqual(['/previously-rejected']);
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
@@ -73,9 +73,9 @@ describe('RequestLinks.vue', () => {
             const wrapper = mount(RequestLinks);
             const link = wrapper.find('.link.active');
             expect(link.text()).toBe('Incoming Requests');
-            updateSheet(testId, 'Passed');
+            await updateSheet(testId, 'Passed');
         } catch (error) {
-            updateSheet(testId, 'Failed');
+            await updateSheet(testId, 'Failed');
             throw error;
         }
     });
