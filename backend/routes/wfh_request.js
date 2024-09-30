@@ -163,4 +163,23 @@ router.get('/request/getApprovedRequestsByApproverID', async (req, res, next) =>
   }
 });
 
+router.put('/request/updateApprovalComments', async (req, res, next) => {
+  const requestID = req.query.requestID;
+  const comments = req.body.comments;
+
+  try {
+    let [result] = await executeQuery(
+      `UPDATE WFH_Request SET Approval_Comments = '${comments}' WHERE Request_ID = ${requestID}`,
+    );
+
+    if (result.affectedRows > 0) {
+      res.json({ message: 'Approval comments updated successfully', requestID, comments });
+    } else {
+      res.status(404).json({ message: 'Request not found' });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
