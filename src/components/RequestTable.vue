@@ -17,7 +17,7 @@
         <table class="table">
             <tbody>
                 <RequestRow v-for="request in requests" :key="request.Request_ID" :request="request" :status="status"
-                    @updateRequestStatus="updateRequestStatus" />
+                    @updateRequestStatus="updateRequestStatus" @rejectRequest="handleRejectRequest" />
             </tbody>
         </table>
     </div>
@@ -28,11 +28,15 @@ export default {
     name: 'RequestTable',
     props: {
         requests: Array,
-        status: String,  // 'pending', 'accepted', or 'rejected'
+        status: String,
     },
+    emits: ['updateRequestStatus'],
     methods: {
         updateRequestStatus(requestID, newStatus) {
             this.$emit('updateRequestStatus', requestID, newStatus);
+        },
+        handleRejectRequest(requestID, rejectionReason) {
+            this.$emit('updateRequestStatus', requestID, 'Rejected', rejectionReason);
         }
     }
 };
