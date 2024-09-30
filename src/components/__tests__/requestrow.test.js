@@ -10,9 +10,10 @@ describe('RequestRow.vue', () => {
         Staff_LName: 'Doe',
         Request_Reason: 'Personal',
         WFH_Date: '2023-09-01',
-        Request_Date: '2023-08-25T10:00:00',
+        Request_Date: '2023-08-25',
         Request_ID: 1,
-        Approval_Comments: 'Not applicable'
+        Approval_Comments: 'Not applicable',
+        Rejection_Reason: 'Invalid Request'
     };
 
     it('should display staff full name', async () => {
@@ -45,14 +46,26 @@ describe('RequestRow.vue', () => {
         }
     });
 
-    it('should format the request date correctly', async () => {
+    it('should cancel rejection process when cancel button is clicked', async () => {
         const testId = 'TC-009';
         try {
             const wrapper = mount(RequestRow, {
-                props: { request, status: 'pending' }
+                props: { request, status: 'pending' },
+                components: { StatusButton }
             });
-            const formattedDate = wrapper.findAll('td.col-2').at(2).text();
-            expect(formattedDate).toContain('August 25, 2023 (Friday)');
+
+            await wrapper.find('.reject-btn').trigger('click');
+            
+            let textarea = wrapper.find('textarea');
+            expect(textarea.exists()).toBe(true);
+    
+            await wrapper.find('.reject-cancel-btn').trigger('click');
+    
+            textarea = wrapper.find('textarea');
+            expect(textarea.exists()).toBe(false);
+
+            expect(wrapper.vm.rejectionReason).toBe('');
+    
             await updateSheet(testId, 'Passed');
         } catch (error) {
             await updateSheet(testId, 'Failed');
@@ -67,7 +80,7 @@ describe('RequestRow.vue', () => {
                 props: { request, status: 'pending' },
                 components: { StatusButton }
             });
-            await wrapper.find('button.btn-success').trigger('click');
+            await wrapper.find('.accept-btn').trigger('click');
             expect(wrapper.emitted().updateRequestStatus[0]).toEqual([1, 'Approved']);
             await updateSheet(testId, 'Passed');
         } catch (error) {
@@ -76,21 +89,26 @@ describe('RequestRow.vue', () => {
         }
     });
 
-    it('should emit updateRequestStatus with "Rejected" when reject button is clicked', async () => {
+    it('should emit rejectRequest with request ID and rejection reason when reject is clicked and submitted', async () => {
         const testId = 'TC-011';
         try {
             const wrapper = mount(RequestRow, {
                 props: { request, status: 'pending' },
                 components: { StatusButton }
             });
-            await wrapper.find('button.btn-danger').trigger('click');
-            expect(wrapper.emitted().updateRequestStatus[0]).toEqual([1, 'Rejected']);
+    
+            await wrapper.find('.reject-btn').trigger('click');
+            await wrapper.find('textarea').setValue(request.Rejection_Reason);
+            await wrapper.find('.reject-submit-btn').trigger('click');
+    
+            expect(wrapper.emitted().rejectRequest[0]).toEqual([1, request.Rejection_Reason]);
             await updateSheet(testId, 'Passed');
         } catch (error) {
             await updateSheet(testId, 'Failed');
             throw error;
         }
     });
+    
 
     it('should emit updateRequestStatus with "Withdrawn" when withdraw button is clicked', async () => {
         const testId = 'TC-012';
@@ -99,7 +117,7 @@ describe('RequestRow.vue', () => {
                 props: { request, status: 'accepted' },
                 components: { StatusButton }
             });
-            await wrapper.find('button.btn-outline-success').trigger('click');
+            await wrapper.find('.withdraw-btn').trigger('click');
             expect(wrapper.emitted().updateRequestStatus[0]).toEqual([1, 'Withdrawn']);
             await updateSheet(testId, 'Passed');
         } catch (error) {
@@ -131,6 +149,39 @@ describe('RequestRow.vue', () => {
             });
             const buttons = wrapper.findAllComponents(StatusButton);
             expect(buttons.length).toBe(0);
+            await updateSheet(testId, 'Passed');
+        } catch (error) {
+            await updateSheet(testId, 'Failed');
+            throw error;
+        }
+    });
+
+    it('should not submit rejection if no reason is provided', async () => {
+        const testId = 'TC-020';
+        try {
+            const wrapper = mount(RequestRow, {
+                props: { request, status: 'pending' },
+                components: { StatusButton }
+            });
+            await wrapper.find('.reject-btn').trigger('click');
+            await wrapper.find('.reject-submit-btn').trigger('click');
+            expect(wrapper.emitted().rejectRequest).toBeFalsy();
+            await updateSheet(testId, 'Passed');
+        } catch (error) {
+            await updateSheet(testId, 'Failed');
+            throw error;
+        }
+    });
+
+    it('should not emit an update with an invalid status', async () => {
+        const testId = 'TC-021';
+        try {
+            const wrapper = mount(RequestRow, {
+                props: { request, status: 'pending' },
+                components: { StatusButton }
+            });
+            wrapper.vm.updateStatus('InvalidStatus');
+            expect(wrapper.emitted().updateRequestStatus).toBeFalsy();
             await updateSheet(testId, 'Passed');
         } catch (error) {
             await updateSheet(testId, 'Failed');
