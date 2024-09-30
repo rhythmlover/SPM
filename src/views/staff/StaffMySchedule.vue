@@ -1,8 +1,8 @@
 <script setup>
-import { useUserStore } from '@/stores/user';
+// import { useUserStore } from '@/stores/user';
 import ScheduleList from '@/components/staff/ScheduleList.vue';
 
-const userStore = useUserStore();
+// const userStore = useUserStore();
 </script>
 
 <template>
