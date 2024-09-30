@@ -8,28 +8,12 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ApplyArrangement: typeof import('./src/components/ApplyArrangement.vue')['default']
-    BAlert: typeof import('bootstrap-vue-next/components/BAlert')['BAlert']
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
     BCard: typeof import('bootstrap-vue-next/components/BCard')['BCard']
-    BCardText: typeof import('bootstrap-vue-next/components/BCard')['BCardText']
     BCol: typeof import('bootstrap-vue-next/components/BContainer')['BCol']
-    BCollapse: typeof import('bootstrap-vue-next/components/BCollapse')['BCollapse']
     BContainer: typeof import('bootstrap-vue-next/components/BContainer')['BContainer']
-    BDropdown: typeof import('bootstrap-vue-next/components/BDropdown')['BDropdown']
-    BDropdownDivider: typeof import('bootstrap-vue-next/components/BDropdown')['BDropdownDivider']
-    BDropdownItem: typeof import('bootstrap-vue-next/components/BDropdown')['BDropdownItem']
-    BFormCheckbox: typeof import('bootstrap-vue-next/components/BFormCheckbox')['BFormCheckbox']
-    BFormGroup: typeof import('bootstrap-vue-next/components/BFormGroup')['BFormGroup']
-    BFormInput: typeof import('bootstrap-vue-next/components/BFormInput')['BFormInput']
     BFormSelect: typeof import('bootstrap-vue-next/components/BFormSelect')['BFormSelect']
-    BListGroup: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroup']
-    BListGroupItem: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroupItem']
-    BNavbar: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbar']
-    BNavbarBrand: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbarBrand']
-    BNavbarNav: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbarNav']
-    BNavbarToggle: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbarToggle']
-    BNavItem: typeof import('bootstrap-vue-next/components/BNav')['BNavItem']
     BRow: typeof import('bootstrap-vue-next/components/BContainer')['BRow']
     BSpinner: typeof import('bootstrap-vue-next/components/BSpinner')['BSpinner']
     BTableSimple: typeof import('bootstrap-vue-next/components/BTable')['BTableSimple']
@@ -53,8 +37,5 @@ declare module 'vue' {
     StaffNavbar: typeof import('./src/components/StaffNavbar.vue')['default']
     StaffTeamSchedule: typeof import('./src/components/StaffTeamSchedule.vue')['default']
     StatusButton: typeof import('./src/components/StatusButton.vue')['default']
-  }
-  export interface ComponentCustomProperties {
-    vBColorMode: typeof import('bootstrap-vue-next/directives/BColorMode')['vBColorMode']
   }
 }

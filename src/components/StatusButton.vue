@@ -39,4 +39,19 @@ button.withdraw-btn {
     border: 1px solid #28a745;
     color: #28a745;
 }
+
+button.withdraw-btn:hover {
+    background-color: #28a745;
+    color: white;
+}
+
+button.reject-submit-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+button.reject-cancel-btn {
+    background-color: #6c757d;
+    color: white;
+}
 </style>
