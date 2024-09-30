@@ -56,6 +56,37 @@ router.get('/user', async (req, res, next) => {
   }
 });
 
+// // Backend Route for Deleting WFH Request
+// router.delete('/wfh_request/deleteByrequestID', async (req, res, next) => {
+//   const requestID = req.query.requestID;
+
+//   try {
+//     let [results] = await executeQuery(
+//       `DELETE FROM WFH_Request WHERE Request_ID = ${requestID}`,
+//     );
+//     res.json({ results });
+
+//     res.status(200).json({ message: `Request ${requestID} deleted successfully.` });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+router.delete('/request/delete/id', async (req, res, next) => {
+  const requestID = req.query.requestID;
+
+  try {
+    // Delete the WFH request
+    await executeQuery(`DELETE FROM WFH_Request WHERE Request_ID = ${requestID}`);
+
+    // Optionally, delete associated dates or related records
+    await executeQuery(`DELETE FROM WFH_Request_Dates WHERE Request_ID = ${requestID}`);
+
+    res.status(200).json({ message: `Request ${requestID} deleted successfully.` });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post('/apply', async (req, res, next) => {
   try {
     const { Staff_ID, Request_Date, Request_Period, Reason, Approver_ID } = req.body;
