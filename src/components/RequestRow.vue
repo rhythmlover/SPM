@@ -13,8 +13,10 @@
             <div v-else-if="isRejecting">
                 <textarea v-model="rejectionReason" placeholder="Enter rejection reason" rows="2"></textarea>
                 <div class="reject-buttons">
-                    <StatusButton @click="submitRejection" label="Submit" class="reject-submit-btn">Submit</StatusButton>
-                    <StatusButton @click="cancelRejection" label="Cancel" class="reject-cancel-btn">Cancel</StatusButton>
+                    <StatusButton @click="submitRejection" label="Submit" class="reject-submit-btn">Submit
+                    </StatusButton>
+                    <StatusButton @click="cancelRejection" label="Cancel" class="reject-cancel-btn">Cancel
+                    </StatusButton>
                 </div>
             </div>
             <div v-else>
@@ -52,12 +54,21 @@ export default {
             this.rejectionReason = '';
         },
         submitRejection() {
-            this.$emit('rejectRequest', this.request.Request_ID, this.rejectionReason);
-            this.isRejecting = false;
-            this.rejectionReason = '';
+            if (this.rejectionReason.trim()) {
+                this.$emit('rejectRequest', this.request.Request_ID, this.rejectionReason);
+                this.isRejecting = false;
+                this.rejectionReason = '';
+            } else {
+                alert('Rejection reason is required');
+            }
         },
         updateStatus(newStatus) {
-            this.$emit('updateRequestStatus', this.request.Request_ID, newStatus);
+            const validStatuses = ['Approved', 'Rejected', 'Withdrawn'];
+            if (validStatuses.includes(newStatus)) {
+                this.$emit('updateRequestStatus', this.request.Request_ID, newStatus);
+            } else {
+                console.error(`Invalid status: ${newStatus}`);
+            }
         },
     }
 };
