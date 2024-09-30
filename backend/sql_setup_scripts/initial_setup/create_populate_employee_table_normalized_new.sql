@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS `WFH_Request_Dates` (
 CREATE TABLE IF NOT EXISTS `WFH_Approval` (
     `Approval_ID` INT PRIMARY KEY AUTO_INCREMENT,
     `Request_ID` INT,
+    `Staff_ID` INT,  -- New column to track the employee who made the WFH request
     `Approver_ID` INT,
     `Approval_Status` VARCHAR(20) CHARACTER SET utf8,
     `Approval_Date` DATE,
@@ -89,7 +90,8 @@ ADD CONSTRAINT `fk_wfh_request_dates_request` FOREIGN KEY (`Request_ID`) REFEREN
 -- Foreign keys for WFH_Approval table
 ALTER TABLE `WFH_Approval`
 ADD CONSTRAINT `fk_wfh_approval_request` FOREIGN KEY (`Request_ID`) REFERENCES `WFH_Request`(`Request_ID`),
-ADD CONSTRAINT `fk_wfh_approval_approver` FOREIGN KEY (`Approver_ID`) REFERENCES `Employee`(`Staff_ID`);
+ADD CONSTRAINT `fk_wfh_approval_approver` FOREIGN KEY (`Approver_ID`) REFERENCES `Employee`(`Staff_ID`),
+ADD CONSTRAINT `fk_wfh_approval_staff` FOREIGN KEY (`Staff_ID`) REFERENCES `Employee`(`Staff_ID`);
 
 -- Foreign key for Access_Log table
 ALTER TABLE `Access_Log`
