@@ -1,9 +1,10 @@
 <template>
     <tr>
         <td class="col-2">{{ request.Staff_FName }} {{ request.Staff_LName }}</td>
-        <td class="col-4">{{ request.Reason }}</td>
+        <td class="col-4">{{ request.Request_Reason }}</td>
         <td class="col-2">{{ request.WFH_Date }}</td>
-        <td class="col-2">{{ formatRequestDate(request.Request_Date) }}</td>
+        <td class="col-2" v-if="status === 'pending'" >{{ formatRequestDate(request.Request_Date) }}</td>
+        <td class="col-2" v-else>{{ formatRequestDate(request.Approval_Date) }}</td>
         <td class="col-2" v-if="status !== 'rejected'">
         <StatusButton v-if="status === 'pending'" 
             @click="updateStatus('Approved')"
@@ -18,7 +19,7 @@
             label="Withdraw" btnClass="btn-outline-success"
         />
         </td>
-        <td class="col-2" v-if="status === 'rejected'">{{ request.Comments }}</td>
+        <td class="col-2" v-if="status === 'rejected'">{{ request.Approval_Comments }}</td>
     </tr>
 </template>
 
@@ -33,16 +34,15 @@ export default {
   },
   components: { StatusButton },
   methods: {
-    formatRequestDate(date) {
-        return new Date(date).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-        }) + ' ' + new Date(date).toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true,
-        });
+    formatRequestDate(isoDate) {
+      const date = new Date(isoDate);
+      const day = date.getUTCDate();
+      const month = date.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' });
+      const year = date.getUTCFullYear();
+      const weekday = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' });
+      const formattedDate = `${month} ${day}, ${year} (${weekday})`;
+
+      return formattedDate;
     },
     updateStatus(newStatus) {
       this.$emit('updateRequestStatus', this.request.Request_ID, newStatus);

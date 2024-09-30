@@ -8,11 +8,11 @@ describe('RequestRow.vue', () => {
     const request = {
         Staff_FName: 'John',
         Staff_LName: 'Doe',
-        Reason: 'Personal',
+        Request_Reason: 'Personal',
         WFH_Date: '2023-09-01',
         Request_Date: '2023-08-25T10:00:00',
         Request_ID: 1,
-        Comments: 'Not applicable'
+        Approval_Comments: 'Not applicable'
     };
 
     it('should display staff full name', async () => {
@@ -52,7 +52,7 @@ describe('RequestRow.vue', () => {
                 props: { request, status: 'pending' }
             });
             const formattedDate = wrapper.findAll('td.col-2').at(2).text();
-            expect(formattedDate).toContain('Aug 25, 2023 10:00 AM');
+            expect(formattedDate).toContain('August 25, 2023 (Friday)');
             await updateSheet(testId, 'Passed');
         } catch (error) {
             await updateSheet(testId, 'Failed');
