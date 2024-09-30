@@ -198,24 +198,24 @@ const formatDateFromStr = (dateString) => {
   return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 };
 
-const getStatusVariant = (status) => {
-  return status.toLowerCase() === 'pending' ? 'warning' : 'success';
-};
+// const getStatusVariant = (status) => {
+//   return status.toLowerCase() === 'pending' ? 'warning' : 'success';
+// };
 
-const isUserRequest = (request) => {
-  return request.Staff_ID === props.staffId.value.toString();
-};
+// const isUserRequest = (request) => {
+//   return request.Staff_ID === props.staffId.value.toString();
+// };
 
-const getUserRequestStyle = (request) => {
-  if (isUserRequest(request)) {
-    const color = request.Status.toLowerCase() === 'pending' ? 'yellow' : 'green';
-    return {
-      border: `2px solid ${color}`,
-      boxShadow: `0 0 5px ${color}`,
-    };
-  }
-  return {};
-};
+// const getUserRequestStyle = (request) => {
+//   if (isUserRequest(request)) {
+//     const color = request.Status.toLowerCase() === 'pending' ? 'yellow' : 'green';
+//     return {
+//       border: `2px solid ${color}`,
+//       boxShadow: `0 0 5px ${color}`,
+//     };
+//   }
+//   return {};
+// };
 
 /**
  * Get status color for pill
