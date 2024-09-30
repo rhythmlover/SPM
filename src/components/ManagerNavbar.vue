@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BContainer, BNavbarNav, BNavItem, BNavItemDropdown, BDropdownItem } from 'bootstrap-vue-next'
 
