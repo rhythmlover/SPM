@@ -4,7 +4,7 @@ import { RouterView } from 'vue-router';
 import StaffNavbar from './components/StaffNavbar.vue';
 import ManagerNavbar from './components/ManagerNavbar.vue';
 import { useUserStore } from '@/stores/user';
-// const route = useRoute();
+import { BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BContainer, BNavbarNav, BNavItem } from 'bootstrap-vue-next'
 
 const userStore = useUserStore();
 provide(
@@ -16,18 +16,39 @@ provide(
 </script>
 
 <template>
-  <ManagerNavbar v-if="userStore.userInfo.Role_ID == 1" />
-  <StaffNavbar v-else-if="userStore.userInfo.Role_ID == 2" />
-  <nav v-else>
-    <RouterLink to="/">Home</RouterLink>
-    <RouterLink to="/staff">Staff</RouterLink>
-    <RouterLink to="/test">Test</RouterLink>
-    <RouterLink to="/staffMySchedule">My Schedule</RouterLink>
-    <RouterLink to="/staffTeamSchedule">My Team's Schedule</RouterLink>
-    <RouterLink to="/staffRequestStatus">All Requests</RouterLink>
-    <RouterLink to="/applyArrangement">Apply</RouterLink>
-  </nav>
-  <RouterView />
+  <div class="app-container">
+    <ManagerNavbar v-if="userStore.userInfo.Role_ID == 1" />
+    <StaffNavbar v-else-if="userStore.userInfo.Role_ID == 2" />
+    <BNavbar v-else fixed="top" toggleable="lg" type="dark" variant="light" class="py-2">
+      <BContainer>
+        <BNavbarBrand to="/" class="fw-bold">WorkForce Portal</BNavbarBrand>
+        <BNavbarToggle target="nav-collapse" />
+        <BCollapse id="nav-collapse" is-nav>
+          <BNavbarNav>
+            <BNavItem to="/">Home</BNavItem>
+            <BNavItem to="/staff">Staff</BNavItem>
+            <BNavItem to="/test">Test</BNavItem>
+            <BNavItem to="/staffMySchedule">My Schedule</BNavItem>
+            <BNavItem to="/staffTeamSchedule">My Team's Schedule</BNavItem>
+            <BNavItem to="/staffRequestStatus">All Requests</BNavItem>
+            <BNavItem to="/applyArrangement">Apply</BNavItem>
+          </BNavbarNav>
+        </BCollapse>
+      </BContainer>
+    </BNavbar>
+    <main class="mt-5 pt-3">
+      <RouterView />
+    </main>
+  </div>
 </template>
 
-<style scoped></style>
+<style>
+.app-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+main {
+  padding: 20px;
+}
+</style>
