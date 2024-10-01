@@ -33,20 +33,13 @@ router.get('/user', async (req, res, next) => {
     // Fetch requests
     let [results, _] = await executeQuery(`SELECT * FROM WFH_Request WHERE Staff_ID = ${staffID}`);
 
-    // Fetch dates of those requests
+    // Attach other info into request
     for (let r of results) {
-      let rid = r['Request_ID'];
-      let [datesresults, _] = await executeQuery(
-        `SELECT * FROM WFH_Request_Dates WHERE Request_ID = ${rid}`,
-      );
-      // Add to WFH_Request
-      r['Dates'] = datesresults;
-
       // Query Staff_ID and Approver_ID for more info on Employee
-      r['Staff'] = currstaffresults[0];
       let [approverresults] = await executeQuery(
         `SELECT * FROM Employee WHERE Staff_ID = ${r['Approver_ID']}`,
       );
+      r['Staff'] = currstaffresults[0];
       r['Approver'] = approverresults[0];
     }
 
@@ -138,12 +131,14 @@ router.put('/request/status', async (req, res, next) => {
   const newStatus = req.body.status;
 
   try {
-    let [result] = await executeQuery(`UPDATE WFH_Request SET Status = '${newStatus}' WHERE Request_ID = ${requestID}`);
+    let [result] = await executeQuery(
+      `UPDATE WFH_Request SET Status = '${newStatus}' WHERE Request_ID = ${requestID}`,
+    );
 
     if (result.affectedRows > 0) {
-      res.json({ message: "Request status updated successfully", requestID, newStatus });
+      res.json({ message: 'Request status updated successfully', requestID, newStatus });
     } else {
-      res.status(404).json({ message: "Request not found" });
+      res.status(404).json({ message: 'Request not found' });
     }
   } catch (error) {
     next(error);

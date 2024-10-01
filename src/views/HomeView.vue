@@ -2,13 +2,11 @@
 import axios from 'axios';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useStore } from 'vuex';
 import { BContainer, BRow, BCol, BFormInput } from 'bootstrap-vue-next';
 import { useUserStore } from '@/stores/user';
 
 const router = useRouter();
 const userStore = useUserStore();
-const store = useStore();
 const employeeID = ref('');
 
 const login = async () => {
@@ -22,7 +20,6 @@ const login = async () => {
     console.log('Staff details:', res.data);
     // Set userStore
     userStore.setUserInfo(res.data);
-    store.dispatch('setStaffID', res.data);
   } catch (error) {
     console.error(error);
     return;
