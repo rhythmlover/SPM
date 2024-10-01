@@ -115,23 +115,24 @@ onMounted(async () => {
   text-align: center;
   margin-top: 20px;
 }
-
-.about {
-  min-height: 100vh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  flex-direction: column;
-  width: 100%;
-  padding: 20px;
+@media (min-width: 1024px) {
+  .about {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    padding: 20px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    table-layout: fixed;
+  }
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  table-layout: fixed;
-}
 th,
 td {
   padding: 12px 15px;
@@ -159,6 +160,10 @@ tr:hover {
   border-radius: 5px;
   color: white;
   font-weight: bold;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
 }
 
 /* Approved status tag */
