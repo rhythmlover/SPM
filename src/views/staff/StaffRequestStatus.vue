@@ -1,9 +1,11 @@
 <script setup>
 import axios from 'axios';
 import { inject, onMounted, ref } from 'vue';
+import { useUserStore } from '@/stores/user';
 
 const requests = ref([]);
 const API_ROUTE = inject('API_ROUTE');
+const userStore = useUserStore();
 
 // Fetch WFH requests for the correct staff
 const getWFHRequests = async (staffID) => {
@@ -41,9 +43,7 @@ const deleteRequest = async (requestID) => {
       ? import.meta.env.VITE_LOCAL_API_ENDPOINT
       : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
 
-    await axios.delete(`${API_ROUTE}/wfh_request/request/delete/id`,
-      { params: { requestID } }
-    );
+    await axios.delete(`${API_ROUTE}/wfh_request/request/delete/id`, { params: { requestID } });
     
     // Remove the deleted request from the requests array
     requests.value = requests.value.filter(request => request.Request_ID !== requestID);
@@ -57,15 +57,21 @@ const deleteRequest = async (requestID) => {
 
 // Use onMounted to fetch data when the component is mounted
 onMounted(async () => {
-  await getWFHRequests(171015);
+  const staffID = userStore.userInfo?.Staff_ID; // Safely access Staff_ID
+  if (staffID) {
+    await getWFHRequests(staffID); // Pass the staffID to the function
+  } else {
+    console.error("Staff ID is not available.");
+  }
 });
 </script>
 
 <template>
-  <BContainer>
+  <BContainer :style="{ marginTop: '100px' }">
     <BRow>
       <BCol>
-        <h1 class="centered-heading">All Requests</h1>
+        <h1>All Requests</h1>
+
         <table class="table">
           <thead>
             <tr>
@@ -73,7 +79,7 @@ onMounted(async () => {
               <th>Request ID</th>
               <th>Request Date</th>
               <th>Request Period</th>
-              <th>Request Reason</th>
+              <th>Reason</th>
               <th>Status</th>
               <th>Action</th> 
             </tr>
@@ -83,7 +89,7 @@ onMounted(async () => {
               <td>{{ request.StaffID }}</td>
               <td>{{ request.Request_ID }}</td>
               <td>{{ request.Request_Date }}</td>
-              <td>{{ request.Request_Period }}</td>
+              <td>{{ request.Request_Period}}</td>
               <td>{{ request.Reason }}</td>
               <td>{{ request.Status }}</td>
               <td>
@@ -104,47 +110,67 @@ onMounted(async () => {
   </BContainer>
 </template>
 
-<style scoped>
-.centered-heading {
-  text-align: center; 
-  margin-top: 20px; 
-}
+<style>
+@media (min-width: 1024px) {
 
-.table {
-  width: 100%;
-  margin-top: 20px;
-  border-collapse: collapse;
-}
+  .about {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    padding: 20px;
+  }
 
-th, td {
-  padding: 12px 15px;
-  text-align: left;
-  border: 1px solid #ddd;
-}
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    table-layout: fixed;
+  }
 
-th {
-  background-color: #f4f4f4;
-  font-weight: bold;
-}
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border: 1px solid #ddd;
+    word-wrap: break-word;
+  }
 
-tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
+  th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+  }
 
-tr:hover {
-  background-color: #f1f1f1;
-}
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
 
-.btn-danger {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-}
+  tr:hover {
+    background-color: #f1f1f1;
+  }
 
-.btn-danger:hover {
-  background-color: #c82333;
+  /* Status tag styling */
+  .status {
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+  }
+
+  /* Approved status tag */
+  .approved {
+    background-color: #4CAF50; /* Green */
+  }
+
+  /* Pending status tag */
+  .pending {
+    background-color: #FFC107; /* Yellow */
+  }
+
+  /* Rejected status tag */
+  .rejected {
+    background-color: #F44336; /* Red */
+  }
 }
 </style>
-
