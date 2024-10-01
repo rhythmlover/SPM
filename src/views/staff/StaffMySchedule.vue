@@ -16,7 +16,7 @@ const getWFHRequests = async () => {
   let dateMap = {};
   try {
     // Fetch requests
-    let res = await axios.get(API_ROUTE + '/wfh_request/user', {
+    let res = await axios.get(API_ROUTE + '/wfh-request/user', {
       params: { staffID: userStore.userInfo.Staff_ID },
     });
 

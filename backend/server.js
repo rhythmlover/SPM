@@ -13,7 +13,7 @@ app.use(express.json());
 
 // Routes
 app.use('/employee', employee);
-app.use('/wfh_request', wfh_request);
+app.use('/wfh-request', wfh_request);
 app.use('/teamlist', teamlist);
 app.get('/', (req, res) => {
   res.json({ message: 'Testing Ping Success!' });

@@ -44,7 +44,7 @@ export default {
       // const API_ROUTE = inject('API_ROUTE');
       const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
       try {
-        const response = await axios.get(API_ROUTE + '/wfh_request/user', {
+        const response = await axios.get(API_ROUTE + '/wfh-request/user', {
           params: { staffID: this.Staff_ID },
         });
         this.existingRequestDates = response.data.results.map((request) => request.Request_Date);
@@ -77,7 +77,7 @@ export default {
       // const API_ROUTE = inject('API_ROUTE');
       const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
       try {
-        const response = await axios.post(API_ROUTE + '/wfh_request/apply', {
+        const response = await axios.post(API_ROUTE + '/wfh-request/apply', {
           Staff_ID: this.Staff_ID,
           Request_Date: this.Request_Date,
           Request_Period: this.Request_Period,

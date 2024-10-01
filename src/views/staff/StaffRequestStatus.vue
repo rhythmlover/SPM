@@ -10,10 +10,10 @@ const userStore = useUserStore();
 // Fetch WFH requests for the correct staff
 const getWFHRequests = async (staffID) => {
   try {
-    const res = await axios.get(`${API_ROUTE}/wfh_request/user`, { params: { staffID } });
+    const res = await axios.get(`${API_ROUTE}/wfh-request/user`, { params: { staffID } });
 
     if (res.data && Array.isArray(res.data.results)) {
-      requests.value = res.data.results.map(request => ({
+      requests.value = res.data.results.map((request) => ({
         StaffID: request.Staff_ID,
         Request_ID: request.Request_ID,
         Request_Date: new Date(request.Request_Date).toLocaleDateString('en-CA'),
@@ -22,19 +22,19 @@ const getWFHRequests = async (staffID) => {
         Status: request.Status,
       }));
     } else {
-      console.warn("No valid results found in the response.");
+      console.warn('No valid results found in the response.');
       requests.value = [];
     }
   } catch (error) {
-    console.error("Error fetching WFH requests:", error);
+    console.error('Error fetching WFH requests:', error);
   }
 };
 
 // Delete a specific request with confirmation and alert
 const deleteRequest = async (requestID) => {
   try {
-    const confirmDelete = window.confirm("Confirm deletion of this pending request?");
-    
+    const confirmDelete = window.confirm('Confirm deletion of this pending request?');
+
     if (!confirmDelete) {
       return; // Do nothing if user cancels
     }
@@ -43,15 +43,15 @@ const deleteRequest = async (requestID) => {
       ? import.meta.env.VITE_LOCAL_API_ENDPOINT
       : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
 
-    await axios.delete(`${API_ROUTE}/wfh_request/request/delete/id`, { params: { requestID } });
-    
+    await axios.delete(`${API_ROUTE}/wfh-request/request/delete/id`, { params: { requestID } });
+
     // Remove the deleted request from the requests array
-    requests.value = requests.value.filter(request => request.Request_ID !== requestID);
+    requests.value = requests.value.filter((request) => request.Request_ID !== requestID);
 
     // Alert the user after successful deletion
     window.alert(`Request with ID ${requestID} has been successfully deleted.`);
   } catch (error) {
-    console.error("Error deleting WFH request:", error);
+    console.error('Error deleting WFH request:', error);
   }
 };
 
@@ -61,7 +61,7 @@ onMounted(async () => {
   if (staffID) {
     await getWFHRequests(staffID); // Pass the staffID to the function
   } else {
-    console.error("Staff ID is not available.");
+    console.error('Staff ID is not available.');
   }
 });
 </script>
@@ -81,7 +81,7 @@ onMounted(async () => {
               <th>Request Period</th>
               <th>Reason</th>
               <th>Status</th>
-              <th>Action</th> 
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -89,7 +89,7 @@ onMounted(async () => {
               <td>{{ request.StaffID }}</td>
               <td>{{ request.Request_ID }}</td>
               <td>{{ request.Request_Date }}</td>
-              <td>{{ request.Request_Period}}</td>
+              <td>{{ request.Request_Period }}</td>
               <td>{{ request.Reason }}</td>
               <td>{{ request.Status }}</td>
               <td>
@@ -110,67 +110,69 @@ onMounted(async () => {
   </BContainer>
 </template>
 
-<style>
-@media (min-width: 1024px) {
+<style scoped>
+.centered-heading {
+  text-align: center;
+  margin-top: 20px;
+}
 
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    flex-direction: column;
-    width: 100%;
-    padding: 20px;
-  }
+.about {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  padding: 20px;
+}
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    table-layout: fixed;
-  }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  table-layout: fixed;
+}
+th,
+td {
+  padding: 12px 15px;
+  text-align: left;
+  border: 1px solid #ddd;
+  word-wrap: break-word;
+}
 
-  th, td {
-    padding: 12px 15px;
-    text-align: left;
-    border: 1px solid #ddd;
-    word-wrap: break-word;
-  }
+th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
 
-  th {
-    background-color: #f4f4f4;
-    font-weight: bold;
-  }
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
 
-  tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
+tr:hover {
+  background-color: #f1f1f1;
+}
 
-  tr:hover {
-    background-color: #f1f1f1;
-  }
+/* Status tag styling */
+.status {
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+}
 
-  /* Status tag styling */
-  .status {
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: white;
-    font-weight: bold;
-  }
+/* Approved status tag */
+.approved {
+  background-color: #4caf50; /* Green */
+}
 
-  /* Approved status tag */
-  .approved {
-    background-color: #4CAF50; /* Green */
-  }
+/* Pending status tag */
+.pending {
+  background-color: #ffc107; /* Yellow */
+}
 
-  /* Pending status tag */
-  .pending {
-    background-color: #FFC107; /* Yellow */
-  }
-
-  /* Rejected status tag */
-  .rejected {
-    background-color: #F44336; /* Red */
-  }
+/* Rejected status tag */
+.rejected {
+  background-color: #f44336; /* Red */
 }
 </style>
