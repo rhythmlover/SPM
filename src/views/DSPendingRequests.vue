@@ -109,15 +109,12 @@ const updateRequestStatus = async (requestID, newStatus, rejectionReason = null)
 
 const checkWFHPolicy = async (reportingManagerID) => {
   try {
-    const staffIDs = await axios.get(`${API_ROUTE}/employee/getStaffUnderReportingManager`, {
-      params: { reportingManagerID: reportingManagerID },
+    const staffIDs = await axios.get(`${API_ROUTE}/employee/get-staff-under-reporting-manager`, {
+      params: { reportingManagerID: reportingManagerID }
     });
-    const approvedRequests = await axios.get(
-      `${API_ROUTE}/wfh-request/getApprovedRequestsByApproverID`,
-      {
-        params: { approverID: reportingManagerID },
-      },
-    );
+    const approvedRequests = await axios.get(`${API_ROUTE}/wfh_request/get-approved-requests-by-approver-id`, {
+      params: { approverID: reportingManagerID }
+    });
     if (staffIDs.length * 0.5 < approvedRequests.length + 1) {
       alert('Accepting this request will violate the 50% WFH policy.');
     }

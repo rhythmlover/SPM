@@ -52,7 +52,7 @@ router.get('/all', async (req, res, next) => {
   }
 });
 
-router.get('/getStaffReportingManager', async (req, res, next) => {
+router.get('/get-staff-reporting-manager', async (req, res, next) => {
   const staffID = req.query.staffID;
   try {
     let [results] = await executeQuery(
@@ -64,7 +64,7 @@ router.get('/getStaffReportingManager', async (req, res, next) => {
   }
 });
 
-router.get('/getStaffUnderReportingManager', async (req, res, next) => {
+router.get('/get-staff-under-reporting-manager', async (req, res, next) => {
   const reportingManagerID = req.query.reportingManagerID;
   try {
     let [results] = await executeQuery(
@@ -76,7 +76,7 @@ router.get('/getStaffUnderReportingManager', async (req, res, next) => {
   }
 });
 
-router.get('/getStaffNameByID', async (req, res, next) => {
+router.get('/get-staff-name-by-id', async (req, res, next) => {
   const staffID = req.query.staffID;
   try {
     let [results] = await executeQuery(

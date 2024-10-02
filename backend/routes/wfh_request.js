@@ -73,9 +73,10 @@ router.delete('/request/delete/id', async (req, res, next) => {
 
 router.post('/apply', async (req, res, next) => {
   try {
-    const { Staff_ID, Request_Date, Request_Period, Reason, Approver_ID } = req.body;
+    const { Staff_ID, Request_Date, Request_Period, Request_Reason, Approver_ID, WFH_Date } =
+      req.body;
 
-    if (!Staff_ID || !Request_Date || !Request_Period || !Reason) {
+    if (!Staff_ID || !WFH_Date || !Request_Period || !Request_Reason) {
       return res.status(400).json({ message: 'Please fill in all fields' });
     }
 
@@ -93,7 +94,7 @@ router.post('/apply', async (req, res, next) => {
     }
 
     const [existingRequests] = await executeQuery(
-      `SELECT * FROM WFH_Request WHERE Staff_ID = ${Staff_ID} AND Request_Date = '${Request_Date}'`,
+      `SELECT * FROM WFH_Request WHERE Staff_ID = ${Staff_ID} AND WFH_Date = '${WFH_Date}'`,
     );
 
     if (existingRequests.length > 0) {
@@ -101,7 +102,7 @@ router.post('/apply', async (req, res, next) => {
     }
 
     const [results] = await executeQuery(
-      `INSERT INTO WFH_Request (Staff_ID, Request_Date, Request_Period, Reason, Status, Approver_ID) VALUES (${Staff_ID}, '${Request_Date}', '${Request_Period}', '${Reason}', 'Pending', ${Approver_ID})`,
+      `INSERT INTO WFH_Request (Staff_ID, Request_Date, Request_Period, Request_Reason, Status, Approver_ID, WFH_Date) VALUES (${Staff_ID}, '${Request_Date}', '${Request_Period}', '${Request_Reason}', 'Pending', ${Approver_ID}, '${WFH_Date}')`,
     );
 
     if (!results) {
@@ -136,7 +137,7 @@ router.put('/request/status', async (req, res, next) => {
   }
 });
 
-router.get('/request/getApprovedRequestsByApproverID', async (req, res, next) => {
+router.get('/get-approved-requests-by-approver-id', async (req, res, next) => {
   const Approver_ID = req.query.approverID;
 
   try {
