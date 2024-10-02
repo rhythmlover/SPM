@@ -12,15 +12,6 @@ router.get('/all', async (req, res, next) => {
   }
 });
 
-router.get('/wfh-dates', async (req, res, next) => {
-  try {
-    let [results, _] = await executeQuery('SELECT * FROM `WFH_Request_Dates`');
-    res.json({ results });
-  } catch (error) {
-    next(error);
-  }
-});
-
 router.get('/user', async (req, res, next) => {
   const staffID = req.query.staffID;
 

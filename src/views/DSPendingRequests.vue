@@ -52,6 +52,7 @@ const joinEmployeesToWFHRequests = () => {
     const combinedRequest = {
       ...request,
       ...employee,
+      Request_Date: formatRequestDate(request.Request_Date),
       Approval_Date: formatRequestDate(request.Approval_Date),
     };
 
@@ -70,52 +71,6 @@ const joinEmployeesToWFHRequests = () => {
         break;
     }
   });
-
-  // console.log('Pending Requests:', pendingRequests.value);
-  // console.log('Accepted Requests:', acceptedRequests.value);
-  // console.log('Rejected Requests:', rejectedRequests.value);
-};
-
-// Function to fetch WFH dates and append them to requests
-const fetchWFHDates = async () => {
-  try {
-    const res = await axios.get(`${API_ROUTE}/wfh-request/wfh-dates`);
-
-    // Log the raw WFH dates received
-    // console.log('WFH Dates Data:', res.data.results);
-
-    const wfhDates = res.data.results;
-
-    // Append WFH dates to pending, accepted, and rejected requests
-    appendWFHDatesToRequests(pendingRequests, wfhDates);
-    appendWFHDatesToRequests(acceptedRequests, wfhDates);
-    appendWFHDatesToRequests(rejectedRequests, wfhDates);
-
-    // Log the updated requests after appending
-    // console.log('Pending Requests After Update:', pendingRequests.value);
-    // console.log('Accepted Requests After Update:', acceptedRequests.value);
-    // console.log('Rejected Requests After Update:', rejectedRequests.value);
-  } catch (error) {
-    console.error('Error fetching WFH dates:', error);
-  }
-};
-
-const appendWFHDatesToRequests = (requestsRef, wfhDates) => {
-  if (!requestsRef.value || requestsRef.value.length === 0) {
-    console.warn('No requests to append WFH dates to.');
-    return;
-  }
-
-  requestsRef.value.forEach((request) => {
-    const matchedDate = wfhDates.find((date) => date.Request_ID === request.Request_ID);
-
-    if (matchedDate) {
-      request.WFH_Date = formatRequestDate(matchedDate.WFH_Date);
-      request.WFH_Time = matchedDate.WFH_Time;
-    }
-  });
-
-  console.log(`Updated requests in ${requestsRef} ref:`, requestsRef.value);
 };
 
 const formatRequestDate = (isoDate) => {
@@ -174,7 +129,6 @@ const checkWFHPolicy = async (reportingManagerID) => {
 onMounted(async () => {
   await fetchEmployees();
   await fetchWFHRequests();
-  await fetchWFHDates();
 });
 </script>
 
@@ -184,23 +138,11 @@ onMounted(async () => {
 
     <RequestLinks @linkChange="setActiveLink" />
 
-    <RequestTable
-      v-if="isActive('/incoming-requests')"
-      :requests="pendingRequests"
-      status="pending"
-      @updateRequestStatus="updateRequestStatus"
-    />
-    <RequestTable
-      v-if="isActive('/previously-accepted')"
-      :requests="acceptedRequests"
-      status="accepted"
-      @updateRequestStatus="updateRequestStatus"
-    />
-    <RequestTable
-      v-if="isActive('/previously-rejected')"
-      :requests="rejectedRequests"
-      status="rejected"
-    />
+    <RequestTable v-if="isActive('/incoming-requests')" :requests="pendingRequests" status="pending"
+      @updateRequestStatus="updateRequestStatus" />
+    <RequestTable v-if="isActive('/previously-accepted')" :requests="acceptedRequests" status="accepted"
+      @updateRequestStatus="updateRequestStatus" />
+    <RequestTable v-if="isActive('/previously-rejected')" :requests="rejectedRequests" status="rejected" />
   </div>
 </template>
 
