@@ -2,7 +2,8 @@
 import axios from 'axios';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { BContainer, BRow, BCol, BFormInput } from 'bootstrap-vue-next';
+import { useStore } from 'vuex';
+import { BContainer, BRow, BCol, BFormInput, BButton } from 'bootstrap-vue-next';
 import { useUserStore } from '@/stores/user';
 
 const router = useRouter();
@@ -14,30 +15,33 @@ const login = async () => {
     let API_ROUTE = import.meta.env.DEV
       ? import.meta.env.VITE_LOCAL_API_ENDPOINT
       : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
-    const res = await axios.get(API_ROUTE + '/employee/login', {
+
+    await axios.get(API_ROUTE + '/employee/login', {
       params: { staffID: employeeID.value },
     });
-    console.log('Staff details:', res.data);
+
+    await userStore.login(employeeID.value);
+    console.log('Staff details:', userStore.userInfo);
+
     // Set userStore
-    userStore.setUserInfo(res.data);
+    store.dispatch('setStaffID', userStore.userInfo);
+
+    // Checking just the Role_ID does not work, as it is not consistent (Jack Sim having 1, Other managers having 2)
+    // Could we just detect the word "Manager" or "Director" then means Manager? Then edit the Role_ID to fit their actual role...
+
+    // Reroute based on role
+    if (userStore.userInfo.Role_ID == 1) {
+      // HR
+      router.replace({ path: '/staff' });
+    } else if (userStore.userInfo.Role_ID == 2) {
+      // Staff
+      router.replace({ path: '/staffmyschedule' });
+    } else {
+      // Manager
+      router.replace({ path: '/staff' });
+    }
   } catch (error) {
-    console.error(error);
-    return;
-  }
-
-  // Checking just the Role_ID does not work, as it is not consistent (Jack Sim having 1, Other managers having 2)
-  // Could we just detect the word "Manager" or "Director" then means Manager? Then edit the Role_ID to fit their actual role...
-
-  // Reroute based on role
-  if (userStore.userInfo.Role_ID == 1) {
-    // HR
-    router.replace({ path: '/staff' });
-  } else if (userStore.userInfo.Role_ID == 2) {
-    // Staff
-    router.replace({ path: '/staffmyschedule' });
-  } else {
-    // Manager
-    router.replace({ path: '/staff' });
+    console.error('Login failed:', error);
   }
 };
 

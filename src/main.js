@@ -2,7 +2,6 @@ import './assets/main.css';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import store from '@/stores/store';
 import { createBootstrap } from 'bootstrap-vue-next';
 
 import App from './App.vue';
@@ -15,9 +14,13 @@ import './assets/custom.css';
 
 const app = createApp(App);
 
-app.use(store);
 app.use(createBootstrap());
 app.use(createPinia());
 app.use(router);
 
-app.mount('#app');
+import { useUserStore } from '@/stores/user';
+const userStore = useUserStore();
+
+userStore.login('171015').then(() => {
+  app.mount('#app');
+});
