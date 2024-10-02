@@ -2,7 +2,6 @@
 import axios from 'axios';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useStore } from 'vuex';
 import { BContainer, BRow, BCol, BFormInput, BButton } from 'bootstrap-vue-next';
 import { useUserStore } from '@/stores/user';
 
@@ -24,7 +23,7 @@ const login = async () => {
     console.log('Staff details:', userStore.userInfo);
 
     // Set userStore
-    store.dispatch('setStaffID', userStore.userInfo);
+    userStore.dispatch('setStaffID', userStore.userInfo);
 
     // Checking just the Role_ID does not work, as it is not consistent (Jack Sim having 1, Other managers having 2)
     // Could we just detect the word "Manager" or "Director" then means Manager? Then edit the Role_ID to fit their actual role...
