@@ -2,7 +2,7 @@
     <tr>
         <td class="col-2">{{ request.Staff_FName }} {{ request.Staff_LName }}</td>
         <td class="col-4">{{ request.Request_Reason }}</td>
-        <td class="col-2">{{ request.WFH_Date }}</td>
+        <td class="col-2">{{ request.Request_Date }}</td>
         <td class="col-2" v-if="status === 'pending'">{{ request.Approval_Date }}</td>
         <td class="col-2" v-else>{{ request.Approval_Date }}</td>
         <td class="col-2" v-if="status !== 'rejected'">
@@ -54,7 +54,7 @@ export default {
             this.rejectionReason = '';
         },
         submitRejection() {
-            if (this.rejectionReason.trim()) {
+            if (this.rejectionReason.length > 0 && this.rejectionReason.trim() !== '') {
                 this.$emit('rejectRequest', this.request.Request_ID, this.rejectionReason);
                 this.isRejecting = false;
                 this.rejectionReason = '';
