@@ -15,7 +15,7 @@ const fetchEmployees = async () => {
   try {
     const res = await axios.get(`${API_ROUTE}/employee/all`);
     employees.value = res.data.results.filter(
-      (employee) => employee.Reporting_Manager === staffID.value
+      (employee) => employee.Reporting_Manager === staffID.value,
     );
   } catch (error) {
     console.error('Error fetching employees:', error);
@@ -33,7 +33,9 @@ const fetchWFHRequests = async () => {
 
     const res = await axios.get(`${API_ROUTE}/wfh-request/all`);
 
-    wfhRequests.value = res.data.results.filter((request) => staffIds.includes(request.Staff_ID));
+    wfhRequests.value = res.data.results.filter((request) =>
+      staffIds.includes(request.Staff_ID),
+    );
 
     joinEmployeesToWFHRequests();
   } catch (error) {
@@ -46,7 +48,9 @@ const joinEmployeesToWFHRequests = () => {
   acceptedRequests.value = [];
   rejectedRequests.value = [];
   wfhRequests.value.forEach((request) => {
-    const employee = employees.value.find((emp) => emp.Staff_ID === request.Staff_ID);
+    const employee = employees.value.find(
+      (emp) => emp.Staff_ID === request.Staff_ID,
+    );
 
     const combinedRequest = {
       ...request,
@@ -75,15 +79,25 @@ const joinEmployeesToWFHRequests = () => {
 const formatRequestDate = (isoDate) => {
   const date = new Date(isoDate);
   const day = date.getUTCDate();
-  const month = date.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' });
+  const month = date.toLocaleString('en-US', {
+    month: 'long',
+    timeZone: 'UTC',
+  });
   const year = date.getUTCFullYear();
-  const weekday = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' });
+  const weekday = date.toLocaleString('en-US', {
+    weekday: 'long',
+    timeZone: 'UTC',
+  });
   const formattedDate = `${month} ${day}, ${year} (${weekday})`;
 
   return formattedDate;
 };
 
-const updateRequestStatus = async (requestID, newStatus, rejectionReason = null) => {
+const updateRequestStatus = async (
+  requestID,
+  newStatus,
+  rejectionReason = null,
+) => {
   try {
     if (newStatus === 'Approved') {
       await checkWFHPolicy(staffID.value);
@@ -108,12 +122,18 @@ const updateRequestStatus = async (requestID, newStatus, rejectionReason = null)
 
 const checkWFHPolicy = async (reportingManagerID) => {
   try {
-    const staffIDs = await axios.get(`${API_ROUTE}/employee/get-staff-under-reporting-manager`, {
-      params: { reportingManagerID: reportingManagerID }
-    });
-    const approvedRequests = await axios.get(`${API_ROUTE}/wfh_request/get-approved-requests-by-approver-id`, {
-      params: { approverID: reportingManagerID }
-    });
+    const staffIDs = await axios.get(
+      `${API_ROUTE}/employee/get-staff-under-reporting-manager`,
+      {
+        params: { reportingManagerID: reportingManagerID },
+      },
+    );
+    const approvedRequests = await axios.get(
+      `${API_ROUTE}/wfh_request/get-approved-requests-by-approver-id`,
+      {
+        params: { approverID: reportingManagerID },
+      },
+    );
     if (staffIDs.length * 0.5 < approvedRequests.length + 1) {
       alert('Accepting this request will violate the 50% WFH policy.');
     }
@@ -134,11 +154,23 @@ onMounted(async () => {
 
     <RequestLinks @linkChange="setActiveLink" />
 
-    <RequestTable v-if="isActive('/incoming-requests')" :requests="pendingRequests" status="pending"
-      @updateRequestStatus="updateRequestStatus" />
-    <RequestTable v-if="isActive('/previously-accepted')" :requests="acceptedRequests" status="accepted"
-      @updateRequestStatus="updateRequestStatus" />
-    <RequestTable v-if="isActive('/previously-rejected')" :requests="rejectedRequests" status="rejected" />
+    <RequestTable
+      v-if="isActive('/incoming-requests')"
+      :requests="pendingRequests"
+      status="pending"
+      @updateRequestStatus="updateRequestStatus"
+    />
+    <RequestTable
+      v-if="isActive('/previously-accepted')"
+      :requests="acceptedRequests"
+      status="accepted"
+      @updateRequestStatus="updateRequestStatus"
+    />
+    <RequestTable
+      v-if="isActive('/previously-rejected')"
+      :requests="rejectedRequests"
+      status="rejected"
+    />
   </div>
 </template>
 

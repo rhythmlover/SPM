@@ -1,6 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import staffMySchedule from '../views/staff/StaffMySchedule.vue';
+import StaffMySchedule from '../views/staff/StaffMySchedule.vue';
 import HomeView from '../views/HomeView.vue';
+import ApplyView from '../views/ApplyView.vue';
+import DSAllRequestsView from '../views/DSAllRequestsView.vue';
+import StaffRequestStatus from '../views/staff/StaffRequestStatus.vue';
+import StaffTeamSchedule from '../views/staff/StaffTeamScheduleView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,29 +15,29 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/staffmyschedule',
-      name: 'staffmyschedule',
-      component: staffMySchedule,
+      path: '/staff-myschedule',
+      name: 'staff-myschedule',
+      component: StaffMySchedule,
     },
     {
-      path: '/staffteamschedule',
-      name: 'staffteamschedule',
-      component: () => import('../views/staff/StaffTeamScheduleView.vue'),
+      path: '/staff-teamschedule',
+      name: 'staff-teamschedule',
+      component: StaffTeamSchedule,
     },
     {
-      path: '/staffrequeststatus',
-      name: 'staffrequeststatus',
-      component: () => import('../views/staff/StaffRequestStatus.vue'),
+      path: '/staff-requeststatus',
+      name: 'staff-requeststatus',
+      component: StaffRequestStatus,
     },
     {
       path: '/pending-requests',
       name: 'pending-requests',
-      component: () => import('../views/DSAllRequestsView.vue'),
+      component: DSAllRequestsView,
     },
     {
-      path: '/applyArrangement',
-      name: 'applyArrangement',
-      component: () => import('../views/ApplyView.vue'),
+      path: '/apply-arrangement',
+      name: 'apply-arrangement',
+      component: ApplyView,
     },
   ],
 });

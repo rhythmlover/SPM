@@ -10,29 +10,50 @@ import {
   BNavItemDropdown,
   BDropdownItem,
 } from 'bootstrap-vue-next';
+import { inject } from 'vue';
+import router from '@/router';
+
+const staffFName = inject('staffFName');
+const roleID = inject('roleID');
+const staffID = inject('staffID');
+
+const logout = () => {
+  localStorage.clear();
+  roleID.value = null;
+  staffID.value = null;
+  staffFName.value = '';
+  router.push('/');
+};
 </script>
 
 <template>
-  <BNavbar fixed="top" toggleable="lg" type="dark" variant="primary" class="py-2">
+  <BNavbar
+    fixed="top"
+    toggleable="lg"
+    type="dark"
+    variant="primary"
+    class="py-2"
+  >
     <BContainer>
-      <BNavbarBrand to="/staffmyschedule" class="fw-bold"> Staff Portal </BNavbarBrand>
+      <BNavbarBrand class="fw-bold"> Staff Portal </BNavbarBrand>
 
       <BNavbarToggle target="nav-collapse" />
 
       <BCollapse id="nav-collapse" is-nav>
         <BNavbarNav>
           <BNavItem to="/">Home</BNavItem>
-          <BNavItem to="/staffmyschedule">My Schedule</BNavItem>
-          <BNavItem to="/staffteamschedule">Team Schedule</BNavItem>
-          <BNavItem to="/staffRequestStatus">All Requests</BNavItem>
-          <BNavItem to="/applyArrangement">Apply</BNavItem>
+          <BNavItem to="/staff-myschedule">My Schedule</BNavItem>
+          <BNavItem to="/staff-teamschedule">Team Schedule</BNavItem>
+          <BNavItem to="/staff-requeststatus">All Requests</BNavItem>
+          <BNavItem to="/apply-arrangement">Apply</BNavItem>
         </BNavbarNav>
 
         <BNavbarNav class="ms-auto">
-          <BNavItemDropdown :text="userStore.userInfo.Staff_FName" toggle-class="nav-link-custom" class="user-dropdown">
-            <BDropdownItem @click="userStore.logout">
-              Logout
-            </BDropdownItem>
+          <BNavItemDropdown
+            :text="`Welcome ${staffFName}!`"
+            class="user-dropdown"
+          >
+            <BDropdownItem @click="logout"> Logout </BDropdownItem>
           </BNavItemDropdown>
         </BNavbarNav>
       </BCollapse>

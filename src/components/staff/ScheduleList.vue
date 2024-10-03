@@ -23,7 +23,10 @@ const dayWeekFilterDropdownSelectOptions = [
 const scheduleListError = ref(null);
 const getCurrentPeriod = computed(() => {
   if (isMonthView.value) {
-    return viewingDate.value.toLocaleString('default', { month: 'long', year: 'numeric' });
+    return viewingDate.value.toLocaleString('default', {
+      month: 'long',
+      year: 'numeric',
+    });
   } else {
     const endOfWeek = new Date(viewingDate.value);
     endOfWeek.setDate(endOfWeek.getDate() + 6);
@@ -87,7 +90,9 @@ const addRequestsToDatesMap = () => {
     // Same date string key?
     if (!datesInPeriodKeys.includes(wfhStringKey)) continue;
     // Add requests in same date
-    datesInPeriod.value[wfhStringKey]['requests'].push(...props.wfhRequests[wfhStringKey]);
+    datesInPeriod.value[wfhStringKey]['requests'].push(
+      ...props.wfhRequests[wfhStringKey],
+    );
   }
 };
 
@@ -105,7 +110,11 @@ const ableToShiftPeriod = (movement) => {
   // Calculate new date
   let newDate = null;
   if (isMonthView.value) {
-    newDate = new Date(viewingDate.value.getFullYear(), viewingDate.value.getMonth() + movement, 1);
+    newDate = new Date(
+      viewingDate.value.getFullYear(),
+      viewingDate.value.getMonth() + movement,
+      1,
+    );
   } else {
     newDate = new Date(
       viewingDate.value.getFullYear(),
@@ -137,7 +146,11 @@ const getMonthDifference = (startDate, endDate) => {
 
 const formatDateFromStr = (dateString) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
 };
 
 /**
@@ -215,7 +228,10 @@ onMounted(async () => {
     <BRow class="my-2">
       <!-- Day / Week Filter -->
       <BCol class="col-4 col-md-2">
-        <BFormSelect v-model="isMonthView" :options="dayWeekFilterDropdownSelectOptions" />
+        <BFormSelect
+          v-model="isMonthView"
+          :options="dayWeekFilterDropdownSelectOptions"
+        />
       </BCol>
     </BRow>
 
@@ -230,11 +246,17 @@ onMounted(async () => {
             <BSpinner />
           </div>
           <div v-else>
-            <BRow v-for="(dateObject, dateKeyStr) in datesInPeriod" :key="dateKeyStr" class="mb-4">
+            <BRow
+              v-for="(dateObject, dateKeyStr) in datesInPeriod"
+              :key="dateKeyStr"
+              class="mb-4"
+            >
               <BCol>
                 <BCard>
                   <template #header>
-                    <h4 class="mb-0">{{ formatDateFromStr(dateKeyStr) }}</h4>
+                    <h4 class="mb-0">
+                      {{ formatDateFromStr(dateKeyStr) }}
+                    </h4>
                   </template>
                   <!-- <b-list-group flush>
                   <template v-if="dateObject.requests.length">
@@ -297,7 +319,10 @@ onMounted(async () => {
                         <BTd> {{ requestObj['Staff']['Position'] }}</BTd>
                         <BTd> {{ requestObj['Request_Period'] }}</BTd>
                         <BTd>
-                          <BBadge :variant="getStatusPillColor(requestObj['Status'])" pill>
+                          <BBadge
+                            :variant="getStatusPillColor(requestObj['Status'])"
+                            pill
+                          >
                             {{ requestObj['Status'] }}
                           </BBadge>
                         </BTd>
