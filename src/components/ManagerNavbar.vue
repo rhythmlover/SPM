@@ -10,6 +10,12 @@ import {
   BNavItemDropdown,
   BDropdownItem,
 } from 'bootstrap-vue-next';
+import { useUserStore } from '@/stores/user'
+import { BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BContainer, BNavbarNav, BNavItem, BNavItemDropdown, BDropdownItem } from 'bootstrap-vue-next'
+import { inject } from 'vue'
+
+const userStore = useUserStore()
+const staffFName = inject('staffFName')
 </script>
 
 <template>
@@ -23,21 +29,14 @@ import {
         <BNavbarNav>
           <BNavItem to="/">Home</BNavItem>
           <BNavItem to="/managerschedule">My Schedule</BNavItem>
-          <BNavItem to="/managerrequests">All Requests</BNavItem>
+          <BNavItem to="/pending-requests">All Requests</BNavItem>
         </BNavbarNav>
 
         <BNavbarNav class="ms-auto">
-          <!-- <BNavItemDropdown
-            :text="userStore.userInfo.Staff_FName"
-            toggle-class="nav-link-custom"
-            class="user-dropdown"
-          > -->
-          <BNavItemDropdown toggle-class="nav-link-custom" class="user-dropdown">
-            <BDropdownItem to="/profile"> Profile </BDropdownItem>
-            <BDropdownItem to="/settings"> Settings </BDropdownItem>
-            <!-- <BDropdownItem @click="userStore.logout">
+          <BNavItemDropdown :text="`Welcome ${staffFName}!`" class="user-dropdown">
+            <BDropdownItem @click="userStore.logout">
               Logout
-            </BDropdownItem> -->
+            </BDropdownItem>
           </BNavItemDropdown>
         </BNavbarNav>
       </BCollapse>
