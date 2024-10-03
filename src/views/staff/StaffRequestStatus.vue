@@ -1,11 +1,9 @@
 <script setup>
 import axios from 'axios';
 import { inject, onMounted, ref } from 'vue';
-import { useUserStore } from '@/stores/user';
 
 const requests = ref([]);
 const API_ROUTE = inject('API_ROUTE');
-const userStore = useUserStore();
 
 // Fetch WFH requests for the correct staff
 const getWFHRequests = async (staffID) => {
@@ -57,7 +55,8 @@ const deleteRequest = async (requestID) => {
 
 // Use onMounted to fetch data when the component is mounted
 onMounted(async () => {
-  const staffID = userStore.userInfo?.Staff_ID; // Safely access Staff_ID
+  // Hardcoded staffID for now after removing userstore, implement after local storage
+  const staffID = 171015; // Safely access Staff_ID
   if (staffID) {
     await getWFHRequests(staffID); // Pass the staffID to the function
   } else {

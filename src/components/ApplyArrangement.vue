@@ -1,7 +1,6 @@
 <script>
 import axios from 'axios';
-import { useUserStore } from '@/stores/user';
-// import { inject } from 'vue';
+import { inject } from 'vue';
 
 export default {
   data() {
@@ -19,18 +18,10 @@ export default {
       existingWFHDates: [],
     };
   },
-  computed: {
-    userStore() {
-      return useUserStore();
-    },
-    getStaffID() {
-      return this.userStore.getStaffID;
-    },
-  },
+  computed: {},
   methods: {
     async fetchReportingManagerID() {
-      // const API_ROUTE = inject('API_ROUTE');
-      const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
+      const API_ROUTE = inject('API_ROUTE');
       try {
         const response = await axios.get(API_ROUTE + '/employee/get-staff-reporting-manager', {
           params: { staffID: this.Staff_ID },
@@ -42,13 +33,13 @@ export default {
           params: { staffID: reportingManagerID },
         });
         this.Approver_Name = reportingManagerName.data.name;
+        console.log(this.Approver_Name);
       } catch (error) {
         console.log(error);
       }
     },
     async fetchExistingWFHDates() {
-      // const API_ROUTE = inject('API_ROUTE');
-      const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
+      const API_ROUTE = inject('API_ROUTE');
       try {
         const response = await axios.get(API_ROUTE + '/wfh-request/user', {
           params: { staffID: this.Staff_ID },

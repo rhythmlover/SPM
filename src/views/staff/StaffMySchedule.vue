@@ -1,10 +1,8 @@
 <script setup>
 import { inject, ref, onMounted } from 'vue';
 import axios from 'axios';
-import { useUserStore } from '@/stores/user';
 import ScheduleList from '@/components/staff/ScheduleList.vue';
 
-const userStore = useUserStore();
 const API_ROUTE = inject('API_ROUTE');
 const myWFHRequests = ref({});
 
@@ -16,8 +14,9 @@ const getWFHRequests = async () => {
   let dateMap = {};
   try {
     // Fetch requests
+    // Hardcoded staffID for now after removing userstore, implement after local storage
     let res = await axios.get(API_ROUTE + '/wfh-request/user', {
-      params: { staffID: userStore.userInfo.Staff_ID },
+      params: { staffID: 171015 },
     });
 
     for (let requestObj of res.data.results) {

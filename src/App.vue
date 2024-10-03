@@ -3,10 +3,16 @@ import { provide } from 'vue';
 import { RouterView } from 'vue-router';
 import StaffNavbar from './components/StaffNavbar.vue';
 import ManagerNavbar from './components/ManagerNavbar.vue';
-import { useUserStore } from '@/stores/user';
-import { BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BContainer, BNavbarNav, BNavItem } from 'bootstrap-vue-next'
+import {
+  BNavbar,
+  BNavbarBrand,
+  BNavbarToggle,
+  BCollapse,
+  BContainer,
+  BNavbarNav,
+  BNavItem,
+} from 'bootstrap-vue-next';
 
-const userStore = useUserStore();
 provide(
   'API_ROUTE',
   import.meta.env.DEV
@@ -17,8 +23,10 @@ provide(
 
 <template>
   <div class="app-container">
+    <!-- WILL REMOVE USERSTORE AND IMPLEMENT LOCAL STORAGE
     <ManagerNavbar v-if="userStore.userInfo.Role_ID == 1" />
-    <StaffNavbar v-else-if="userStore.userInfo.Role_ID == 2" />
+    <StaffNavbar v-else-if="userStore.userInfo.Role_ID == 2" /> -->
+    <StaffNavbar v-if="true" />
     <BNavbar v-else fixed="top" toggleable="lg" type="dark" variant="light" class="py-2">
       <BContainer>
         <BNavbarBrand to="/" class="fw-bold">WorkForce Portal</BNavbarBrand>

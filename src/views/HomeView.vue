@@ -3,10 +3,8 @@ import axios from 'axios';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { BContainer, BRow, BCol, BFormInput, BButton } from 'bootstrap-vue-next';
-import { useUserStore } from '@/stores/user';
 
 const router = useRouter();
-const userStore = useUserStore();
 const employeeID = ref('');
 
 const login = async () => {
@@ -19,26 +17,22 @@ const login = async () => {
       params: { staffID: employeeID.value },
     });
 
-    await userStore.login(employeeID.value);
-    console.log('Staff details:', userStore.userInfo);
-
-    // Set userStore
-    userStore.dispatch('setStaffID', userStore.userInfo);
-
     // Checking just the Role_ID does not work, as it is not consistent (Jack Sim having 1, Other managers having 2)
     // Could we just detect the word "Manager" or "Director" then means Manager? Then edit the Role_ID to fit their actual role...
 
     // Reroute based on role
-    if (userStore.userInfo.Role_ID == 1) {
-      // HR
-      router.replace({ path: '/staff' });
-    } else if (userStore.userInfo.Role_ID == 2) {
-      // Staff
-      router.replace({ path: '/staffmyschedule' });
-    } else {
-      // Manager
-      router.replace({ path: '/staff' });
-    }
+    // WILL REMOVE USERSTORE AND IMPLEMENT LOCAL STORAGE
+    // if (userStore.userInfo.Role_ID == 1) {
+    //   // HR
+    //   router.replace({ path: '/staff' });
+    // } else if (userStore.userInfo.Role_ID == 2) {
+    //   // Staff
+    //   router.replace({ path: '/staffmyschedule' });
+    // } else {
+    //   // Manager
+    //   router.replace({ path: '/staff' });
+    // }
+    router.replace({ path: '/staff' });
   } catch (error) {
     console.error('Login failed:', error);
   }
