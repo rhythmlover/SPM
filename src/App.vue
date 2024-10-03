@@ -27,6 +27,7 @@ provide(
     <ManagerNavbar v-if="userStore.userInfo.Role_ID == 1" />
     <StaffNavbar v-else-if="userStore.userInfo.Role_ID == 2" /> -->
     <StaffNavbar v-if="true" />
+    <ManagerNavbar v-else-if="false" />
     <BNavbar v-else fixed="top" toggleable="lg" type="dark" variant="light" class="py-2">
       <BContainer>
         <BNavbarBrand to="/" class="fw-bold">WorkForce Portal</BNavbarBrand>
