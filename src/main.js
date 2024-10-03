@@ -18,9 +18,4 @@ app.use(createBootstrap());
 app.use(createPinia());
 app.use(router);
 
-import { useUserStore } from '@/stores/user';
-const userStore = useUserStore();
-
-userStore.login('171015').then(() => {
-  app.mount('#app');
-});
+app.mount('#app');

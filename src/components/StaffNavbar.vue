@@ -1,16 +1,21 @@
 <script setup>
-import { useUserStore } from '@/stores/user'
-import { BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BContainer, BNavbarNav, BNavItem, BNavItemDropdown, BDropdownItem } from 'bootstrap-vue-next'
-
-const userStore = useUserStore()
+import {
+  BNavbar,
+  BNavbarBrand,
+  BNavbarToggle,
+  BCollapse,
+  BContainer,
+  BNavbarNav,
+  BNavItem,
+  BNavItemDropdown,
+  BDropdownItem,
+} from 'bootstrap-vue-next';
 </script>
 
 <template>
   <BNavbar fixed="top" toggleable="lg" type="dark" variant="primary" class="py-2">
     <BContainer>
-      <BNavbarBrand to="/staffmyschedule" class="fw-bold">
-        Staff Portal
-      </BNavbarBrand>
+      <BNavbarBrand to="/staffmyschedule" class="fw-bold"> Staff Portal </BNavbarBrand>
 
       <BNavbarToggle target="nav-collapse" />
 
@@ -23,20 +28,17 @@ const userStore = useUserStore()
         </BNavbarNav>
 
         <BNavbarNav class="ms-auto">
-          <BNavItemDropdown
+          <!-- <BNavItemDropdown
             :text="userStore.userInfo.Staff_FName"
             toggle-class="nav-link-custom"
             class="user-dropdown"
-          >
-            <BDropdownItem to="/profile">
-              Profile
-            </BDropdownItem>
-            <BDropdownItem to="/settings">
-              Settings
-            </BDropdownItem>
-            <BDropdownItem @click="userStore.logout">
+          > -->
+          <BNavItemDropdown toggle-class="nav-link-custom" class="user-dropdown">
+            <BDropdownItem to="/profile"> Profile </BDropdownItem>
+            <BDropdownItem to="/settings"> Settings </BDropdownItem>
+            <!-- <BDropdownItem @click="userStore.logout">
               Logout
-            </BDropdownItem>
+            </BDropdownItem> -->
           </BNavItemDropdown>
         </BNavbarNav>
       </BCollapse>
