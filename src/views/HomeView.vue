@@ -5,42 +5,34 @@ import { useRouter } from 'vue-router';
 import { BContainer, BRow, BCol, BFormInput, BButton } from 'bootstrap-vue-next';
 
 const router = useRouter();
+import { inject, ref } from 'vue';
+import { BContainer, BRow, BCol, BFormInput } from 'bootstrap-vue-next';
+import router from '@/router';
+
 const employeeID = ref('');
+const API_ROUTE = inject('API_ROUTE');
+const roleID = inject('roleID');
+const staffID = inject('staffID');
+const staffFName = inject('staffFName');
 
 const login = async () => {
-  try {
-    let API_ROUTE = import.meta.env.DEV
-      ? import.meta.env.VITE_LOCAL_API_ENDPOINT
-      : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
+  const res = await axios.get(`${API_ROUTE}/employee/login`, {
+    params: { staffID: employeeID.value },
+  });
+  localStorage.setItem('staffID', res.data.Staff_ID);
+  localStorage.setItem('roleID', res.data.Role_ID);
+  localStorage.setItem('staffFName', res.data.Staff_FName);
 
-    await axios.get(API_ROUTE + '/employee/login', {
-      params: { staffID: employeeID.value },
-    });
+  roleID.value = res.data.Role_ID;
+  staffID.value = res.data.Staff_ID;
+  staffFName.value = res.data.Staff_FName;
 
-    // Checking just the Role_ID does not work, as it is not consistent (Jack Sim having 1, Other managers having 2)
-    // Could we just detect the word "Manager" or "Director" then means Manager? Then edit the Role_ID to fit their actual role...
-
-    // Reroute based on role
-    // WILL REMOVE USERSTORE AND IMPLEMENT LOCAL STORAGE
-    // if (userStore.userInfo.Role_ID == 1) {
-    //   // HR
-    //   router.replace({ path: '/staff' });
-    // } else if (userStore.userInfo.Role_ID == 2) {
-    //   // Staff
-    //   router.replace({ path: '/staffmyschedule' });
-    // } else {
-    //   // Manager
-    //   router.replace({ path: '/staff' });
-    // }
-    router.replace({ path: '/staff' });
-  } catch (error) {
-    console.error('Login failed:', error);
+  if (res.data.Role_ID === 1) {
+    router.push('/pending-requests');
+  } else {
+    router.push('/staffmyschedule');
   }
 };
-
-// onMounted(() => {
-//   console.log(`The`);
-// });
 </script>
 
 <template>

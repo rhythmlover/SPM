@@ -2,13 +2,12 @@
 import axios from 'axios';
 import { inject, ref, onMounted } from 'vue';
 
-const reportingManagerId = 130002; // Hardcoded Reporting Manager ID
-
 const employees = ref([]);
 const wfhRequests = ref([]);
 const pendingRequests = ref([]);
 const acceptedRequests = ref([]);
 const rejectedRequests = ref([]);
+const staffID = inject('staffID');
 
 const API_ROUTE = inject('API_ROUTE');
 
@@ -16,7 +15,7 @@ const fetchEmployees = async () => {
   try {
     const res = await axios.get(`${API_ROUTE}/employee/all`);
     employees.value = res.data.results.filter(
-      (employee) => employee.Reporting_Manager === reportingManagerId,
+      (employee) => employee.Reporting_Manager === staffID.value
     );
   } catch (error) {
     console.error('Error fetching employees:', error);
@@ -38,7 +37,7 @@ const fetchWFHRequests = async () => {
 
     joinEmployeesToWFHRequests();
   } catch (error) {
-    console.error('Error fetching sWFH requests:', error);
+    console.error('Error fetching WFH requests:', error);
   }
 };
 
@@ -87,7 +86,7 @@ const formatRequestDate = (isoDate) => {
 const updateRequestStatus = async (requestID, newStatus, rejectionReason = null) => {
   try {
     if (newStatus === 'Approved') {
-      await checkWFHPolicy(reportingManagerId);
+      await checkWFHPolicy(staffID.value);
     }
     if (rejectionReason !== null && rejectionReason !== '') {
       await axios.put(

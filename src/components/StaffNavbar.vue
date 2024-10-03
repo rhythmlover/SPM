@@ -21,6 +21,7 @@ import {
 
       <BCollapse id="nav-collapse" is-nav>
         <BNavbarNav>
+          <BNavItem to="/">Home</BNavItem>
           <BNavItem to="/staffmyschedule">My Schedule</BNavItem>
           <BNavItem to="/staffteamschedule">Team Schedule</BNavItem>
           <BNavItem to="/staffRequestStatus">All Requests</BNavItem>
@@ -28,17 +29,10 @@ import {
         </BNavbarNav>
 
         <BNavbarNav class="ms-auto">
-          <!-- <BNavItemDropdown
-            :text="userStore.userInfo.Staff_FName"
-            toggle-class="nav-link-custom"
-            class="user-dropdown"
-          > -->
-          <BNavItemDropdown toggle-class="nav-link-custom" class="user-dropdown">
-            <BDropdownItem to="/profile"> Profile </BDropdownItem>
-            <BDropdownItem to="/settings"> Settings </BDropdownItem>
-            <!-- <BDropdownItem @click="userStore.logout">
+          <BNavItemDropdown :text="userStore.userInfo.Staff_FName" toggle-class="nav-link-custom" class="user-dropdown">
+            <BDropdownItem @click="userStore.logout">
               Logout
-            </BDropdownItem> -->
+            </BDropdownItem>
           </BNavItemDropdown>
         </BNavbarNav>
       </BCollapse>
