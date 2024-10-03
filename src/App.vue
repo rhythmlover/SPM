@@ -3,16 +3,6 @@ import { provide, ref, onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import StaffNavbar from './components/StaffNavbar.vue';
 import ManagerNavbar from './components/ManagerNavbar.vue';
-import {
-  BNavbar,
-  BNavbarBrand,
-  BNavbarToggle,
-  BCollapse,
-  BContainer,
-  BNavbarNav,
-  BNavItem,
-} from 'bootstrap-vue-next';
-
 
 const roleID = ref(null);
 const staffID = ref(null);
@@ -38,8 +28,8 @@ onMounted(() => {
 
 <template>
   <div class="app-container">
-    <ManagerNavbar v-if="roleID== 1" />
-    <StaffNavbar v-else/>
+    <ManagerNavbar v-if="roleID == 1" />
+    <StaffNavbar v-else />
     <main class="mt-5 pt-3">
       <RouterView />
     </main>

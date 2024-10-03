@@ -16,7 +16,7 @@ import StaffTeamSchedule from '../../components/StaffTeamSchedule.vue';
 export default {
   name: 'StaffScheduleView',
   components: {
-    StaffTeamSchedule
-  }
+    StaffTeamSchedule,
+  },
 };
 </script>

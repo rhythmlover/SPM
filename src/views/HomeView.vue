@@ -1,10 +1,5 @@
 <script setup>
 import axios from 'axios';
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { BContainer, BRow, BCol, BFormInput, BButton } from 'bootstrap-vue-next';
-
-const router = useRouter();
 import { inject, ref } from 'vue';
 import { BContainer, BRow, BCol, BFormInput } from 'bootstrap-vue-next';
 import router from '@/router';
@@ -29,8 +24,10 @@ const login = async () => {
 
   if (res.data.Role_ID === 1) {
     router.push('/pending-requests');
+  } else if (res.data.Role_ID === 2 || res.data.Role_ID === 3) {
+    router.push('/staff-myschedule');
   } else {
-    router.push('/staffmyschedule');
+    router.push('/');
   }
 };
 </script>
@@ -41,7 +38,10 @@ const login = async () => {
       <BRow>
         <BCol> </BCol>
         <BCol>
-          <BFormInput v-model="employeeID" placeholder="Enter your Employee ID" />
+          <BFormInput
+            v-model="employeeID"
+            placeholder="Enter your Employee ID"
+          />
           <div class="d-grid">
             <BButton
               @click="login"

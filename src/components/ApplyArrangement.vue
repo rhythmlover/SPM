@@ -23,15 +23,21 @@ export default {
     async fetchReportingManagerID() {
       const API_ROUTE = inject('API_ROUTE');
       try {
-        const response = await axios.get(API_ROUTE + '/employee/get-staff-reporting-manager', {
-          params: { staffID: this.Staff_ID },
-        });
+        const response = await axios.get(
+          API_ROUTE + '/employee/get-staff-reporting-manager',
+          {
+            params: { staffID: this.Staff_ID },
+          },
+        );
         const reportingManagerID = response.data.results[0].Reporting_Manager;
         this.Approver_ID = reportingManagerID;
 
-        const reportingManagerName = await axios.get(API_ROUTE + '/employee/get-staff-name-by-id', {
-          params: { staffID: reportingManagerID },
-        });
+        const reportingManagerName = await axios.get(
+          API_ROUTE + '/employee/get-staff-name-by-id',
+          {
+            params: { staffID: reportingManagerID },
+          },
+        );
         this.Approver_Name = reportingManagerName.data.name;
         console.log(this.Approver_Name);
       } catch (error) {
@@ -44,7 +50,9 @@ export default {
         const response = await axios.get(API_ROUTE + '/wfh-request/user', {
           params: { staffID: this.Staff_ID },
         });
-        this.existingWFHDates = response.data.results.map((request) => request.WFH_Date);
+        this.existingWFHDates = response.data.results.map(
+          (request) => request.WFH_Date,
+        );
       } catch (error) {
         console.log(error);
       }
@@ -88,7 +96,11 @@ export default {
         console.log(response);
       } catch (error) {
         console.log(error);
-        if (error.response && error.response.data && error.response.data.message) {
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.message
+        ) {
           this.errorMessage = error.response.data.message;
         } else {
           this.errorMessage = 'Application Submission Failed';
@@ -102,7 +114,7 @@ export default {
       this.Request_Reason = '';
       this.errorMessage = '';
       this.successMessage = '';
-      this.$router.push('/staffMySchedule');
+      this.$router.push('/staff-myschedule');
     },
     getMinDate() {
       const date = new Date();
@@ -145,7 +157,11 @@ export default {
       </div>
       <div class="form-group mb-3">
         <label for="request_period">Request Period:</label>
-        <select v-model="Request_Period" id="request_period" class="form-control">
+        <select
+          v-model="Request_Period"
+          id="request_period"
+          class="form-control"
+        >
           <option value="AM">AM</option>
           <option value="PM">PM</option>
           <option value="Full-Day">Full-Day</option>
@@ -153,7 +169,12 @@ export default {
       </div>
       <div class="form-group mb-3">
         <label for="reason">Request_Reason:</label>
-        <input type="text" v-model="Request_Reason" id="reason" class="form-control" />
+        <input
+          type="text"
+          v-model="Request_Reason"
+          id="reason"
+          class="form-control"
+        />
       </div>
       <div class="form-group mb-3">
         <label for="approver_name">Approver Name:</label>
@@ -165,10 +186,16 @@ export default {
           disabled
         />
       </div>
-      <div v-if="errorMessage" class="alert alert-danger mb-3">{{ errorMessage }}</div>
-      <div v-if="successMessage" class="alert alert-success mb-3">{{ successMessage }}</div>
+      <div v-if="errorMessage" class="alert alert-danger mb-3">
+        {{ errorMessage }}
+      </div>
+      <div v-if="successMessage" class="alert alert-success mb-3">
+        {{ successMessage }}
+      </div>
       <button type="submit" class="btn btn-primary m-1">Submit</button>
-      <button type="button" class="btn btn-secondary m-1" @click="cancel">Cancel</button>
+      <button type="button" class="btn btn-secondary m-1" @click="cancel">
+        Cancel
+      </button>
     </form>
   </div>
 </template>

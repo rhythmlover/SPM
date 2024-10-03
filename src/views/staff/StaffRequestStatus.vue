@@ -8,13 +8,17 @@ const API_ROUTE = inject('API_ROUTE');
 // Fetch WFH requests for the correct staff
 const getWFHRequests = async (staffID) => {
   try {
-    const res = await axios.get(`${API_ROUTE}/wfh-request/user`, { params: { staffID } });
+    const res = await axios.get(`${API_ROUTE}/wfh-request/user`, {
+      params: { staffID },
+    });
 
     if (res.data && Array.isArray(res.data.results)) {
       requests.value = res.data.results.map((request) => ({
         StaffID: request.Staff_ID,
         Request_ID: request.Request_ID,
-        Request_Date: new Date(request.Request_Date).toLocaleDateString('en-CA'),
+        Request_Date: new Date(request.Request_Date).toLocaleDateString(
+          'en-CA',
+        ),
         Request_Period: request.Request_Period,
         Reason: request.Reason,
         Status: request.Status,
@@ -31,7 +35,9 @@ const getWFHRequests = async (staffID) => {
 // Delete a specific request with confirmation and alert
 const deleteRequest = async (requestID) => {
   try {
-    const confirmDelete = window.confirm('Confirm deletion of this pending request?');
+    const confirmDelete = window.confirm(
+      'Confirm deletion of this pending request?',
+    );
 
     if (!confirmDelete) {
       return; // Do nothing if user cancels
@@ -41,10 +47,14 @@ const deleteRequest = async (requestID) => {
       ? import.meta.env.VITE_LOCAL_API_ENDPOINT
       : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
 
-    await axios.delete(`${API_ROUTE}/wfh-request/request/delete/id`, { params: { requestID } });
+    await axios.delete(`${API_ROUTE}/wfh-request/request/delete/id`, {
+      params: { requestID },
+    });
 
     // Remove the deleted request from the requests array
-    requests.value = requests.value.filter((request) => request.Request_ID !== requestID);
+    requests.value = requests.value.filter(
+      (request) => request.Request_ID !== requestID,
+    );
 
     // Alert the user after successful deletion
     window.alert(`Request with ID ${requestID} has been successfully deleted.`);
