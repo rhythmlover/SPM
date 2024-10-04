@@ -89,4 +89,18 @@ router.get('/get-staff-name-by-id', async (req, res, next) => {
   }
 });
 
+router.get('/getStaffPositionByID', async (req, res, next) => {
+  const staffID = req.query.staffID;
+  try {
+    let [results] = await executeQuery(
+      `SELECT Position FROM Employee WHERE Staff_ID = ${staffID}`,
+    );
+    let position = results[0]['Position'];
+    res.json({ position });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 export default router;

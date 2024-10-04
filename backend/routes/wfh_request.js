@@ -184,6 +184,19 @@ router.put('/request/updateComments', async (req, res, next) => {
   }
 });
 
+router.get('/getStaffWFHDateByID', async (req, res, next) => {
+  const requestID = req.query.requestID;
+  try {
+    let [results] = await executeQuery(
+      `SELECT WFH_Date FROM WFH_Request WHERE Request_ID = ${requestID}`,
+    );
+    let wfh_date = results[0]['WFH_Date'];
+    res.json({ wfh_date });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/my-subordinate-and-me-requests', async (req, res, next) => {
   const staffID = req.query.staffID;
 
@@ -230,5 +243,37 @@ router.get('/my-subordinate-and-me-requests', async (req, res, next) => {
     next(error);
   }
 });
+
+router.post('/update-withdrawal-request-status', async (req, res) => {
+  const { Request_ID } = req.query.Request_ID;
+
+  try {
+    // Step 1: Check if WFH_Withdrawal status is "Approved" by Request_ID
+    const withdrawalStatusQuery = `
+      SELECT Status 
+      FROM WFH_Withdrawal 
+      WHERE Status = 'Approved' 
+      AND Request_ID = ${Request_ID}`;
+    
+    const [withdrawalStatusResult] = await db.query(withdrawalStatusQuery, [Request_ID]);
+
+    // Step 2: If status is Approved, update WFH_Request status to Withdrawn
+    if (withdrawalStatusResult && withdrawalStatusResult.Status === 'Approved') {
+      const updateRequestQuery = `
+        UPDATE WFH_Request 
+        SET Status = 'Withdrawn' 
+        WHERE Request_ID = ${Request_ID}`;
+      await db.query(updateRequestQuery, [Request_ID]);
+
+      res.status(200).json({ message: 'WFH_Request status updated to Withdrawn' });
+    } else {
+      res.status(400).json({ message: 'WFH_Withdrawal status is not Approved' });
+    }
+  } catch (error) {
+    console.error('Error updating WFH_Request status:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 export default router;
