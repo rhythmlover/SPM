@@ -46,6 +46,17 @@ const router = createRouter({
       name: 'manager-view-schedule',
       component: ManagerViewSchedule,
     },
+    {
+      path: '/staff-approved-requests-withdrawal',
+      name: 'staff-approved-requests-withdrawal',
+      component: () => import('../views/staff/ApprovedRequestWithdrawal.vue'),
+    },
+    {
+      path: '/staff-requeststatus/:requestID/:WFH_Date/:Request_Period',
+      name: 'WithdrawRequestForm',
+      component: () => import('../views/staff/ApprovedRequestWithdrawal.vue'), 
+      props: true
+    }
   ],
 });
 

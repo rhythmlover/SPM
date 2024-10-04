@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ApplyArrangement: typeof import('./src/components/ApplyArrangement.vue')['default']
+    ApprovedRequestWithdrawal: typeof import('./src/views/staff/ApprovedRequestWithdrawal.vue')['default']
     BAlert: typeof import('bootstrap-vue-next/components/BAlert')['BAlert']
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
@@ -33,7 +34,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScheduleList: typeof import('./src/components/staff/ScheduleList.vue')['default']
-    StaffNavbar: typeof import('./src/components/staff/StaffNavbar.vue')['default']
+    StaffNavbar: typeof import('./src/components/StaffNavbar.vue')['default']
     StaffTeamSchedule: typeof import('./src/components/staff/StaffTeamSchedule.vue')['default']
     StatusButton: typeof import('./src/components/StatusButton.vue')['default']
   }
