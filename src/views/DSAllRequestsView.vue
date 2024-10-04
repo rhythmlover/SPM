@@ -57,6 +57,7 @@ const joinEmployeesToWFHRequests = () => {
       ...employee,
       Request_Date: formatRequestDate(request.Request_Date),
       Approval_Date: formatRequestDate(request.Approval_Date),
+      WFH_Date: formatRequestDate(request.WFH_Date),
     };
 
     switch (combinedRequest.Status) {
@@ -74,6 +75,10 @@ const joinEmployeesToWFHRequests = () => {
         break;
     }
   });
+  console.log('PENDING RESULTS: ', pendingRequests);
+  console.log('ACCEPTED RESULTS: ', acceptedRequests);
+  console.log('REJECTED RESULTS: ', rejectedRequests);
+  console.log('All WFH Requests:', wfhRequests.value);
 };
 
 const formatRequestDate = (isoDate) => {
@@ -149,9 +154,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="container">
-    <h2>Pending Requests of my Direct Subordinates</h2>
-
+  <BContainer :style="{ marginTop: '80px' }">
+    <h2 :style="{ marginBottom: '20px' }">
+      Pending Requests of my Direct Subordinates
+    </h2>
     <RequestLinks @linkChange="setActiveLink" />
 
     <RequestTable
@@ -171,7 +177,7 @@ onMounted(async () => {
       :requests="rejectedRequests"
       status="rejected"
     />
-  </div>
+  </BContainer>
 </template>
 
 <script>
@@ -192,15 +198,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.container {
-  padding: 20px;
-}
-
-h2 {
-  margin-bottom: 20px;
-  font-size: 1.5em;
-  color: #343a40;
-}
-</style>
