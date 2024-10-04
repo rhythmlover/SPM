@@ -167,4 +167,18 @@ router.get('/getStaffWFHDateByID', async (req, res, next) => {
   }
 });
 
+// router.post('/approved-wfh-request/withdraw', async (req, res, next) => {
+//   const requestID = req.query.requestID;
+
+//   try {
+//     let [results] = await executeQuery(
+//       `SELECT WFH_Date FROM WFH_Request WHERE Request_ID = ${requestID}`,
+//     );
+//     let wfh_date = results[0]['WFH_Date'];
+//     res.json({ wfh_date });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
 export default router;

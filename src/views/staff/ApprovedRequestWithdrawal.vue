@@ -1,7 +1,7 @@
 <script>
 import axios from 'axios';
 import { mapGetters } from 'vuex';
-// import { inject } from 'vue';
+import { inject } from 'vue';
 
 export default {
   data() {
@@ -9,7 +9,8 @@ export default {
       Staff_Name: '',
       Staff_ID: '171015',
       Staff_Position: '',
-      Request_ID: '',
+      Request_ID: this.$route.params.requestID, 
+      WFH_Date: this.$route.params.WFH_Date,
       Request_Date: '',
       Request_Period: '',
       Reason: '',
@@ -26,18 +27,23 @@ export default {
   },
   methods: {
     async fetchReportingManagerID() {
-      // const API_ROUTE = inject('API_ROUTE');
-      const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
+      const API_ROUTE = inject('API_ROUTE');
       try {
-        const response = await axios.get(API_ROUTE + '/employee/getStaffReportingManager', {
-          params: { staffID: this.Staff_ID },
-        });
+        const response = await axios.get(
+          API_ROUTE + '/employee/get-staff-reporting-manager',
+          {
+            params: { staffID: this.Staff_ID },
+          },
+        );
         const reportingManagerID = response.data.results[0].Reporting_Manager;
         this.Approver_ID = reportingManagerID;
 
-        const reportingManagerName = await axios.get(API_ROUTE + '/employee/getStaffNameByID', {
-          params: { staffID: reportingManagerID },
-        });
+        const reportingManagerName = await axios.get(
+          API_ROUTE + '/employee/get-staff-name-by-id',
+          {
+            params: { staffID: reportingManagerID },
+          },
+        );
         this.Approver_Name = reportingManagerName.data.name;
       } catch (error) {
         console.log(error);
@@ -46,7 +52,7 @@ export default {
     async fetchStaffName() {
       const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
       try {
-        const response = await axios.get(API_ROUTE + '/employee/getStaffNameByID', {
+        const response = await axios.get(API_ROUTE + '/employee/get-staff-name-by-id', {
           params: { staffID: this.Staff_ID },
         });
 
@@ -83,26 +89,6 @@ export default {
         }
       }
     },
-    // async fetchWFHDate() {
-    //   const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
-    //   try {
-    //     const response = await axios.get(API_ROUTE + '/employee/getStaffWFHDateByID', {
-    //       params: { requestID: this.Request_ID },  // Replace staffID with requestID
-    //     });
-
-    //     // Extract the WFH date from the response
-    //     const { wfh_date } = response.data;
-    //     this.WFH_Date = wfh_date;  // Set the WFH date in the component data
-
-    //   } catch (error) {
-    //     console.log(error);
-    //     if (error.response && error.response.status === 404) {
-    //       this.errorMessage = 'WFH Date not found';
-    //     } else {
-    //       this.errorMessage = 'Failed to fetch WFH date';
-    //     }
-    //   }
-    // },
     validateForm() {
       if (!this.Request_Date || !this.Request_Period || !this.Reason) {
         this.errorMessage = 'Please fill in all fields';
@@ -111,45 +97,21 @@ export default {
 
       return true;
     },
-    // async apply() {
-    //   if (!this.validateForm()) {
-    //     return;
-    //   }
-
-    //   // const API_ROUTE = inject('API_ROUTE');
-    //   const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
-    //   try {
-    //     const response = await axios.post(API_ROUTE + '/wfh-request/approvedwithdraw', {
-    //       Staff_Name: this.Staff_Name,
-    //       Staff_ID: this.Staff_ID,
-    //       Staff_Position: this.Staff_Position,
-    //       Request_ID: this.Request_ID,
-    //       Request_Date: this.Request_Date,
-    //       Request_Period: this.Request_Period,
-    //       Reason: this.Reason,
-    //       Status: this.Status,
-    //       Approver_ID: this.Approver_ID,
-    //     });
-    //     this.successMessage = 'Request Submitted Successfully';
-    //     this.errorMessage = '';
-    //     console.log(response);
-    //   } catch (error) {
-    //     console.log(error);
-    //     if (error.response && error.response.data && error.response.data.message) {
-    //       this.errorMessage = error.response.data.message;
-    //     } else {
-    //       this.errorMessage = 'Application Submission Failed';
-    //     }
-    //     this.successMessage = '';
-    //   }
-    // },
-    async withdrawRequest(requestID, WFH_Date) {
+    async withdrawRequest() {
       // You can add this logic to call your backend for withdrawal
       const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
       try {
-        const response = await axios.post(API_ROUTE + '/wfh-request/withdraw', {
-          requestID,  // Send the request ID
-          WFH_Date,   // Send the WFH date
+        const response = await axios.post(API_ROUTE + '/approved-wfh-request/withdraw', {
+          Staff_Name: this.Staff_Name,
+          Staff_ID: this.Staff_ID,
+          Staff_Position: this.Staff_Position,
+          Request_Date: this.Request_Date,
+          Request_Period: this.Request_Period,
+          Reason: this.Reason,
+          Status: this.Status,
+          Approver_ID: this.Approver_ID,  
+          requestID: this.Request_ID,  
+          WFH_Date: this.WFH_Date,
         });
         this.successMessage = 'Withdrawal Request Sent Successfully';
         this.errorMessage = '';
@@ -166,7 +128,7 @@ export default {
       this.Reason = '';
       this.errorMessage = '';
       this.successMessage = '';
-      this.$router.push('/staffRequestStatus');
+      this.$router.push('/staff-requeststatus');
     },
 
   },
@@ -174,15 +136,13 @@ export default {
     this.fetchReportingManagerID();
     this.fetchStaffName();
     this.fetchStaffPosition();
-    // this.fetchWFHDate();
-    // this.fetchExistingRequestDates();
   },
 };
 </script>
 
 <template>
   <div class="container mt-5">
-    <form @submit.prevent="apply">
+    <form @submit.prevent="withdrawRequest">
       <div class="form-group mb-3">
         <label for="staff_name">Name:</label>
         <input type="text" v-model="Staff_Name" id="staff__name" class="form-control" disabled />
@@ -192,8 +152,8 @@ export default {
         <input type="text" v-model="Staff_Position" id="position" class="form-control" disabled />
       </div>
       <div class="form-group mb-3">
-        <label for="request_date">WFH Date:</label>
-        <input type="text" v-model="Request_Date" id="request_date" class="form-control" disabled />
+        <label for="wfh_date">WFH Date:</label>
+        <input type="text" v-model="WFH_Date" id="wfh_date" class="form-control" disabled />
       </div>
       <div class="form-group mb-3">
         <label for="request_period">Withdrawal Request Period:</label>

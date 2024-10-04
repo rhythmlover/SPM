@@ -1,10 +1,27 @@
 <script setup>
 import axios from 'axios';
 import { inject, onMounted, ref } from 'vue';
-// import { withdrawRequest } from './ApprovedRequestWithdrawal.vue';
+import { useRouter } from 'vue-router';
 
 const requests = ref([]);
 const API_ROUTE = inject('API_ROUTE');
+
+const formatRequestDate = (isoDate) => {
+  const date = new Date(isoDate);
+  const day = date.getUTCDate();
+  const month = date.toLocaleString('en-US', {
+    month: 'long',
+    timeZone: 'UTC',
+  });
+  const year = date.getUTCFullYear();
+  const weekday = date.toLocaleString('en-US', {
+    weekday: 'long',
+    timeZone: 'UTC',
+  });
+  const formattedDate = `${month} ${day}, ${year} (${weekday})`;
+
+  return formattedDate;
+};
 
 const isWithinTwoWeeks = (WFH_Date, Status) => {
   const currentDate = new Date();
@@ -27,8 +44,8 @@ const getWFHRequests = async (staffID) => {
       requests.value = res.data.results.map((request) => ({
         StaffID: request.Staff_ID,
         Request_ID: request.Request_ID,
-        Request_Date: new Date(request.Request_Date).toLocaleDateString('en-CA'),
-        WFH_Date: new Date(request.WFH_Date).toLocaleDateString('en-CA'),
+        Request_Date: formatRequestDate(request.Request_Date),
+        WFH_Date: formatRequestDate(request.WFH_Date),
         Request_Period: request.Request_Period,
         Reason: request.Request_Reason,
         Status: request.Status,
@@ -74,24 +91,27 @@ const deleteRequest = async (requestID) => {
   }
 };
 
-const openWithdrawForm = (requestID, WFH_Date) => {
+
+const router = useRouter();
+const openWithdrawForm = (Request_ID, WFH_Date) => {
   const confirmWithdraw = window.confirm('Send request to manager to approve withdrawal of this request?');
 
   if (!confirmWithdraw) {
-    return; // Do nothing if user cancels
+    return; 
   }
 
-  // Call the function to withdraw the request
-  withdrawRequest(requestID, WFH_Date);
-  // userStore.dispatch('withdrawRequest', { requestID, WFH_Date });
+  router.push({
+    name: 'WithdrawRequestForm', 
+    params: { requestID: Request_ID, WFH_Date: WFH_Date }, 
+  });
 };
 
 // Use onMounted to fetch data when the component is mounted
 onMounted(async () => {
   // Hardcoded staffID for now after removing userstore, implement after local storage
-  const staffID = 171015; // Safely access Staff_ID
+  const staffID = 171015; 
   if (staffID) {
-    await getWFHRequests(staffID); // Pass the staffID to the function
+    await getWFHRequests(staffID); 
   } else {
     console.error('Staff ID is not available.');
   }
@@ -130,10 +150,10 @@ onMounted(async () => {
                 <!-- Conditionally show Delete button if status is 'Pending' or 'pending' -->
                 <button v-if="request.Status.toLowerCase() === 'pending'" @click="deleteRequest(request.Request_ID)"
                   class="btn btn-warning">
-                  Withdraw
+                  Cancel
                 </button>
-                <button v-if="request.showWithdrawButton" @click="openWithdrawForm(request.WFH_Date)"
-                  class="btn btn-danger">
+                <button v-if="request.showWithdrawButton"
+                  @click="openWithdrawForm(request.Request_ID, request.WFH_Date)" class="btn btn-danger">
                   Withdraw
                 </button>
               </td>
