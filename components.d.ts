@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ApplyArrangement: typeof import('./src/components/ApplyArrangement.vue')['default']
+    ApprovedRequestWithdrawal: typeof import('./src/views/staff/ApprovedRequestWithdrawal.vue')['default']
     BAlert: typeof import('bootstrap-vue-next/components/BAlert')['BAlert']
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']

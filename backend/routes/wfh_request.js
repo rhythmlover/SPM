@@ -40,21 +40,6 @@ router.get('/user', async (req, res, next) => {
   }
 });
 
-// // Backend Route for Deleting WFH Request
-// router.delete('/wfh_request/deleteByrequestID', async (req, res, next) => {
-//   const requestID = req.query.requestID;
-
-//   try {
-//     let [results] = await executeQuery(
-//       `DELETE FROM WFH_Request WHERE Request_ID = ${requestID}`,
-//     );
-//     res.json({ results });
-
-//     res.status(200).json({ message: `Request ${requestID} deleted successfully.` });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
 router.delete('/request/delete/id', async (req, res, next) => {
   const requestID = req.query.requestID;
 
@@ -164,6 +149,19 @@ router.put('/request/updateApprovalComments', async (req, res, next) => {
     } else {
       res.status(404).json({ message: 'Request not found' });
     }
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/getStaffWFHDateByID', async (req, res, next) => {
+  const requestID = req.query.requestID;
+  try {
+    let [results] = await executeQuery(
+      `SELECT WFH_Date FROM WFH_Request WHERE Request_ID = ${requestID}`,
+    );
+    let wfh_date = results[0]['WFH_Date'];
+    res.json({ wfh_date });
   } catch (error) {
     next(error);
   }

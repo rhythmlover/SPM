@@ -39,6 +39,11 @@ const router = createRouter({
       name: 'apply-arrangement',
       component: ApplyView,
     },
+    {
+      path: '/staff-approved-requests-withdrawal',
+      name: 'staff-approved-requests-withdrawal',
+      component: () => import('../views/staff/ApprovedRequestWithdrawal.vue'),
+    },
   ],
 });
 
