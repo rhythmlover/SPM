@@ -46,6 +46,7 @@ const logout = () => {
           <BNavItem to="/staff-teamschedule">Team Schedule</BNavItem>
           <BNavItem to="/staff-requeststatus">All Requests</BNavItem>
           <BNavItem to="/apply-arrangement">Apply</BNavItem>
+          <BNavItem to="/staff-approved-requests-withdrawal">Withdrawal Application</BNavItem>
         </BNavbarNav>
 
         <BNavbarNav class="ms-auto">
