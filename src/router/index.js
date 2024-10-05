@@ -3,6 +3,7 @@ import StaffMySchedule from '../views/staff/StaffMySchedule.vue';
 import HomeView from '../views/HomeView.vue';
 import ApplyView from '../views/ApplyView.vue';
 import DSAllRequestsView from '../views/DSAllRequestsView.vue';
+import ManagerViewSchedule from '@/views/manager/ManagerViewSchedule.vue';
 import StaffRequestStatus from '../views/staff/StaffRequestStatus.vue';
 import StaffTeamSchedule from '../views/staff/StaffTeamScheduleView.vue';
 
@@ -30,14 +31,20 @@ const router = createRouter({
       component: StaffRequestStatus,
     },
     {
+      path: '/apply-arrangement',
+      name: 'apply-arrangement',
+      component: ApplyView,
+    },
+
+    {
       path: '/pending-requests',
       name: 'pending-requests',
       component: DSAllRequestsView,
     },
     {
-      path: '/apply-arrangement',
-      name: 'apply-arrangement',
-      component: ApplyView,
+      path: '/manager-view-schedule',
+      name: 'manager-view-schedule',
+      component: ManagerViewSchedule,
     },
   ],
 });

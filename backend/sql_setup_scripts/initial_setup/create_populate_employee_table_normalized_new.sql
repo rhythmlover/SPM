@@ -38,9 +38,9 @@ CREATE TABLE IF NOT EXISTS `WFH_Request` (
     `Request_Reason` TEXT CHARACTER SET utf8,
     `Status` VARCHAR(20) CHARACTER SET utf8,	-- Pending, Approved, Rejected
     `WFH_Date` DATE,							-- The WFH date that this request is requesting
-    `Approver_ID` INT,
-    `Approver_Comments` TEXT CHARACTER SET utf8,
-	`Approval_Date` DATE, 						-- The date when the request was approved
+    `Approver_ID` INT NULL,
+    `Approval_Comments` TEXT CHARACTER SET utf8 NULL,
+	`Approval_Date` DATE NULL,					-- The date when the request was approved
 );
 
 CREATE TABLE IF NOT EXISTS `Access_Log` (
@@ -710,7 +710,6 @@ DROP TABLE Temp_Employee;
 --     OR e1.Position LIKE '%Director%'
 --     OR e1.Position LIKE '%Manager%';
 
-
 -- Increase the GROUP_CONCAT max length limit
 SET SESSION group_concat_max_len = 1000000;
 -- Create the Manager_Subordinates table
@@ -724,7 +723,7 @@ CREATE TABLE IF NOT EXISTS `Manager_Subordinates` (
 INSERT INTO `Manager_Subordinates` (Manager_ID, Subordinates)
 SELECT 
     e1.Staff_ID AS Manager_ID,
-    GROUP_CONCAT(e2.Staff_ID, ' ', e2.Staff_ID ORDER BY e2.Staff_ID SEPARATOR ', ') AS Subordinates
+    GROUP_CONCAT(DISTINCT e2.Staff_ID ORDER BY e2.Staff_ID SEPARATOR ', ') AS Subordinates
 FROM 
     Employee e1
 JOIN 

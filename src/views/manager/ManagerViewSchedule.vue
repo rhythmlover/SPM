@@ -4,7 +4,7 @@ import axios from 'axios';
 import ScheduleList from '@/components/staff/ScheduleList.vue';
 
 const API_ROUTE = inject('API_ROUTE');
-const myWFHRequests = ref({});
+const wfhRequests = ref({});
 
 /**
  * Retrieve all of my WFH requests that have same date present in dateMap
@@ -16,9 +16,12 @@ const getWFHRequests = async () => {
 
   try {
     // Fetch requests
-    let res = await axios.get(API_ROUTE + '/wfh-request/user', {
-      params: { staffID },
-    });
+    let res = await axios.get(
+      API_ROUTE + '/wfh-request/my-subordinate-and-me-requests',
+      {
+        params: { staffID },
+      },
+    );
 
     for (let requestObj of res.data.results) {
       // Convert MySQL date into JS Date object and String representations
@@ -42,7 +45,7 @@ const getWFHRequests = async () => {
 
 onMounted(async () => {
   let requestsMap = await getWFHRequests();
-  myWFHRequests.value = requestsMap;
+  wfhRequests.value = requestsMap;
 });
 </script>
 
@@ -50,7 +53,7 @@ onMounted(async () => {
   <BContainer>
     <BRow>
       <BCol>
-        <ScheduleList :wfh-requests="myWFHRequests" />
+        <ScheduleList :wfh-requests="wfhRequests" />
       </BCol>
     </BRow>
   </BContainer>

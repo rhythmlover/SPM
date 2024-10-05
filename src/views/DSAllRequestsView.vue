@@ -149,7 +149,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="container">
+  <BContainer>
     <h2>Pending Requests of my Direct Subordinates</h2>
 
     <RequestLinks @linkChange="setActiveLink" />
@@ -171,7 +171,7 @@ onMounted(async () => {
       :requests="rejectedRequests"
       status="rejected"
     />
-  </div>
+  </BContainer>
 </template>
 
 <script>
@@ -194,10 +194,6 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  padding: 20px;
-}
-
 h2 {
   margin-bottom: 20px;
   font-size: 1.5em;

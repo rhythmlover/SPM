@@ -340,32 +340,4 @@ onMounted(async () => {
   </BContainer>
 </template>
 
-<style scoped>
-.staff-team-schedule {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.controls button {
-  margin-right: 10px;
-}
-
-.error {
-  color: red;
-}
-
-.day-schedule {
-  border-bottom: 1px solid #ddd;
-  padding: 10px 0;
-}
-
-.day-schedule h3 {
-  margin-bottom: 5px;
-}
-</style>
+<style scoped></style>
