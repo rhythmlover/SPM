@@ -1,12 +1,13 @@
 <script setup>
-import { provide, ref, onMounted } from 'vue';
+import { provide, ref, onMounted, computed } from 'vue';
 import { RouterView } from 'vue-router';
-import StaffNavbar from './components/StaffNavbar.vue';
+import StaffNavbar from './components/staff/StaffNavbar.vue';
 import ManagerNavbar from './components/ManagerNavbar.vue';
 
 const roleID = ref(null);
 const staffID = ref(null);
 const staffFName = ref('');
+const staffPosition = ref('');
 
 provide(
   'API_ROUTE',
@@ -18,31 +19,40 @@ provide(
 provide('roleID', roleID);
 provide('staffID', staffID);
 provide('staffFName', staffFName);
+provide('staffPosition', staffPosition);
 
 onMounted(() => {
   roleID.value = localStorage.roleID ? parseInt(localStorage.roleID) : null;
   staffID.value = localStorage.staffID ? parseInt(localStorage.staffID) : null;
   staffFName.value = localStorage.staffFName ? localStorage.staffFName : '';
+  staffPosition.value = localStorage.staffPosition
+    ? localStorage.staffPosition
+    : '';
+});
+
+const isManager = computed(() => {
+  return (
+    staffPosition.value.includes('Manager') ||
+    staffPosition.value.includes('Director') ||
+    staffPosition.value.includes('MD')
+  );
 });
 </script>
 
 <template>
   <div class="app-container">
-    <ManagerNavbar v-if="roleID == 1" />
+    <div v-if="staffPosition == ''"></div>
+    <ManagerNavbar v-else-if="isManager" />
     <StaffNavbar v-else />
-    <main class="mt-5 pt-3">
+    <main class="">
+      <div class="navbar-spacing"></div>
       <RouterView />
     </main>
   </div>
 </template>
 
-<style>
-.app-container {
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-
-main {
-  padding: 20px;
+<style scoped>
+.navbar-spacing {
+  height: 130px;
 }
 </style>

@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import StaffTeamSchedule from '../../components/StaffTeamSchedule.vue';
+import StaffTeamSchedule from '../../components/staff/StaffTeamSchedule.vue';
 
 export default {
   name: 'StaffScheduleView',
