@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { updateSheet } from '../../../updateGoogleSheet';
 import ScheduleList from '../staff/ScheduleList.vue';
+// import { updateSheet } from '../../../updateGoogleSheet';
 
 const waitForCondition = async (
   conditionFn,
@@ -61,241 +61,238 @@ describe('ScheduleList.vue', () => {
   });
 
   it('renders correctly with given props', async () => {
-    const testId = 'TC-028';
-    try {
-      const wrapper = mount(ScheduleList, {
-        props: {
-          wfhRequests: mockWFHRequests,
-        },
-      });
+    // const testId = 'TC-028';
+    // try {
+    const wrapper = mount(ScheduleList, {
+      props: {
+        wfhRequests: mockWFHRequests,
+      },
+    });
 
-      // Wait until the spinner disappears (loading completes)
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // Wait until the spinner disappears (loading completes)
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Check if the correct dates are rendered
-      const dateHeaders = wrapper.findAll('h4.mb-0'); // Adjust selector based on your template
-      expect(dateHeaders.length).toBe(31);
-      expect(dateHeaders[0].text()).toContain('October 1'); // Check first date
-      expect(dateHeaders[1].text()).toContain('October 2'); // Check second date
+    // Check if the correct dates are rendered
+    const dateHeaders = wrapper.findAll('h4.mb-0'); // Adjust selector based on your template
+    expect(dateHeaders.length).toBe(31);
+    expect(dateHeaders[0].text()).toContain('October 1'); // Check first date
+    expect(dateHeaders[1].text()).toContain('October 2'); // Check second date
 
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Passed');
-    } catch (error) {
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Failed');
-      throw error;
-    }
+    // // Reset the mock date
+    // vi.useRealTimers();
+    // await updateSheet(testId, 'Passed');
+    // } catch (error) {
+    //   // Reset the mock date
+    //   vi.useRealTimers();
+    //   await updateSheet(testId, 'Failed');
+    //   throw error;
+    // }
   });
 
   it('handles period change forward', async () => {
-    const testId = 'TC-029';
-    try {
-      const wrapper = mount(ScheduleList, {
-        props: {
-          wfhRequests: {},
-        },
-      });
+    // const testId = 'TC-029';
+    // try {
+    const wrapper = mount(ScheduleList, {
+      props: {
+        wfhRequests: {},
+      },
+    });
 
-      // Wait until the spinner disappears (loading completes)
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // Wait until the spinner disappears (loading completes)
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Find next period buton
-      const buttons = wrapper.findAll('button');
-      const nextButton = buttons.find((button) => button.text() === 'Next');
-      expect(nextButton.exists()).toBe(true);
+    // Find next period buton
+    const buttons = wrapper.findAll('button');
+    const nextButton = buttons.find((button) => button.text() === 'Next');
+    expect(nextButton.exists()).toBe(true);
 
-      // Trigger click event on "Next" button
-      await nextButton.trigger('click');
+    // Trigger click event on "Next" button
+    await nextButton.trigger('click');
 
-      // Wait for the next tick
-      await wrapper.vm.$nextTick();
+    // Wait for the next tick
+    await wrapper.vm.$nextTick();
 
-      // Check if the current period has changed
-      expect(wrapper.find('h2').text()).toContain('November 2024');
+    // Check if the current period has changed
+    expect(wrapper.find('h2').text()).toContain('November 2024');
 
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Passed');
-    } catch (error) {
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Failed');
-      throw error;
-    }
+    //   // Reset the mock date
+    //   vi.useRealTimers();
+    //   await updateSheet(testId, 'Passed');
+    // } catch (error) {
+    //   // Reset the mock date
+    //   vi.useRealTimers();
+    //   await updateSheet(testId, 'Failed');
+    //   throw error;
+    // }
   });
 
   it('handles period change backwards', async () => {
-    const testId = 'TC-030';
+    // const testId = 'TC-030';
+    // try {
+    const wrapper = mount(ScheduleList, {
+      props: {
+        wfhRequests: {},
+      },
+    });
 
-    try {
-      const wrapper = mount(ScheduleList, {
-        props: {
-          wfhRequests: {},
-        },
-      });
+    // Wait until the spinner disappears (loading completes)
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Wait until the spinner disappears (loading completes)
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // Find previous period buton
+    const buttons = wrapper.findAll('button');
+    const nextButton = buttons.find((button) => button.text() === 'Previous');
+    expect(nextButton.exists()).toBe(true);
 
-      // Find previous period buton
-      const buttons = wrapper.findAll('button');
-      const nextButton = buttons.find((button) => button.text() === 'Previous');
-      expect(nextButton.exists()).toBe(true);
+    // Trigger click event on "Next" button
+    await nextButton.trigger('click');
 
-      // Trigger click event on "Next" button
-      await nextButton.trigger('click');
+    // Wait for the next tick
+    await wrapper.vm.$nextTick();
 
-      // Wait for the next tick
-      await wrapper.vm.$nextTick();
+    // Check if the current period has changed
+    expect(wrapper.find('h2').text()).toContain('September 2024');
 
-      // Check if the current period has changed
-      expect(wrapper.find('h2').text()).toContain('September 2024');
-
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Passed');
-    } catch (error) {
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Failed');
-      throw error;
-    }
+    //   // Reset the mock date
+    //   vi.useRealTimers();
+    //   await updateSheet(testId, 'Passed');
+    // } catch (error) {
+    //   // Reset the mock date
+    //   vi.useRealTimers();
+    //   await updateSheet(testId, 'Failed');
+    //   throw error;
+    // }
   });
 
   it('unable to shift to previous period if at min range', async () => {
-    const testId = 'TC-031';
+    // const testId = 'TC-031';
+    // try {
+    const wrapper = mount(ScheduleList, {
+      props: {
+        wfhRequests: {},
+      },
+    });
 
-    try {
-      const wrapper = mount(ScheduleList, {
-        props: {
-          wfhRequests: {},
-        },
-      });
+    // Wait until the spinner disappears (loading completes)
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Wait until the spinner disappears (loading completes)
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // // Mock the ableToShiftPeriod method to return [false, null]
+    // const ableToShiftPeriodMock = vi
+    //   .spyOn(wrapper.vm, 'ableToShiftPeriod')
+    //   .mockReturnValue([false, null]);
 
-      // // Mock the ableToShiftPeriod method to return [false, null]
-      // const ableToShiftPeriodMock = vi
-      //   .spyOn(wrapper.vm, 'ableToShiftPeriod')
-      //   .mockReturnValue([false, null]);
+    // Click the button
+    let buttons = wrapper.findAll('button');
+    let nextButton = buttons.find((button) => button.text() === 'Previous');
+    await nextButton.trigger('click');
+    // Wait for the DOM to update
+    await wrapper.vm.$nextTick();
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Click the button
-      let buttons = wrapper.findAll('button');
-      let nextButton = buttons.find((button) => button.text() === 'Previous');
-      await nextButton.trigger('click');
-      // Wait for the DOM to update
-      await wrapper.vm.$nextTick();
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // Click the button
+    buttons = wrapper.findAll('button');
+    nextButton = buttons.find((button) => button.text() === 'Previous');
+    await nextButton.trigger('click');
+    // Wait for the DOM to update
+    await wrapper.vm.$nextTick();
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Click the button
-      buttons = wrapper.findAll('button');
-      nextButton = buttons.find((button) => button.text() === 'Previous');
-      await nextButton.trigger('click');
-      // Wait for the DOM to update
-      await wrapper.vm.$nextTick();
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // Check if the period has been updated
+    expect(wrapper.find('h2').text()).toContain('August 2024');
 
-      // Check if the period has been updated
-      expect(wrapper.find('h2').text()).toContain('August 2024');
+    // Expect button to be disabled
+    buttons = wrapper.findAll('button');
+    nextButton = buttons.find((button) => button.text() === 'Previous');
+    expect(nextButton.attributes('disabled')).toBeDefined();
 
-      // Expect button to be disabled
-      buttons = wrapper.findAll('button');
-      nextButton = buttons.find((button) => button.text() === 'Previous');
-      expect(nextButton.attributes('disabled')).toBeDefined();
-
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Passed');
-    } catch (error) {
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Failed');
-      throw error;
-    }
+    //   // Reset the mock date
+    //   vi.useRealTimers();
+    //   await updateSheet(testId, 'Passed');
+    // } catch (error) {
+    //   // Reset the mock date
+    //   vi.useRealTimers();
+    //   await updateSheet(testId, 'Failed');
+    //   throw error;
+    // }
   });
 
   it('unable to shift to next period if at max range', async () => {
-    const testId = 'TC-032';
+    // const testId = 'TC-032';
+    // try {
+    const wrapper = mount(ScheduleList, {
+      props: {
+        wfhRequests: {},
+      },
+    });
 
-    try {
-      const wrapper = mount(ScheduleList, {
-        props: {
-          wfhRequests: {},
-        },
-      });
+    // Wait until the spinner disappears (loading completes)
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Wait until the spinner disappears (loading completes)
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // // Mock the ableToShiftPeriod method to return [false, null]
+    // const ableToShiftPeriodMock = vi
+    //   .spyOn(wrapper.vm, 'ableToShiftPeriod')
+    //   .mockReturnValue([false, null]);
 
-      // // Mock the ableToShiftPeriod method to return [false, null]
-      // const ableToShiftPeriodMock = vi
-      //   .spyOn(wrapper.vm, 'ableToShiftPeriod')
-      //   .mockReturnValue([false, null]);
+    // Click the button
+    let buttons = wrapper.findAll('button');
+    let nextButton = buttons.find((button) => button.text() === 'Next');
+    await nextButton.trigger('click');
+    // Wait for the DOM to update
+    await wrapper.vm.$nextTick();
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Click the button
-      let buttons = wrapper.findAll('button');
-      let nextButton = buttons.find((button) => button.text() === 'Next');
-      await nextButton.trigger('click');
-      // Wait for the DOM to update
-      await wrapper.vm.$nextTick();
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // Click the button
+    buttons = wrapper.findAll('button');
+    nextButton = buttons.find((button) => button.text() === 'Next');
+    await nextButton.trigger('click');
+    // Wait for the DOM to update
+    await wrapper.vm.$nextTick();
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Click the button
-      buttons = wrapper.findAll('button');
-      nextButton = buttons.find((button) => button.text() === 'Next');
-      await nextButton.trigger('click');
-      // Wait for the DOM to update
-      await wrapper.vm.$nextTick();
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // Click the button
+    buttons = wrapper.findAll('button');
+    nextButton = buttons.find((button) => button.text() === 'Next');
+    await nextButton.trigger('click');
+    // Wait for the DOM to update
+    await wrapper.vm.$nextTick();
+    await waitForCondition(
+      () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
+    );
 
-      // Click the button
-      buttons = wrapper.findAll('button');
-      nextButton = buttons.find((button) => button.text() === 'Next');
-      await nextButton.trigger('click');
-      // Wait for the DOM to update
-      await wrapper.vm.$nextTick();
-      await waitForCondition(
-        () => !wrapper.findComponent({ name: 'BSpinner' }).exists(),
-      );
+    // Check if the period has been updated
+    expect(wrapper.find('h2').text()).toContain('January 2025');
 
-      // Check if the period has been updated
-      expect(wrapper.find('h2').text()).toContain('January 2025');
+    // Expect button to be disabled
+    buttons = wrapper.findAll('button');
+    nextButton = buttons.find((button) => button.text() === 'Next');
+    expect(nextButton.attributes('disabled')).toBeDefined();
 
-      // Expect button to be disabled
-      buttons = wrapper.findAll('button');
-      nextButton = buttons.find((button) => button.text() === 'Next');
-      expect(nextButton.attributes('disabled')).toBeDefined();
-
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Passed');
-    } catch (error) {
-      // Reset the mock date
-      vi.useRealTimers();
-      await updateSheet(testId, 'Failed');
-      throw error;
-    }
+    //   // Reset the mock date
+    //   vi.useRealTimers();
+    //   await updateSheet(testId, 'Passed');
+    // } catch (error) {
+    //   // Reset the mock date
+    //   vi.useRealTimers();
+    //   await updateSheet(testId, 'Failed');
+    //   throw error;
+    // }
   });
 
   // it('displays error message if scheduleListError is set', async () => {
