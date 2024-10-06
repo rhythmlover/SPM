@@ -24,10 +24,8 @@ app.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
   }
-  console.error(err, err.statusCode, err.stack);
-  res
-    .status(err.statusCode)
-    .json({ error: true, message: err.message, stack: err.stack });
+  console.error('Error Middleware:', err, 500, err.stack);
+  res.status(500).json({ error: true, message: err.message, stack: err.stack });
 });
 
 export default app;
