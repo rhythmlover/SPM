@@ -45,7 +45,7 @@ const router = createRouter({
       component: () => import('../views/staff/ApprovedRequestWithdrawal.vue'),
     },
     {
-      path: '/staff-requeststatus/:requestID/:WFH_Date',
+      path: '/staff-requeststatus/:requestID/:WFH_Date/:Request_Period',
       name: 'WithdrawRequestForm',
       component: () => import('../views/staff/ApprovedRequestWithdrawal.vue'), 
       props: true

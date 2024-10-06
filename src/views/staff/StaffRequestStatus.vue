@@ -93,7 +93,7 @@ const deleteRequest = async (requestID) => {
 
 
 const router = useRouter();
-const openWithdrawForm = (Request_ID, WFH_Date) => {
+const openWithdrawForm = (Request_ID, WFH_Date, Request_Period, Status) => {
   const confirmWithdraw = window.confirm('Send request to manager to approve withdrawal of this request?');
 
   if (!confirmWithdraw) {
@@ -102,7 +102,7 @@ const openWithdrawForm = (Request_ID, WFH_Date) => {
 
   router.push({
     name: 'WithdrawRequestForm', 
-    params: { requestID: Request_ID, WFH_Date: WFH_Date }, 
+    params: { requestID: Request_ID, WFH_Date: WFH_Date, Request_Period: Request_Period, Status: Status }, 
   });
 };
 
@@ -153,9 +153,10 @@ onMounted(async () => {
                   Cancel
                 </button>
                 <button v-if="request.showWithdrawButton"
-                  @click="openWithdrawForm(request.Request_ID, request.WFH_Date)" class="btn btn-danger">
+                  @click="openWithdrawForm(request.Request_ID, request.WFH_Date, request.Request_Period, request.Status)" class="btn btn-danger">
                   Withdraw
                 </button>
+                <span v-if="request.Status.toLowerCase() === 'withdrawal pending'" class="text-muted">Withdrawal Pending</span>
               </td>
             </tr>
           </tbody>

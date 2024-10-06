@@ -9,12 +9,12 @@ export default {
       Staff_Name: '',
       Staff_ID: '171015',
       Staff_Position: '',
-      Request_ID: this.$route.params.requestID, 
+      Request_ID: this.$route.params.requestID,
       WFH_Date: this.$route.params.WFH_Date,
       Request_Date: '',
-      Request_Period: '',
-      Reason: '',
-      Status: 'Pending',
+      Request_Period: this.$route.params.Request_Period,
+      Request_Reason: '',
+      Status: this.$route.params.Status,
       Approver_ID: '',
       Approver_Name: '',
       errorMessage: '',
@@ -89,43 +89,41 @@ export default {
         }
       }
     },
-    validateForm() {
-      if (!this.Request_Date || !this.Request_Period || !this.Reason) {
-        this.errorMessage = 'Please fill in all fields';
-        return false;
-      }
-
-      return true;
-    },
     async withdrawRequest() {
-      // You can add this logic to call your backend for withdrawal
       const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
       try {
-        const response = await axios.post(API_ROUTE + '/approved-wfh-request/withdraw', {
+        // Step 1: Send the withdrawal request to the backend
+        const response = await axios.post(`${API_ROUTE}/wfh-request/withdraw/post/id`, {
           Staff_Name: this.Staff_Name,
-          Staff_ID: this.Staff_ID,
           Staff_Position: this.Staff_Position,
-          Request_Date: this.Request_Date,
+          Request_ID: this.Request_ID,
           Request_Period: this.Request_Period,
-          Reason: this.Reason,
-          Status: this.Status,
-          Approver_ID: this.Approver_ID,  
-          requestID: this.Request_ID,  
+          Request_Reason: this.Request_Reason,
+          Status: 'Pending',
+          Approver_Name: this.Approver_Name,
           WFH_Date: this.WFH_Date,
         });
-        this.successMessage = 'Withdrawal Request Sent Successfully';
+
+        // request.showWithdrawButton = false; 
+        this.successMessage = 'Withdrawal Request Submitted Successfully';
         this.errorMessage = '';
         console.log(response);
       } catch (error) {
         console.log(error);
-        this.errorMessage = 'Failed to send withdrawal request';
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.message
+        ) {
+          this.errorMessage = error.response.data.message;
+        } else {
+          this.errorMessage = 'Withdrawal Application Submission Failed';
+        }
         this.successMessage = '';
       }
     },
     cancel() {
-      // this.Request_Date = '';
-      this.Request_Period = '';
-      this.Reason = '';
+      this.Request_Reason = '';
       this.errorMessage = '';
       this.successMessage = '';
       this.$router.push('/staff-requeststatus');
@@ -157,15 +155,11 @@ export default {
       </div>
       <div class="form-group mb-3">
         <label for="request_period">Withdrawal Request Period:</label>
-        <select v-model="Request_Period" id="request_period" class="form-control">
-          <option value="AM">AM</option>
-          <option value="PM">PM</option>
-          <option value="Full-Day">Full-Day</option>
-        </select>
+        <input type="text" v-model="Request_Period" id="request_period" class="form-control" disabled />
       </div>
       <div class="form-group mb-3">
         <label for="reason">Reason for withdrawal:</label>
-        <input type="text" v-model="Reason" id="reason" class="form-control" />
+        <input type="text" v-model="Request_Reason" id="reason" class="form-control" />
       </div>
       <div class="form-group mb-3">
         <label for="approver_name">Approver Name:</label>

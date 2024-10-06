@@ -167,18 +167,41 @@ router.get('/getStaffWFHDateByID', async (req, res, next) => {
   }
 });
 
-// router.post('/approved-wfh-request/withdraw', async (req, res, next) => {
-//   const requestID = req.query.requestID;
+router.post('/withdraw/post/id', async (req, res, next) => {
+  const { Request_ID, Staff_Name, Staff_Position, Request_Period, Request_Reason, Approver_Name, WFH_Date } = req.body;
 
-//   try {
-//     let [results] = await executeQuery(
-//       `SELECT WFH_Date FROM WFH_Request WHERE Request_ID = ${requestID}`,
-//     );
-//     let wfh_date = results[0]['WFH_Date'];
-//     res.json({ wfh_date });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+  // Check for missing fields
+  if (!Request_Reason) {
+    return res.status(400).json({ message: 'Please fill in all fields' });
+  }
+
+  try {
+    // Insert the withdrawal request into the database
+    const [results] = await executeQuery(
+      `INSERT INTO WFH_Withdrawal (Request_ID, Staff_Name, Staff_Position, Request_Period, Request_Reason, Status, Approver_Name, WFH_Date) 
+      VALUES (${Request_ID}, '${Staff_Name}', '${Staff_Position}', '${Request_Period}', '${Request_Reason}', 'Pending', '${Approver_Name}', '${WFH_Date}')`
+    );
+
+    if (!results) {
+      return res.status(400).json({ message: 'Withdrawal Application Submission Failed', error: 'Invalid Request' });
+    }
+
+    // Update the Status in the wfh_request table
+    const [updateResults] = await executeQuery(
+      `UPDATE WFH_Request 
+       SET Status = 'Withdrawal Pending' 
+       WHERE Request_ID = ${Request_ID}`
+    );
+
+    if (!updateResults) {
+      return res.status(400).json({ message: 'Failed to update the WFH request status' });
+    }
+
+    res.status(200).json({ message: 'Withdrawal Application Submitted Successfully', data: results });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Withdrawal Application Submission Failed', error: error.message });
+  }
+});
 
 export default router;
