@@ -22,4 +22,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  test: {
+    setupFiles: './setupTests.js', // Your setup file where the mock is defined
+  },
 });

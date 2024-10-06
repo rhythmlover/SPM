@@ -11,6 +11,7 @@ import {
 } from 'bootstrap-vue-next';
 import { inject } from 'vue';
 import router from '@/router';
+import { highlightedNavItemStyle } from '@/utils/highlightedNavItemStyle';
 
 const roleID = inject('roleID');
 const staffID = inject('staffID');
@@ -35,14 +36,21 @@ const logout = () => {
     variant="primary"
     class="py-2"
   >
-    <BNavbarBrand class="fw-bold"> Manager Portal </BNavbarBrand>
+    <BNavbarBrand class="fw-bold">Manager Portal</BNavbarBrand>
     <BNavbarToggle target="nav-collapse" />
 
     <BCollapse id="nav-collapse" is-nav>
       <BNavbarNav>
-        <!-- <BNavItem to="/">Home</BNavItem> -->
-        <BNavItem to="/manager-view-schedule">Team's Schedule</BNavItem>
-        <BNavItem to="/pending-requests">View Requests</BNavItem>
+        <BNavItem
+          :class="highlightedNavItemStyle('manager-view-schedule')"
+          to="/manager-view-schedule"
+          >Team's Schedule</BNavItem
+        >
+        <BNavItem
+          :class="highlightedNavItemStyle('pending-requests')"
+          to="/pending-requests"
+          >View Requests</BNavItem
+        >
       </BNavbarNav>
 
       <BNavbarNav class="ms-auto">
@@ -57,30 +65,4 @@ const logout = () => {
   </BNavbar>
 </template>
 
-<style scoped>
-.navbar {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.navbar-brand {
-  font-size: 1.5rem;
-}
-
-.nav-link-custom {
-  display: flex;
-  align-items: center;
-}
-
-.nav-link-custom::after {
-  margin-left: 0.5rem;
-}
-
-.user-dropdown :deep(.dropdown-toggle) {
-  font-weight: bold;
-}
-
-.user-dropdown :deep(.dropdown-item) {
-  display: flex;
-  align-items: center;
-}
-</style>
+<style scoped></style>

@@ -161,7 +161,10 @@ const getStatusPillColor = (status) => {
     case 'approved':
       return 'success';
     case 'pending':
+    case 'withdrawal pending':
       return 'warning';
+    case 'rejected':
+      return 'danger';
     default:
       return 'secondary';
   }
@@ -258,52 +261,23 @@ onMounted(async () => {
                       {{ formatDateFromStr(dateKeyStr) }}
                     </h4>
                   </template>
-                  <!-- <b-list-group flush>
-                  <template v-if="dateObject.requests.length">
-                    <b-list-group-item
-                      v-for="request in dateObject.requests"
-                      :key="request.Request_ID"
-                      class="d-flex justify-content-between align-items-center"
-                      :class="{ 'user-request': isUserRequest(request) }"
-                      :style="getUserRequestStyle(request)"
-                    >
-                      <div class="d-flex align-items-center">
-                        <BBadge
-                          pill
-                          :variant="getStatusVariant(request.Status)"
-                          class="mr-2"
-                        ></BBadge>
-                        <span class="mr-2">{{ request.Request_Period }}</span>
-                        <strong class="ms-2">
-                          {{ request.Staff_FName }} {{ request.Staff_LName }}
-                          <span v-if="isUserRequest(request)" class="text-primary">(YOU)</span>
-                        </strong>
-                      </div>
-                      <div>
-                        <BBadge :variant="getStatusVariant(request.Status)">{{
-                          request.Status
-                        }}</BBadge>
-                        <BBadge v-if="request.Comments" variant="info" class="ml-2">
-                          {{ request.Comments }}
-                        </BBadge>
-                      </div>
-                    </b-list-group-item>
-                  </template>
-                  <b-list-group-item v-else> No WFH requests for this day </b-list-group-item>
-                </b-list-group> -->
-
+                  <BTable
+                    v-model:sort-by="multiSortBy"
+                    :items="sortItems"
+                    :fields="sortFields"
+                    :multisort="true"
+                  />
                   <BTableSimple
                     v-if="dateObject['requests'].length > 0"
                     hover
                     caption-top
-                    responsive
                   >
                     <BThead head-variant="dark">
                       <BTr>
-                        <BTh>Name</BTh>
-                        <BTh>Position</BTh>
-                        <BTh>WFH Time</BTh>
-                        <BTh>Status</BTh>
+                        <BTh class="col-3">Name</BTh>
+                        <BTh class="col-3">Position</BTh>
+                        <BTh class="col-3">WFH Time</BTh>
+                        <BTh class="col-3">Status</BTh>
                       </BTr>
                     </BThead>
                     <BTbody>
