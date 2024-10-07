@@ -2,11 +2,8 @@
   <tr>
     <td class="col-2">{{ request.Staff_FName }} {{ request.Staff_LName }}</td>
     <td class="col-4">{{ request.Request_Reason }}</td>
+    <td class="col-2">{{ request.WFH_Date }}</td>
     <td class="col-2">{{ request.Request_Date }}</td>
-    <td class="col-2" v-if="status === 'pending'">
-      {{ request.Approval_Date }}
-    </td>
-    <td class="col-2" v-else>{{ request.Approval_Date }}</td>
     <td class="col-2" v-if="status !== 'rejected'">
       <div v-if="!isRejecting && status !== 'accepted'">
         <StatusButton
@@ -42,16 +39,38 @@
         </div>
       </div>
       <div v-else>
-        <StatusButton
-          v-if="status === 'accepted'"
-          @click="updateStatus('Withdrawn')"
-          label="Withdraw"
-          class="withdraw-btn"
-        />
+        <div v-if="!isWithdrawing">
+          <StatusButton
+            @click="startWithdrawal"
+            label="Withdraw"
+            class="withdraw-btn"
+          />
+        </div>
+        <div v-if="isWithdrawing">
+          <textarea
+            v-model="withdrawalReason"
+            placeholder="Enter withdrawal reason"
+            rows="2"
+          ></textarea>
+          <div class="withdraw-buttons">
+            <StatusButton
+              @click="submitWithdrawal"
+              label="Submit"
+              class="withdraw-submit-btn"
+              >Submit
+            </StatusButton>
+            <StatusButton
+              @click="cancelWithdrawal"
+              label="Cancel"
+              class="withdraw-cancel-btn"
+              >Cancel
+            </StatusButton>
+          </div>
+        </div>
       </div>
     </td>
     <td class="col-2" v-if="status === 'rejected'">
-      {{ request.Approval_Comments }}
+      {{ request.Comments }}
     </td>
   </tr>
 </template>
@@ -66,11 +85,13 @@ export default {
     status: String,
   },
   components: { StatusButton },
-  emits: ['updateRequestStatus', 'rejectRequest'],
+  emits: ['updateRequestStatus', 'rejectRequest', 'withdrawRequest'],
   data() {
     return {
       isRejecting: false,
       rejectionReason: '',
+      isWithdrawing: false,
+      withdrawalReason: '',
     };
   },
   methods: {
@@ -95,6 +116,29 @@ export default {
         this.rejectionReason = '';
       } else {
         alert('Rejection reason is required');
+      }
+    },
+    startWithdrawal() {
+      this.isWithdrawing = true;
+    },
+    cancelWithdrawal() {
+      this.isWithdrawing = false;
+      this.withdrawalReason = '';
+    },
+    submitWithdrawal() {
+      if (
+        this.withdrawalReason.length > 0 &&
+        this.withdrawalReason.trim() !== ''
+      ) {
+        this.$emit(
+          'withdrawRequest',
+          this.request.Request_ID,
+          this.withdrawalReason,
+        );
+        this.isWithdrawing = false;
+        this.withdrawalReason = '';
+      } else {
+        alert('Withdrawal reason is required');
       }
     },
     updateStatus(newStatus) {
@@ -124,11 +168,5 @@ textarea {
   margin-top: 10px;
   border-radius: 5px;
   border: 1px solid #ced4da;
-}
-
-.reject-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
 }
 </style>

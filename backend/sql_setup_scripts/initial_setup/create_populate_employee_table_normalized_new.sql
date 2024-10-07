@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS `WFH_Request` (
     `Status` VARCHAR(20) CHARACTER SET utf8,	-- Pending, Approved, Rejected
     `WFH_Date` DATE,							-- The WFH date that this request is requesting
     `Approver_ID` INT NULL,
-    `Approval_Comments` TEXT CHARACTER SET utf8 NULL,
-	`Approval_Date` DATE NULL,					-- The date when the request was approved
+    `Comments` TEXT CHARACTER SET utf8 NULL,
+	`Decision_Date` DATE NULL,					-- The date when the request was approved
 );
 
 CREATE TABLE IF NOT EXISTS `Access_Log` (

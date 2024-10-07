@@ -23,6 +23,7 @@
           :status="status"
           @updateRequestStatus="updateRequestStatus"
           @rejectRequest="handleRejectRequest"
+          @withdrawRequest="handleWithdrawRequest"
         />
       </tbody>
     </table>
@@ -43,6 +44,14 @@ export default {
     },
     handleRejectRequest(requestID, rejectionReason) {
       this.$emit('updateRequestStatus', requestID, 'Rejected', rejectionReason);
+    },
+    handleWithdrawRequest(requestID, withdrawalReason) {
+      this.$emit(
+        'updateRequestStatus',
+        requestID,
+        'Withdrawn',
+        withdrawalReason,
+      );
     },
   },
 };
