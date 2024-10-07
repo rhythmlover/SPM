@@ -12,8 +12,8 @@ describe('RequestRow.vue', () => {
     WFH_Date: '2023-09-01',
     Request_Date: '2023-08-25',
     Request_ID: 1,
-    Approval_Comments: 'Not applicable',
-    Rejection_Reason: 'Invalid Request',
+    Comments: 'Not applicable',
+    Rejection_Withdraw_Reason: 'Invalid Request',
   };
 
   it('should display staff full name', async () => {
@@ -98,12 +98,14 @@ describe('RequestRow.vue', () => {
       });
 
       await wrapper.find('.reject-btn').trigger('click');
-      await wrapper.find('textarea').setValue(request.Rejection_Reason);
+      await wrapper
+        .find('textarea')
+        .setValue(request.Rejection_Withdraw_Reason);
       await wrapper.find('.reject-submit-btn').trigger('click');
 
       expect(wrapper.emitted().rejectRequest[0]).toEqual([
         1,
-        request.Rejection_Reason,
+        request.Rejection_Withdraw_Reason,
       ]);
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -112,7 +114,7 @@ describe('RequestRow.vue', () => {
     }
   });
 
-  it('should emit updateRequestStatus with "Withdrawn" when withdraw button is clicked', async () => {
+  it('should emit withdrawRequest with request ID and withdrawal reason when withdraw is clicked and submitted', async () => {
     const testId = 'TC-012';
     try {
       const wrapper = mount(RequestRow, {
@@ -120,9 +122,13 @@ describe('RequestRow.vue', () => {
         components: { StatusButton },
       });
       await wrapper.find('.withdraw-btn').trigger('click');
-      expect(wrapper.emitted().updateRequestStatus[0]).toEqual([
+      await wrapper
+        .find('textarea')
+        .setValue(request.Rejection_Withdraw_Reason);
+      await wrapper.find('.withdraw-submit-btn').trigger('click');
+      expect(wrapper.emitted().withdrawRequest[0]).toEqual([
         1,
-        'Withdrawn',
+        request.Rejection_Withdraw_Reason,
       ]);
       await updateSheet(testId, 'Passed');
     } catch (error) {

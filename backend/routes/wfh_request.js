@@ -161,18 +161,18 @@ router.get('/get-approved-requests-by-approver-id', async (req, res, next) => {
   }
 });
 
-router.put('/request/updateApprovalComments', async (req, res, next) => {
+router.put('/request/updateComments', async (req, res, next) => {
   const requestID = req.query.requestID;
   const comments = req.body.comments;
 
   try {
     let [result] = await executeQuery(
-      `UPDATE WFH_Request SET Approval_Comments = '${comments}' WHERE Request_ID = ${requestID}`,
+      `UPDATE WFH_Request SET Comments = '${comments}' WHERE Request_ID = ${requestID}`,
     );
 
     if (result.affectedRows > 0) {
       res.json({
-        message: 'Approval comments updated successfully',
+        message: 'Request comments updated successfully',
         requestID,
         comments,
       });

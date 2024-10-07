@@ -56,7 +56,8 @@ const joinEmployeesToWFHRequests = () => {
       ...request,
       ...employee,
       Request_Date: formatRequestDate(request.Request_Date),
-      Approval_Date: formatRequestDate(request.Approval_Date),
+      Decision_Date: formatRequestDate(request.Decision_Date),
+      WFH_Date: formatRequestDate(request.WFH_Date),
     };
 
     switch (combinedRequest.Status) {
@@ -64,6 +65,7 @@ const joinEmployeesToWFHRequests = () => {
         pendingRequests.value.push(combinedRequest);
         break;
       case 'Withdrawn':
+        break;
       case 'Approved':
         acceptedRequests.value.push(combinedRequest);
         break;
@@ -96,16 +98,16 @@ const formatRequestDate = (isoDate) => {
 const updateRequestStatus = async (
   requestID,
   newStatus,
-  rejectionReason = null,
+  commentsAdded = null,
 ) => {
   try {
     if (newStatus === 'Approved') {
       await checkWFHPolicy(staffID.value);
     }
-    if (rejectionReason !== null && rejectionReason !== '') {
+    if (commentsAdded !== null && commentsAdded !== '') {
       await axios.put(
-        `${API_ROUTE}/wfh-request/request/updateApprovalComments`,
-        { comments: rejectionReason },
+        `${API_ROUTE}/wfh-request/request/updateComments`,
+        { comments: commentsAdded },
         { params: { requestID } },
       );
     }

@@ -35,23 +35,23 @@ button.reject-btn {
 }
 
 button.withdraw-btn {
-  background-color: transparent;
-  border: 1px solid #28a745;
-  color: #28a745;
+  background-color: #ffc107;
+  color: white;
 }
 
-button.withdraw-btn:hover {
+button.reject-submit-btn,
+button.withdraw-submit-btn {
   background-color: #28a745;
   color: white;
 }
 
-button.reject-submit-btn {
-  background-color: #28a745;
-  color: white;
-}
-
-button.reject-cancel-btn {
+button.reject-cancel-btn,
+button.withdraw-cancel-btn {
   background-color: #6c757d;
   color: white;
+}
+
+button:hover {
+  opacity: 0.8;
 }
 </style>
