@@ -12,7 +12,7 @@ export const usePeriodChange = ({
   const getCurrentPeriodString = () => {
     if (isMonthView.value) {
       // Update ref
-      currentPeriodString.value = viewingDate.value.toLocaleString('default', {
+      currentPeriodString.value = viewingDate.value.toLocaleString('en-GB', {
         month: 'long',
         year: 'numeric',
       });
@@ -21,12 +21,12 @@ export const usePeriodChange = ({
       endOfWeek.setDate(endOfWeek.getDate() + 6);
       // Update ref
       currentPeriodString.value = `${viewingDate.value.toLocaleDateString(
-        'default',
+        'en-GB',
         {
           month: 'short',
           day: 'numeric',
         },
-      )} - ${endOfWeek.toLocaleDateString('default', {
+      )} - ${endOfWeek.toLocaleDateString('en-GB', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
