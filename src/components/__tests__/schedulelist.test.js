@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import ScheduleList from '../staff/ScheduleList.vue';
 import { updateSheet } from '../../../updateGoogleSheet';
 
@@ -50,12 +50,8 @@ describe('ScheduleList.vue', () => {
       expect(dateHeaders[0].text()).toContain('October 1'); // Check first date
       expect(dateHeaders[1].text()).toContain('October 2'); // Check second date
 
-      // Reset the mock date
-      vi.useRealTimers();
       await updateSheet(testId, 'Passed');
     } catch (error) {
-      // Reset the mock date
-      vi.useRealTimers();
       await updateSheet(testId, 'Failed');
       throw error;
     }
