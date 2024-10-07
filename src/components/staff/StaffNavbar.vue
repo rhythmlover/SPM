@@ -13,9 +13,9 @@ import { inject } from 'vue';
 import router from '@/router';
 import { highlightedNavItemStyle } from '@/utils/highlightedNavItemStyle';
 
+const staffFName = inject('staffFName');
 const roleID = inject('roleID');
 const staffID = inject('staffID');
-const staffFName = inject('staffFName');
 const staffPosition = inject('staffPosition');
 
 const logout = () => {
@@ -36,20 +36,31 @@ const logout = () => {
     variant="primary"
     class="py-2"
   >
-    <BNavbarBrand class="fw-bold">Manager Portal</BNavbarBrand>
+    <BNavbarBrand class="fw-bold">Staff Portal</BNavbarBrand>
+
     <BNavbarToggle target="nav-collapse" />
 
     <BCollapse id="nav-collapse" is-nav>
-      <BNavbarNav>
+      <BNavbarNav pills>
         <BNavItem
-          :class="highlightedNavItemStyle('manager-view-schedule')"
-          to="/manager-view-schedule"
-          >Team's Schedule</BNavItem
+          :class="highlightedNavItemStyle('staff-myschedule')"
+          to="/staff-myschedule"
+          >My Schedule</BNavItem
         >
         <BNavItem
-          :class="highlightedNavItemStyle('pending-requests')"
-          to="/pending-requests"
-          >View Requests</BNavItem
+          :class="highlightedNavItemStyle('staff-teamschedule')"
+          to="/staff-teamschedule"
+          >Team Schedule</BNavItem
+        >
+        <BNavItem
+          :class="highlightedNavItemStyle('staff-requeststatus')"
+          to="/staff-requeststatus"
+          >All Requests</BNavItem
+        >
+        <BNavItem
+          :class="highlightedNavItemStyle('apply-arrangement')"
+          to="/apply-arrangement"
+          >Apply</BNavItem
         >
       </BNavbarNav>
 

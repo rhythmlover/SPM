@@ -1,6 +1,6 @@
 {
   "name": "spm",
-  "version": "0.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,8 @@
     "test": "vitest --run",
     "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore --max-warnings 0",
     "fix": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs --fix",
-    "format": "eslint-config-prettier src/**/*.{vue,js,jsx,cjs,mjs}",
+    "check": "prettier --check src/**/*.{vue,js}",
+    "format": "prettier --write src/**/*.{vue,js}",
     "checkall": "npm run lint && npm run format && npm run test"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "bootstrap-vue-next": "^0.24.18",
     "googleapis": "^144.0.0",
     "pinia": "^2.1.7",
+    "prettier": "^3.3.3",
     "uuid": "^10.0.0",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3",

@@ -1,7 +1,6 @@
 <script setup>
-import axios from 'axios';
 import { inject, ref, onMounted, watch } from 'vue';
-import ScheduleList from '@/components/staff/ScheduleList.vue';
+import axios from 'axios';
 import { usePeriodChange } from '@/components/usePeriodChange';
 
 const API_ROUTE = inject('API_ROUTE');
@@ -27,14 +26,17 @@ const {
  * Retrieve all of my WFH requests that have same date present in dateMap
  */
 const getWFHRequests = async () => {
+  let requestsMap = {};
   let staffID = localStorage.getItem('staffID');
 
-  // Fetch requests
-  let requestsMap = {};
   try {
-    let res = await axios.get(API_ROUTE + '/wfh-request/user', {
-      params: { staffID },
-    });
+    // Fetch requests
+    let res = await axios.get(
+      API_ROUTE + '/wfh-request/my-subordinate-and-me-requests',
+      {
+        params: { staffID },
+      },
+    );
 
     for (let requestObj of res.data.results) {
       // Convert MySQL date into JS Date object and String representations
@@ -52,7 +54,6 @@ const getWFHRequests = async () => {
   } catch (error) {
     console.error(error);
   }
-
   // Update ref
   myWFHRequests.value = requestsMap;
   return requestsMap;

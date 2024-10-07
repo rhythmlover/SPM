@@ -62,3 +62,8 @@ npm run format
 - Vue (Composition API)
 - [Bootstrap-vue-next](https://bootstrap-vue-next.github.io/bootstrap-vue-next/)
 - Express.js
+
+# Testing Stack
+
+- Vitest + @Vue/Test-Utils@Next + JsDom (Frontend)
+- Jest (Backend)

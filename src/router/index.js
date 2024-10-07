@@ -1,8 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import staffMySchedule from '../views/staff/StaffMySchedule.vue';
+import StaffMySchedule from '../views/staff/StaffMySchedule.vue';
 import HomeView from '../views/HomeView.vue';
-import StaffView from '../views/StaffView.vue';
-import TestView from '@/views/TestView.vue';
+import ApplyView from '../views/ApplyView.vue';
+import DSAllRequestsView from '../views/DSAllRequestsView.vue';
+import ManagerViewSchedule from '@/views/manager/ManagerViewSchedule.vue';
+import StaffRequestStatus from '../views/staff/StaffRequestStatus.vue';
+import StaffTeamSchedule from '../views/staff/StaffTeamScheduleView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,45 +16,35 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/staff',
-      name: 'staff',
-      component: StaffView,
+      path: '/staff-myschedule',
+      name: 'staff-myschedule',
+      component: StaffMySchedule,
     },
     {
-      path: '/test',
-      name: 'test',
-      component: TestView,
+      path: '/staff-teamschedule',
+      name: 'staff-teamschedule',
+      component: StaffTeamSchedule,
     },
     {
-      path: '/staffmyschedule',
-      name: 'staffmyschedule',
-      component: staffMySchedule,
+      path: '/staff-requeststatus',
+      name: 'staff-requeststatus',
+      component: StaffRequestStatus,
     },
     {
-      path: '/staffteamschedule',
-      name: 'staffteamschedule',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/staff/StaffTeamScheduleView.vue'),
+      path: '/apply-arrangement',
+      name: 'apply-arrangement',
+      component: ApplyView,
     },
-    {
-      path: '/staffrequeststatus',
-      name: 'staffrequeststatus',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/staff/StaffRequestStatus.vue'),
-    },
+
     {
       path: '/pending-requests',
       name: 'pending-requests',
-      component: () => import('../views/DSPendingRequests.vue'),
+      component: DSAllRequestsView,
     },
     {
-      path: '/applyArrangement',
-      name: 'applyArrangement',
-      component: () => import('../views/ApplyView.vue'),
+      path: '/manager-view-schedule',
+      name: 'manager-view-schedule',
+      component: ManagerViewSchedule,
     },
   ],
 });

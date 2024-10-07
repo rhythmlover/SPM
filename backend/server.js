@@ -13,7 +13,7 @@ app.use(express.json());
 
 // Routes
 app.use('/employee', employee);
-app.use('/wfh_request', wfh_request);
+app.use('/wfh-request', wfh_request);
 app.use('/teamlist', teamlist);
 app.get('/', (req, res) => {
   res.json({ message: 'Testing Ping Success!' });
@@ -24,7 +24,7 @@ app.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
   }
-  console.error(err, err.stack);
+  console.error('Error Middleware:', err, 500, err.stack);
   res.status(500).json({ error: true, message: err.message, stack: err.stack });
 });
 

@@ -33,27 +33,14 @@ CREATE TABLE IF NOT EXISTS `Department` (
 CREATE TABLE IF NOT EXISTS `WFH_Request` (
     `Request_ID` INT PRIMARY KEY AUTO_INCREMENT,
     `Staff_ID` INT,
-    `Request_Date` DATE, -- The date when the request was made
-    `Reason` TEXT CHARACTER SET utf8,
-    `Status` VARCHAR(20) CHARACTER SET utf8,  -- Pending, Approved, Rejected
-    `Approver_ID` INT
-);
-
-CREATE TABLE IF NOT EXISTS `WFH_Request_Dates` (
-    `Request_Date_ID` INT PRIMARY KEY AUTO_INCREMENT,
-    `Request_ID` INT,  -- Foreign key to WFH_Request
-    `WFH_Date` DATE   -- Specific WFH date
-    `WFH_Time` VARCHAR(20) CHARACTER SET utf8,   -- Specific WFH time (AM, PM, FULL)
-);
-
-CREATE TABLE IF NOT EXISTS `WFH_Approval` (
-    `Approval_ID` INT PRIMARY KEY AUTO_INCREMENT,
-    `Request_ID` INT,
-    `Staff_ID` INT,  -- New column to track the employee who made the WFH request
-    `Approver_ID` INT,
-    `Approval_Status` VARCHAR(20) CHARACTER SET utf8,
-    `Approval_Date` DATE,
-    `Comments` TEXT CHARACTER SET utf8
+    `Request_Date` DATE, 						-- The date when the request was made
+    `Request_Period` VARCHAR(5), 				-- AM, PM, FULL
+    `Request_Reason` TEXT CHARACTER SET utf8,
+    `Status` VARCHAR(20) CHARACTER SET utf8,	-- Pending, Approved, Rejected
+    `WFH_Date` DATE,							-- The WFH date that this request is requesting
+    `Approver_ID` INT NULL,
+    `Approval_Comments` TEXT CHARACTER SET utf8 NULL,
+	`Approval_Date` DATE NULL,					-- The date when the request was approved
 );
 
 CREATE TABLE IF NOT EXISTS `Access_Log` (
@@ -82,16 +69,6 @@ ADD CONSTRAINT `fk_employee_manager` FOREIGN KEY (`Reporting_Manager`) REFERENCE
 ALTER TABLE `WFH_Request`
 ADD CONSTRAINT `fk_wfh_request_staff` FOREIGN KEY (`Staff_ID`) REFERENCES `Employee`(`Staff_ID`),
 ADD CONSTRAINT `fk_wfh_request_approver` FOREIGN KEY (`Approver_ID`) REFERENCES `Employee`(`Staff_ID`);
-
--- Foreign keys for WFH_Request_Dates table
-ALTER TABLE `WFH_Request_Dates`
-ADD CONSTRAINT `fk_wfh_request_dates_request` FOREIGN KEY (`Request_ID`) REFERENCES `WFH_Request`(`Request_ID`) ON DELETE CASCADE;
-
--- Foreign keys for WFH_Approval table
-ALTER TABLE `WFH_Approval`
-ADD CONSTRAINT `fk_wfh_approval_request` FOREIGN KEY (`Request_ID`) REFERENCES `WFH_Request`(`Request_ID`),
-ADD CONSTRAINT `fk_wfh_approval_approver` FOREIGN KEY (`Approver_ID`) REFERENCES `Employee`(`Staff_ID`),
-ADD CONSTRAINT `fk_wfh_approval_staff` FOREIGN KEY (`Staff_ID`) REFERENCES `Employee`(`Staff_ID`);
 
 -- Foreign key for Access_Log table
 ALTER TABLE `Access_Log`
@@ -733,7 +710,6 @@ DROP TABLE Temp_Employee;
 --     OR e1.Position LIKE '%Director%'
 --     OR e1.Position LIKE '%Manager%';
 
-
 -- Increase the GROUP_CONCAT max length limit
 SET SESSION group_concat_max_len = 1000000;
 -- Create the Manager_Subordinates table
@@ -747,7 +723,7 @@ CREATE TABLE IF NOT EXISTS `Manager_Subordinates` (
 INSERT INTO `Manager_Subordinates` (Manager_ID, Subordinates)
 SELECT 
     e1.Staff_ID AS Manager_ID,
-    GROUP_CONCAT(e2.Staff_ID, ' ', e2.Staff_ID ORDER BY e2.Staff_ID SEPARATOR ', ') AS Subordinates
+    GROUP_CONCAT(DISTINCT e2.Staff_ID ORDER BY e2.Staff_ID SEPARATOR ', ') AS Subordinates
 FROM 
     Employee e1
 JOIN 

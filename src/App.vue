@@ -1,54 +1,58 @@
 <script setup>
-import { provide } from 'vue';
+import { provide, ref, onMounted, computed } from 'vue';
 import { RouterView } from 'vue-router';
-import StaffNavbar from './components/StaffNavbar.vue';
+import StaffNavbar from './components/staff/StaffNavbar.vue';
 import ManagerNavbar from './components/ManagerNavbar.vue';
-import { useUserStore } from '@/stores/user';
-import { BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BContainer, BNavbarNav, BNavItem } from 'bootstrap-vue-next'
 
-const userStore = useUserStore();
+const roleID = ref(null);
+const staffID = ref(null);
+const staffFName = ref('');
+const staffPosition = ref('');
+
 provide(
   'API_ROUTE',
   import.meta.env.DEV
     ? import.meta.env.VITE_LOCAL_API_ENDPOINT
     : import.meta.env.VITE_DEPLOYED_API_ENDPOINT,
 );
+
+provide('roleID', roleID);
+provide('staffID', staffID);
+provide('staffFName', staffFName);
+provide('staffPosition', staffPosition);
+
+onMounted(() => {
+  roleID.value = localStorage.roleID ? parseInt(localStorage.roleID) : null;
+  staffID.value = localStorage.staffID ? parseInt(localStorage.staffID) : null;
+  staffFName.value = localStorage.staffFName ? localStorage.staffFName : '';
+  staffPosition.value = localStorage.staffPosition
+    ? localStorage.staffPosition
+    : '';
+});
+
+const isManager = computed(() => {
+  return (
+    staffPosition.value.includes('Manager') ||
+    staffPosition.value.includes('Director') ||
+    staffPosition.value.includes('MD')
+  );
+});
 </script>
 
 <template>
   <div class="app-container">
-    <ManagerNavbar v-if="userStore.userInfo.Role_ID == 1" />
-    <StaffNavbar v-else-if="userStore.userInfo.Role_ID == 2" />
-    <BNavbar v-else fixed="top" toggleable="lg" type="dark" variant="light" class="py-2">
-      <BContainer>
-        <BNavbarBrand to="/" class="fw-bold">WorkForce Portal</BNavbarBrand>
-        <BNavbarToggle target="nav-collapse" />
-        <BCollapse id="nav-collapse" is-nav>
-          <BNavbarNav>
-            <BNavItem to="/">Home</BNavItem>
-            <BNavItem to="/staff">Staff</BNavItem>
-            <BNavItem to="/test">Test</BNavItem>
-            <BNavItem to="/staffMySchedule">My Schedule</BNavItem>
-            <BNavItem to="/staffTeamSchedule">My Team's Schedule</BNavItem>
-            <BNavItem to="/staffRequestStatus">All Requests</BNavItem>
-            <BNavItem to="/applyArrangement">Apply</BNavItem>
-          </BNavbarNav>
-        </BCollapse>
-      </BContainer>
-    </BNavbar>
-    <main class="mt-5 pt-3">
+    <div v-if="staffPosition == ''"></div>
+    <ManagerNavbar v-else-if="isManager" />
+    <StaffNavbar v-else />
+    <main class="">
+      <div class="navbar-spacing"></div>
       <RouterView />
     </main>
   </div>
 </template>
 
-<style>
-.app-container {
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-
-main {
-  padding: 20px;
+<style scoped>
+.navbar-spacing {
+  height: 130px;
 }
 </style>
