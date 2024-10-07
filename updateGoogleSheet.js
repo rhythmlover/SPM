@@ -30,7 +30,7 @@ export async function updateSheet(testId, status) {
   // Fetch existing data from the sheet (assuming the ID starts in column A, status in K, and date in P)
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: 'Sprint1!A3:P', // Adjust range if needed, starting from A3
+    range: 'TESTCASES!A3:P', // Adjust range if needed, starting from A3
   });
 
   const rows = response.data.values;
@@ -42,8 +42,8 @@ export async function updateSheet(testId, status) {
 
     if (rowIndex !== -1) {
       const rowNumber = rowIndex + 3;
-      const statusRange = `Sprint1!K${rowNumber}`;
-      const dateRange = `Sprint1!P${rowNumber}`;  
+      const statusRange = `TESTCASES!K${rowNumber}`;
+      const dateRange = `TESTCASES!P${rowNumber}`;  
 
       sheets.spreadsheets.values.batchUpdate({
         spreadsheetId: sheetId,
@@ -66,7 +66,7 @@ export async function updateSheet(testId, status) {
       // If test case ID does not exist, append it to the next available row
       sheets.spreadsheets.values.append({
         spreadsheetId: sheetId,
-        range: 'Sprint1!A:P',
+        range: 'TESTCASES!A:P',
         valueInputOption: 'USER_ENTERED',
         resource: {
           values: [[testId, , , , , , , , , , status, , , dateTimeGMT8, , dateTimeGMT8]]
@@ -78,7 +78,7 @@ export async function updateSheet(testId, status) {
     // If no data exists in the sheet, append the first row
     sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: 'Sprint1!A:P',
+      range: 'TESTCASES!A:P',
       valueInputOption: 'USER_ENTERED',
       resource: {
         values: [[testId, , , , , , , , , , status, , , dateTimeGMT8, , dateTimeGMT8]]
