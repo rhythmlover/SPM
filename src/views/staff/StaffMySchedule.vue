@@ -25,7 +25,6 @@ const {
 
 /**
  * Retrieve all of my WFH requests that have same date present in dateMap
- * @param dateMap map of dates
  */
 const getWFHRequests = async () => {
   let staffID = localStorage.getItem('staffID');
