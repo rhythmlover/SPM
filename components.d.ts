@@ -21,8 +21,6 @@ declare module 'vue' {
     BListGroup: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroup']
     BListGroupItem: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroupItem']
     BRow: typeof import('bootstrap-vue-next/components/BContainer')['BRow']
-    BSpinner: typeof import('bootstrap-vue-next/components/BSpinner')['BSpinner']
-    BTable: typeof import('bootstrap-vue-next/components/BTable')['BTable']
     BTableSimple: typeof import('bootstrap-vue-next/components/BTable')['BTableSimple']
     BTbody: typeof import('bootstrap-vue-next/components/BTable')['BTbody']
     BTd: typeof import('bootstrap-vue-next/components/BTable')['BTd']

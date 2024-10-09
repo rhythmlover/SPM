@@ -62,10 +62,10 @@ const joinEmployeesToWFHRequests = () => {
 
     switch (combinedRequest.Status) {
       case 'Pending':
+      case 'Withdrawal Pending':
         pendingRequests.value.push(combinedRequest);
         break;
       case 'Withdrawn':
-        break;
       case 'Approved':
         acceptedRequests.value.push(combinedRequest);
         break;
@@ -73,6 +73,7 @@ const joinEmployeesToWFHRequests = () => {
         rejectedRequests.value.push(combinedRequest);
         break;
       default:
+        // Handle any other cases if necessary
         break;
     }
   });
@@ -136,7 +137,7 @@ const checkWFHPolicy = async (reportingManagerID) => {
         params: { approverID: reportingManagerID },
       },
     );
-    if (staffIDs.length * 0.5 < approvedRequests.length + 1) {
+    if (staffIDs.data.length * 0.5 < approvedRequests.data.length + 1) {
       alert('Accepting this request will violate the 50% WFH policy.');
     }
   } catch (error) {
@@ -152,7 +153,7 @@ onMounted(async () => {
 
 <template>
   <BContainer>
-    <h2>Pending Requests of my Direct Subordinates</h2>
+    <h2>Requests from My Direct Subordinates</h2>
 
     <RequestLinks @linkChange="setActiveLink" />
 
@@ -194,11 +195,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-h2 {
-  margin-bottom: 20px;
-  font-size: 1.5em;
-  color: #343a40;
-}
-</style>
