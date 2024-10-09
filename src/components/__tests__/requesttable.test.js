@@ -1,46 +1,41 @@
 import { mount } from '@vue/test-utils';
-import RequestTable from '../RequestTable.vue';
+import RequestTable from '@/components/RequestTable.vue';
 import StatusButton from '../StatusButton.vue';
 import { describe, it, expect } from 'vitest';
 import { updateSheet } from '../../../updateGoogleSheet';
 
 describe('RequestTable.vue', () => {
-  const request = {
-    Staff_FName: 'John',
-    Staff_LName: 'Doe',
-    Request_Reason: 'Personal',
-    WFH_Date: '2023-09-01',
-    Request_Date: '2023-08-25',
-    Request_ID: 1,
-    Comments: 'Not applicable',
-    Rejection_Withdraw_Reason: 'Invalid Request',
-  };
-
-  const requests = [
+  const request = [
     {
       Request_ID: 1,
       Staff_FName: 'John',
       Staff_LName: 'Doe',
-      Reason: 'Personal',
+      Request_Reason: 'Personal',
+      Request_Period: 'Full Day',
       WFH_Date: '2023-09-01',
-      Request_Date: '2023-08-25T10:00:00',
+      Request_Date: '2023-08-25',
       Comments: 'Not applicable',
-    },
+      Status: 'Pending',
+    }];
+
+  const request_approved = [
     {
-      Request_ID: 2,
+      Request_ID: 1,
       Staff_FName: 'Jane',
       Staff_LName: 'Smith',
-      Reason: 'Medical',
+      Request_Reason: 'Medical',
+      Request_Period: 'Full Day',
       WFH_Date: '2023-09-05',
-      Request_Date: '2023-08-28T12:00:00',
+      Request_Date: '2023-08-28',
       Comments: 'Not applicable',
-    },
-  ];
+      Status: 'Approved',
+    }];
+
   it('should display staff full name', async () => {
     const testId = 'TC-007';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'pending' },
+        props: { requests: request, status: 'pending' },
       });
       const nameText = wrapper.find('td.col-2').text();
       expect(nameText).toContain('John Doe');
@@ -55,7 +50,7 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-008';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'pending' },
+        props: { requests: request, status: 'pending' },
       });
       const reasonText = wrapper.findAll('td.col-2').at(1).text();
       expect(reasonText).toBe('Personal');
@@ -70,8 +65,7 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-009';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'pending' },
-        components: { StatusButton },
+        props: { requests: request, status: 'pending' },
       });
 
       await wrapper.find('.reject-btn').trigger('click');
@@ -84,7 +78,7 @@ describe('RequestTable.vue', () => {
       textarea = wrapper.find('textarea');
       expect(textarea.exists()).toBe(false);
 
-      expect(wrapper.vm.rejectionReason).toBe('');
+      expect(wrapper.vm.rejectionReason[1]).toBe('');
 
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -97,14 +91,11 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-010';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'pending' },
+        props: { requests: request, status: 'pending' },
         components: { StatusButton },
       });
       await wrapper.find('.accept-btn').trigger('click');
-      expect(wrapper.emitted().updateRequestStatus[0]).toEqual([
-        1,
-        'Approved',
-      ]);
+      expect(wrapper.emitted().updateRequestStatus[0]).toEqual([1, 'Approved']);
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -116,19 +107,20 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-011';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'pending' },
+        props: { requests: request, status: 'pending' },
         components: { StatusButton },
       });
 
       await wrapper.find('.reject-btn').trigger('click');
       await wrapper
         .find('textarea')
-        .setValue(request.Rejection_Withdraw_Reason);
+        .setValue(request.Request_Reason);
       await wrapper.find('.reject-submit-btn').trigger('click');
 
-      expect(wrapper.emitted().rejectRequest[0]).toEqual([
+      expect(wrapper.emitted().updateRequestStatus[0]).toEqual([
         1,
-        request.Rejection_Withdraw_Reason,
+        'Rejected',
+        `${request.Request_Reason}`,
       ]);
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -141,17 +133,13 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-012';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'accepted' },
+        props: { requests: request_approved, status: 'accepted' },
         components: { StatusButton },
       });
       await wrapper.find('.withdraw-btn').trigger('click');
-      await wrapper
-        .find('textarea')
-        .setValue(request.Rejection_Withdraw_Reason);
-      await wrapper.find('.withdraw-submit-btn').trigger('click');
-      expect(wrapper.emitted().withdrawRequest[0]).toEqual([
+      expect(wrapper.emitted().updateRequestStatus[0]).toEqual([
         1,
-        request.Rejection_Withdraw_Reason,
+        'Withdrawn',
       ]);
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -164,7 +152,7 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-013';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'rejected' },
+        props: { requests: request, status: 'rejected' },
       });
       const commentText = wrapper.findAll('td.col-2').at(5).text();
       expect(commentText).toBe('Not applicable');
@@ -179,7 +167,7 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-014';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'rejected' },
+        props: { requests: request, status: 'rejected' },
       });
       const buttons = wrapper.findAllComponents(StatusButton);
       expect(buttons.length).toBe(0);
@@ -194,7 +182,7 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-020';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'pending' },
+        props: { requests: request, status: 'pending' },
         components: { StatusButton },
       });
       await wrapper.find('.reject-btn').trigger('click');
@@ -211,7 +199,7 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-021';
     try {
       const wrapper = mount(RequestTable, {
-        props: { request, status: 'pending' },
+        props: { requests: request, status: 'pending' },
         components: { StatusButton },
       });
       wrapper.vm.updateStatus('InvalidStatus');
@@ -228,7 +216,7 @@ describe('RequestTable.vue', () => {
     try {
       const wrapper = mount(RequestTable, {
         props: {
-          requests,
+          requests: request,
           status: 'pending',
         },
       });
@@ -237,7 +225,8 @@ describe('RequestTable.vue', () => {
       expect(headers[1].text()).toBe('Reason for Request');
       expect(headers[2].text()).toBe('WFH Date');
       expect(headers[3].text()).toBe('Requested On');
-      expect(headers[4].text()).toBe('Actions');
+      expect(headers[4].text()).toBe('Request Type');
+      expect(headers[5].text()).toBe('Actions');
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -250,12 +239,12 @@ describe('RequestTable.vue', () => {
     try {
       const wrapper = mount(RequestTable, {
         props: {
-          requests,
+          requests: request,
           status: 'pending',
         },
       });
-      const requestTables = wrapper.findAllComponents(RequestTable);
-      expect(requestTables.length - 1).toBe(requests.length); // -1 to account for header row
+      const requestRows = wrapper.findAll('tbody tr');
+      expect(requestRows.length).toBe(request.length);
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -263,24 +252,17 @@ describe('RequestTable.vue', () => {
     }
   });
 
-  it('should emit updateRequestStatus when a row action is triggered', async () => {
+  it("updateRequestStatus is emitted when a row action is triggered", async () => {
     const testId = 'TC-017';
     try {
       const wrapper = mount(RequestTable, {
         props: {
-          requests,
+          requests: request,
           status: 'pending',
         },
       });
-
-      await wrapper
-        .findComponent(RequestTable)
-        .vm.$emit('updateRequestStatus', 1, 'Approved');
-
-      expect(wrapper.emitted().updateRequestStatus[0]).toEqual([
-        1,
-        'Approved',
-      ]);
+      await wrapper.find('.accept-btn').trigger('click');
+      expect(wrapper.emitted().updateRequestStatus).toBeTruthy();
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -288,24 +270,18 @@ describe('RequestTable.vue', () => {
     }
   });
 
-  it('should emit withdrawRequest when a row action is triggered', async () => {
+  it("Actions column is not displayed when status is rejected", async () => {
     const testId = 'TC-018';
     try {
       const wrapper = mount(RequestTable, {
         props: {
-          requests,
-          status: 'accepted',
+          requests: request,
+          status: 'rejected',
         },
       });
-
-      await wrapper
-        .findComponent(RequestTable)
-        .vm.$emit('withdrawRequest', 1, 'Invalid Request');
-
-      expect(wrapper.emitted().withdrawRequest[0]).toEqual([
-        1,
-        'Invalid Request',
-      ]);
+      const headers = wrapper.findAll('th');
+      const actionsColumn = headers.filter(header => header.text() === 'Actions');
+      expect(actionsColumn.length).toBe(0);
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -313,24 +289,18 @@ describe('RequestTable.vue', () => {
     }
   });
 
-  it('should emit rejectRequest when a row action is triggered', async () => {
+  it("Reason column is displayed when status is rejected", async () => {
     const testId = 'TC-019';
     try {
       const wrapper = mount(RequestTable, {
         props: {
-          requests,
-          status: 'pending',
+          requests: request,
+          status: 'rejected',
         },
       });
-
-      await wrapper
-        .findComponent(RequestTable)
-        .vm.$emit('rejectRequest', 1, 'Invalid Request');
-
-      expect(wrapper.emitted().rejectRequest[0]).toEqual([
-        1,
-        'Invalid Request',
-      ]);
+      const headers = wrapper.findAll('th');
+      const commentsColumn = headers.filter(header => header.text() === 'Comments');
+      expect(commentsColumn.length).toBe(1);
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
