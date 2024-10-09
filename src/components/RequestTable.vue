@@ -48,47 +48,25 @@
             </td>
             <td class="col-2">
               <template v-if="!isRejecting[request.Request_ID]">
-                <StatusButton
-                  v-if="request.Status == 'Pending'"
-                  @click="updateStatus(request.Request_ID, 'Approved')"
-                  label="Accept"
-                  class="accept-btn"
-                />
-                <StatusButton
-                  v-if="request.Status == 'Withdrawal Pending'"
-                  @click="updateStatus(request.Request_ID, 'Withdrawn')"
-                  label="Accept"
-                  class="accept-btn"
-                />
-                <StatusButton
-                  @click="startRejection(request.Request_ID)"
-                  label="Reject"
-                  class="reject-btn"
-                />
+                <StatusButton v-if="request.Status == 'Pending'" @click="updateStatus(request.Request_ID, 'Approved')"
+                  label="Accept" class="accept-btn" />
+                <StatusButton v-if="request.Status == 'Withdrawal Pending'"
+                  @click="updateStatus(request.Request_ID, 'Withdrawn')" label="Accept" class="accept-withdrawal-btn" />
+                <StatusButton @click="startRejection(request.Request_ID)" label="Reject" class="reject-btn" />
               </template>
               <template v-else>
-                <textarea
-                  v-model="rejectionReason[request.Request_ID]"
-                  placeholder="Enter rejection reason"
-                  rows="2"
-                ></textarea>
+                <textarea v-model="rejectionReason[request.Request_ID]" placeholder="Enter rejection reason"
+                  rows="2"></textarea>
                 <div class="reject-buttons">
-                  <StatusButton
-                    @click="submitRejection(request.Request_ID, request.Status)"
-                    label="Submit"
-                    class="reject-submit-btn"
-                  />
-                  <StatusButton
-                    @click="cancelRejection(request.Request_ID)"
-                    label="Cancel"
-                    class="reject-cancel-btn"
-                  />
+                  <StatusButton @click="submitRejection(request.Request_ID, request.Status)" label="Submit"
+                    class="reject-submit-btn" />
+                  <StatusButton @click="cancelRejection(request.Request_ID)" label="Cancel" class="reject-cancel-btn" />
                 </div>
               </template>
             </td>
           </tr>
         </tbody>
-        <tbody v-if="status === 'accepted'">
+        <tbody v-else-if="status === 'accepted'">
           <tr v-for="request in requests" :key="request.Request_ID">
             <td class="col-2">
               {{ request.Staff_FName }} {{ request.Staff_LName }}
@@ -102,15 +80,12 @@
             <td class="col-2">{{ request.Request_Date }}</td>
             <td class="col-2">{{ request.Decision_Date }}</td>
             <td class="col-2" v-if="request.Status == 'Approved'">
-              <StatusButton
-                @click="updateStatus(request.Request_ID, 'Withdrawn')"
-                label="Withdraw"
-                class="withdraw-btn"
-              />
+              <StatusButton @click="updateStatus(request.Request_ID, 'Withdrawn')" label="Withdraw"
+                class="withdraw-btn" />
             </td>
             <td class="col-2" v-if="request.Status == 'Withdrawn'">
               <button type="button" class="btn btn-outline-success" disabled>
-                Already WIthdrawn
+                Already Withdrawn
               </button>
             </td>
           </tr>
