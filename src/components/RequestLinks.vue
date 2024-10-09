@@ -47,7 +47,7 @@ export default {
     },
     setActiveLink(link) {
       this.activeLink = link;
-      this.$emit('linkChange', link);
+      this.$emit('linkChange', link); // Emit for parent component
     },
   },
 };
@@ -58,9 +58,9 @@ export default {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
-  border-bottom: 1px solid #0d6fe5;
-  /* Single line across all links */
+  border-bottom: 1px solid #0d6fe5; /* Single line across all links */
   padding-bottom: 5px;
+  position: relative; /* Make this relative to allow positioning of the blue line */
 }
 
 .link-container {
@@ -69,14 +69,26 @@ export default {
 }
 
 .link {
-  color: #007bff;
-  font-weight: bold;
+  color: #000000;
+  font-weight: normal; /* Default weight for unselected links */
   text-decoration: none;
+  padding-bottom: 5px;
+  position: relative; /* Position relative for proper alignment of the active line */
 }
 
 .link.active {
-  color: #28a745;
-  border-bottom: 2px solid #28a745;
+  color: #000000; /* Active link color */
+  font-weight: bold; /* Bold active link */
+}
+
+.link.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px; /* Place the blue line 6px below the text to align it under the border */
+  height: 3px;
+  background-color: #007bff; /* Blue underline for active link */
 }
 
 .link:hover {
