@@ -2,10 +2,10 @@ import { onMounted, watch, ref } from 'vue';
 
 // isMonthView = Filtering by day or month
 export const usePeriodChange = ({
-  todayDate = new Date(),
-  isMonthView = true,
+  todayDate = ref(new Date()),
+  isMonthView = ref(true),
 }) => {
-  const viewingDate = ref(new Date());
+  const viewingDate = ref(new Date(todayDate.value));
   const currentPeriodString = ref('');
   const datesInPeriod = ref({});
 
@@ -83,7 +83,7 @@ export const usePeriodChange = ({
     if (!ableToShift) return;
     viewingDate.value = shiftedDate;
     // Update refs
-    getDatesInPeriod();
+    await getDatesInPeriod();
     getCurrentPeriodString();
   };
 
@@ -122,11 +122,11 @@ export const usePeriodChange = ({
 
   watch([todayDate, isMonthView], async () => {
     await getDatesInPeriod();
-    await getCurrentPeriodString();
+    getCurrentPeriodString();
   });
   onMounted(async () => {
     await getDatesInPeriod();
-    await getCurrentPeriodString();
+    getCurrentPeriodString();
   });
 
   return {
