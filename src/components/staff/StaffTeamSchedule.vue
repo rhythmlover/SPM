@@ -55,7 +55,11 @@
     </b-row>
 
     <template v-else>
-      <b-row v-for="(dayInfo, date) in filteredDatesInPeriod" :key="date" class="mb-4">
+      <b-row
+        v-for="(dayInfo, date) in filteredDatesInPeriod"
+        :key="date"
+        class="mb-4"
+      >
         <b-col>
           <b-card>
             <template #header>
@@ -124,7 +128,7 @@ export default {
     const datesInPeriod = ref({});
     const error = ref(null);
     const isMonthView = ref(true);
-    
+
     const dayWeekFilterDropdownSelectOptions = [
       { value: true, text: 'Month' },
       { value: false, text: 'Week' },
@@ -182,14 +186,20 @@ export default {
           );
 
           // Populate teammates list
-          teammates.value = [...new Set(requests.map(request => ({
-            Staff_ID: request.Staff_ID,
-            Staff_FName: request.Staff_FName,
-            Staff_LName: request.Staff_LName
-          })))];
-          
+          teammates.value = [
+            ...new Set(
+              requests.map((request) => ({
+                Staff_ID: request.Staff_ID,
+                Staff_FName: request.Staff_FName,
+                Staff_LName: request.Staff_LName,
+              })),
+            ),
+          ];
+
           // Initialize selectedTeammates with all teammate IDs
-          selectedTeammates.value = teammates.value.map(teammate => teammate.Staff_ID);
+          selectedTeammates.value = teammates.value.map(
+            (teammate) => teammate.Staff_ID,
+          );
 
           return requests;
         } else {
@@ -309,7 +319,9 @@ export default {
     // New functions for teammate filtering
     const toggleAllTeammates = () => {
       if (selectAllTeammates.value) {
-        selectedTeammates.value = teammates.value.map(teammate => teammate.Staff_ID);
+        selectedTeammates.value = teammates.value.map(
+          (teammate) => teammate.Staff_ID,
+        );
       } else {
         selectedTeammates.value = [];
       }
@@ -318,8 +330,8 @@ export default {
     const filteredDatesInPeriod = computed(() => {
       const filtered = {};
       Object.entries(datesInPeriod.value).forEach(([date, dayInfo]) => {
-        const filteredRequests = dayInfo.requests.filter(request =>
-          selectedTeammates.value.includes(request.Staff_ID)
+        const filteredRequests = dayInfo.requests.filter((request) =>
+          selectedTeammates.value.includes(request.Staff_ID),
         );
         filtered[date] = { ...dayInfo, requests: filteredRequests };
       });
@@ -331,7 +343,8 @@ export default {
     });
 
     watch(selectedTeammates, () => {
-      selectAllTeammates.value = selectedTeammates.value.length === teammates.value.length;
+      selectAllTeammates.value =
+        selectedTeammates.value.length === teammates.value.length;
     });
 
     onMounted(async () => {
