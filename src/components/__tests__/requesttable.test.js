@@ -16,7 +16,8 @@ describe('RequestTable.vue', () => {
       Request_Date: '2023-08-25',
       Comments: 'Not applicable',
       Status: 'Pending',
-    }];
+    },
+  ];
 
   const request_approved = [
     {
@@ -29,7 +30,22 @@ describe('RequestTable.vue', () => {
       Request_Date: '2023-08-28',
       Comments: 'Not applicable',
       Status: 'Approved',
-    }];
+    },
+  ];
+
+  const withdrawal_request = [
+    {
+      Request_ID: 1,
+      Staff_FName: 'Jane',
+      Staff_LName: 'Smith',
+      Request_Reason: 'Studies',
+      Request_Period: 'Full Day',
+      WFH_Date: '2023-09-05',
+      Request_Date: '2023-08-28',
+      Comments: 'Yes, approved',
+      Status: 'Withdrawal Pending',
+    },
+  ];
 
   it('should display staff full name', async () => {
     const testId = 'TC-007';
@@ -112,9 +128,7 @@ describe('RequestTable.vue', () => {
       });
 
       await wrapper.find('.reject-btn').trigger('click');
-      await wrapper
-        .find('textarea')
-        .setValue(request.Request_Reason);
+      await wrapper.find('textarea').setValue(request.Request_Reason);
       await wrapper.find('.reject-submit-btn').trigger('click');
 
       expect(wrapper.emitted().updateRequestStatus[0]).toEqual([
@@ -252,7 +266,7 @@ describe('RequestTable.vue', () => {
     }
   });
 
-  it("updateRequestStatus is emitted when a row action is triggered", async () => {
+  it('updateRequestStatus is emitted when a row action is triggered', async () => {
     const testId = 'TC-017';
     try {
       const wrapper = mount(RequestTable, {
@@ -270,7 +284,7 @@ describe('RequestTable.vue', () => {
     }
   });
 
-  it("Actions column is not displayed when status is rejected", async () => {
+  it('Actions column is not displayed when status is rejected', async () => {
     const testId = 'TC-018';
     try {
       const wrapper = mount(RequestTable, {
@@ -280,7 +294,9 @@ describe('RequestTable.vue', () => {
         },
       });
       const headers = wrapper.findAll('th');
-      const actionsColumn = headers.filter(header => header.text() === 'Actions');
+      const actionsColumn = headers.filter(
+        (header) => header.text() === 'Actions',
+      );
       expect(actionsColumn.length).toBe(0);
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -289,7 +305,7 @@ describe('RequestTable.vue', () => {
     }
   });
 
-  it("Reason column is displayed when status is rejected", async () => {
+  it('Reason column is displayed when status is rejected', async () => {
     const testId = 'TC-019';
     try {
       const wrapper = mount(RequestTable, {
@@ -299,8 +315,72 @@ describe('RequestTable.vue', () => {
         },
       });
       const headers = wrapper.findAll('th');
-      const commentsColumn = headers.filter(header => header.text() === 'Comments');
+      const commentsColumn = headers.filter(
+        (header) => header.text() === 'Comments',
+      );
       expect(commentsColumn.length).toBe(1);
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('for withdrawal requests, should emit updateRequestStatus with "Approved" when accept button is clicked', async () => {
+    const testId = 'TC-043';
+    try {
+      const wrapper = mount(RequestTable, {
+        props: { requests: withdrawal_request, status: 'pending' },
+        components: { StatusButton },
+      });
+      await wrapper.find('.accept-withdrawal-btn').trigger('click');
+      expect(wrapper.emitted().updateRequestStatus[0]).toEqual([
+        1,
+        'Withdrawn',
+      ]);
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('for withdrawal requests, should emit rejectRequest with request ID and rejection reason when reject is clicked and submitted', async () => {
+    const testId = 'TC-044';
+    try {
+      const wrapper = mount(RequestTable, {
+        props: { requests: withdrawal_request, status: 'pending' },
+        components: { StatusButton },
+      });
+
+      await wrapper.find('.reject-btn').trigger('click');
+      await wrapper
+        .find('textarea')
+        .setValue(withdrawal_request.Request_Reason);
+      await wrapper.find('.reject-submit-btn').trigger('click');
+
+      expect(wrapper.emitted().updateRequestStatus[0]).toEqual([
+        1,
+        'Approved',
+        `${withdrawal_request.Request_Reason}`,
+      ]);
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('for withdrawal requests, should not submit rejection if no reason is provided', async () => {
+    const testId = 'TC-045';
+    try {
+      const wrapper = mount(RequestTable, {
+        props: { requests: withdrawal_request, status: 'pending' },
+        components: { StatusButton },
+      });
+      await wrapper.find('.reject-btn').trigger('click');
+      await wrapper.find('.reject-submit-btn').trigger('click');
+      expect(wrapper.emitted().rejectRequest).toBeFalsy();
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
