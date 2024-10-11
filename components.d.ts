@@ -37,7 +37,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScheduleList: typeof import('./src/components/staff/ScheduleList.vue')['default']
-    StaffNavbar: typeof import('./src/components/StaffNavbar.vue')['default']
+    StaffNavbar: typeof import('./src/components/staff/StaffNavbar.vue')['default']
     StaffTeamSchedule: typeof import('./src/components/staff/StaffTeamSchedule.vue')['default']
     StatusButton: typeof import('./src/components/StatusButton.vue')['default']
   }
