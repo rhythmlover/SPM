@@ -107,6 +107,8 @@ export default {
         this.successMessage = 'Withdrawal Request Submitted Successfully';
         this.errorMessage = '';
         console.log(response);
+
+
       } catch (error) {
         console.log(error);
         if (
@@ -121,31 +123,6 @@ export default {
         this.successMessage = '';
       }
     },
-    // async updateRequestStatus() {
-    //   const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
-    //   try {
-    //     // Step 1: Send the withdrawal request to the backend
-    //     const response = await axios.post(`${API_ROUTE}/wfh-request/update-withdrawal-request-status`, {
-    //       Request_ID: this.Request_ID
-    //     });
-
-    //     this.successMessage = 'Withdrawal Request Status Updated Successfully';
-    //     this.errorMessage = '';
-    //     console.log(response);
-    //   } catch (error) {
-    //     console.log(error);
-    //     if (
-    //       error.response &&
-    //       error.response.data &&
-    //       error.response.data.message
-    //     ) {
-    //       this.errorMessage = error.response.data.message;
-    //     } else {
-    //       this.errorMessage = 'Withdrawal Request Status Update Failed';
-    //     }
-    //     this.successMessage = '';
-    //   }
-    // },
     cancel() {
       this.Request_Reason = '';
       this.errorMessage = '';
