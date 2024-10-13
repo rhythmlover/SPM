@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ApplyArrangement: typeof import('./src/components/ApplyArrangement.vue')['default']
+    ApplyArrangementRecurring: typeof import('./src/components/ApplyArrangementRecurring.vue')['default']
     BAlert: typeof import('bootstrap-vue-next/components/BAlert')['BAlert']
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
@@ -21,8 +22,6 @@ declare module 'vue' {
     BListGroup: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroup']
     BListGroupItem: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroupItem']
     BRow: typeof import('bootstrap-vue-next/components/BContainer')['BRow']
-    BSpinner: typeof import('bootstrap-vue-next/components/BSpinner')['BSpinner']
-    BTable: typeof import('bootstrap-vue-next/components/BTable')['BTable']
     BTableSimple: typeof import('bootstrap-vue-next/components/BTable')['BTableSimple']
     BTbody: typeof import('bootstrap-vue-next/components/BTable')['BTbody']
     BTd: typeof import('bootstrap-vue-next/components/BTable')['BTd']
@@ -36,8 +35,8 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScheduleList: typeof import('./src/components/staff/ScheduleList.vue')['default']
-    StaffNavbar: typeof import('./src/components/staff/StaffNavbar.vue')['default']
-    StaffTeamSchedule: typeof import('./src/components/staff/StaffTeamSchedule.vue')['default']
+    StaffNavbar: typeof import('./src/components/StaffNavbar.vue')['default']
+    StaffTeamSchedule: typeof import('./src/components/StaffTeamSchedule.vue')['default']
     StatusButton: typeof import('./src/components/StatusButton.vue')['default']
   }
 }

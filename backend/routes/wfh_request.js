@@ -42,6 +42,62 @@ router.get('/user', async (req, res, next) => {
   }
 });
 
+router.get('/user/non-recurring-dates', async (req, res, next) => {
+  const staffID = req.query.staffID;
+
+  try {
+    let [results] = await executeQuery(
+      `SELECT WFH_Date FROM WFH_Request WHERE Staff_ID = ${staffID} AND Status IN ('Approved', 'Pending', 'Withdrawal Pending')`,
+    );
+
+    results = results.map((result) => {
+      let date = new Date(result['WFH_Date']);
+      date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+      return date.toISOString().split('T')[0];
+    });
+
+    res.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/user/recurring-dates', async (req, res, next) => {
+  const staffID = req.query.staffID;
+
+  try {
+    let [results] = await executeQuery(
+      `SELECT * FROM WFH_Request_Recurring WHERE Staff_ID = ${staffID} AND Status IN ('Pending', 'Withdrawal Pending')`,
+    );
+
+    let recurringDates = [];
+
+    for (let request of results) {
+      const wfhDateStart = new Date(request['WFH_Date_Start']);
+      const wfhDateEnd = new Date(request['WFH_Date_End']);
+      const wfhDay = parseInt(request['WFH_Day']);
+
+      for (
+        let d = new Date(wfhDateStart);
+        d <= wfhDateEnd;
+        d.setDate(d.getDate() + 1)
+      ) {
+        if (d.getDay() === wfhDay) {
+          let adjustedDate = new Date(d);
+          adjustedDate.setMinutes(
+            adjustedDate.getMinutes() - adjustedDate.getTimezoneOffset(),
+          );
+          recurringDates.push(adjustedDate.toISOString().split('T')[0]);
+        }
+      }
+    }
+
+    res.json({ recurringDates });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete('/request/delete/id', async (req, res, next) => {
   const requestID = req.query.requestID;
 
@@ -75,32 +131,22 @@ router.post('/apply', async (req, res, next) => {
       WFH_Date,
     } = req.body;
 
-    if (!Staff_ID || !WFH_Date || !Request_Period || !Request_Reason) {
+    if (!WFH_Date || !Request_Period || !Request_Reason) {
       return res.status(400).json({ message: 'Please fill in all fields' });
     }
 
-    const requestDate = new Date(Request_Date);
+    const wfhDate = new Date(WFH_Date);
     const currentDate = new Date();
     const threeMonthsForward = new Date();
     threeMonthsForward.setMonth(currentDate.getMonth() + 3);
     const twoMonthsBack = new Date();
     twoMonthsBack.setMonth(currentDate.getMonth() - 2);
 
-    if (requestDate > threeMonthsForward || requestDate < twoMonthsBack) {
+    if (wfhDate > threeMonthsForward || wfhDate < twoMonthsBack) {
       return res.status(400).json({
         message:
-          'Request date must be within 3 months forward or 2 months back',
+          'Applied WFH date must be within 3 months forward or 2 months back',
       });
-    }
-
-    const [existingRequests] = await executeQuery(
-      `SELECT * FROM WFH_Request WHERE Staff_ID = ${Staff_ID} AND WFH_Date = '${WFH_Date}'`,
-    );
-
-    if (existingRequests.length > 0) {
-      return res
-        .status(400)
-        .json({ message: 'You already have a request for this date' });
     }
 
     const [results] = await executeQuery(
@@ -117,6 +163,94 @@ router.post('/apply', async (req, res, next) => {
     res
       .status(200)
       .json({ message: 'Application Submitted Successfully', data: results });
+  } catch (error) {
+    console.error('Error:', error);
+    res
+      .status(500)
+      .json({ message: 'Application Submission Failed', error: error.message });
+  }
+});
+
+router.post('/apply-recurring', async (req, res, next) => {
+  try {
+    const {
+      Staff_ID,
+      WFH_Date_Start,
+      WFH_Date_End,
+      WFH_Day,
+      WFH_Period,
+      Request_Date,
+      Request_Reason,
+      Approver_ID,
+    } = req.body;
+
+    if (
+      !WFH_Date_Start ||
+      !WFH_Date_End ||
+      !WFH_Day ||
+      !WFH_Period ||
+      !Request_Reason
+    ) {
+      return res.status(400).json({ message: 'Please fill in all fields' });
+    }
+
+    const wfhDateStart = new Date(WFH_Date_Start);
+    const wfhDateEnd = new Date(WFH_Date_End);
+    const currentDate = new Date();
+    const threeMonthsForward = new Date();
+    threeMonthsForward.setMonth(currentDate.getMonth() + 3);
+    const twoMonthsBack = new Date();
+    twoMonthsBack.setMonth(currentDate.getMonth() - 2);
+
+    if (
+      wfhDateStart > threeMonthsForward ||
+      wfhDateStart < twoMonthsBack ||
+      wfhDateEnd > threeMonthsForward ||
+      wfhDateEnd < twoMonthsBack
+    ) {
+      return res.status(400).json({
+        message:
+          'Applied WFH start and end date must be within 3 months forward or 2 months back',
+      });
+    }
+
+    let wfhDates = [];
+    for (
+      let d = new Date(wfhDateStart);
+      d <= wfhDateEnd;
+      d.setDate(d.getDate() + 1)
+    ) {
+      if (d.getDay() === parseInt(WFH_Day)) {
+        wfhDates.push(new Date(d));
+      }
+    }
+
+    if (wfhDates.length === 0) {
+      return res.status(400).json({
+        message: 'No WFH dates found within the specified range',
+      });
+    }
+
+    try {
+      const [results] = await executeQuery(
+        `INSERT INTO WFH_Request_Recurring (Staff_ID, WFH_Date_Start, WFH_Date_End, WFH_Day, WFH_Period, Request_Date, Request_Reason, Status, Approver_ID) VALUES (${Staff_ID}, '${WFH_Date_Start}', '${WFH_Date_End}', '${WFH_Day}', '${WFH_Period}', '${Request_Date}', '${Request_Reason}', 'Pending', ${Approver_ID})`,
+      );
+
+      if (!results) {
+        return res.status(400).json({
+          message: 'Application Submission Failed',
+          error: 'Invalid Request',
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({
+        message: 'Application Submission Failed',
+        error: error.message,
+      });
+    }
+
+    res.status(200).json({ message: 'Application Submitted Successfully' });
   } catch (error) {
     console.error('Error:', error);
     res
