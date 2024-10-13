@@ -56,11 +56,13 @@ const joinEmployeesToWFHRequests = () => {
       ...request,
       ...employee,
       Request_Date: formatRequestDate(request.Request_Date),
-      Approval_Date: formatRequestDate(request.Approval_Date),
+      Decision_Date: formatRequestDate(request.Decision_Date),
+      WFH_Date: formatRequestDate(request.WFH_Date),
     };
 
     switch (combinedRequest.Status) {
       case 'Pending':
+      case 'Withdrawal Pending':
         pendingRequests.value.push(combinedRequest);
         break;
       case 'Withdrawn':
@@ -71,6 +73,7 @@ const joinEmployeesToWFHRequests = () => {
         rejectedRequests.value.push(combinedRequest);
         break;
       default:
+        // Handle any other cases if necessary
         break;
     }
   });
@@ -96,16 +99,16 @@ const formatRequestDate = (isoDate) => {
 const updateRequestStatus = async (
   requestID,
   newStatus,
-  rejectionReason = null,
+  commentsAdded = null,
 ) => {
   try {
     if (newStatus === 'Approved') {
       await checkWFHPolicy(staffID.value);
     }
-    if (rejectionReason !== null && rejectionReason !== '') {
+    if (commentsAdded !== null && commentsAdded !== '') {
       await axios.put(
-        `${API_ROUTE}/wfh-request/request/updateApprovalComments`,
-        { comments: rejectionReason },
+        `${API_ROUTE}/wfh-request/request/updateComments`,
+        { comments: commentsAdded },
         { params: { requestID } },
       );
     }
@@ -134,7 +137,7 @@ const checkWFHPolicy = async (reportingManagerID) => {
         params: { approverID: reportingManagerID },
       },
     );
-    if (staffIDs.length * 0.5 < approvedRequests.length + 1) {
+    if (staffIDs.data.length * 0.5 < approvedRequests.data.length + 1) {
       alert('Accepting this request will violate the 50% WFH policy.');
     }
   } catch (error) {
@@ -150,7 +153,7 @@ onMounted(async () => {
 
 <template>
   <BContainer>
-    <h2>Pending Requests of my Direct Subordinates</h2>
+    <h2>Requests from My Direct Subordinates</h2>
 
     <RequestLinks @linkChange="setActiveLink" />
 
@@ -192,11 +195,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-h2 {
-  margin-bottom: 20px;
-  font-size: 1.5em;
-  color: #343a40;
-}
-</style>
