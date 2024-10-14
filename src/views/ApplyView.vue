@@ -1,5 +1,5 @@
 <script setup>
-import { useRouter }  from 'vue-router';
+import { useRouter } from 'vue-router';
 import Apply from '../components/ApplyArrangement.vue';
 
 const router = useRouter();
