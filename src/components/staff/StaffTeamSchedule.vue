@@ -238,7 +238,7 @@ export default {
       try {
         const requests = await getWFHRequests();
         requests.forEach((request) => {
-          const requestDate = request.Request_Date;
+          const requestDate = new Date(request.WFH_Date).toLocaleDateString('en-CA');
           if (newMap[requestDate]) {
             newMap[requestDate].requests.push(request);
           }
@@ -352,6 +352,7 @@ export default {
     });
 
     return {
+      staffID,
       viewingDate,
       datesInPeriod,
       filteredDatesInPeriod,
