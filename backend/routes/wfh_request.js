@@ -282,6 +282,42 @@ router.put('/request/status', async (req, res, next) => {
   }
 });
 
+router.put('/withdrawal/status', async (req, res, next) => {
+  const requestID = req.query.requestID;
+  const newStatus = req.body.status;
+
+  try {
+    let result;
+
+    if (newStatus === "Rejected") {
+      // If newStatus is "Approved", update Status to "Rejected"
+      [result] = await executeQuery(
+        `UPDATE WFH_Withdrawal SET Status = 'Rejected' WHERE Request_ID = ${requestID}`
+      );
+    }  
+    if (newStatus === "Withdrawn") {
+      // If newStatus is "Withdrawn", update Status to "Approved"
+      [result] = await executeQuery(
+        `UPDATE WFH_Withdrawal SET Status = 'Approved' WHERE Request_ID = ${requestID}`
+      );
+    } 
+
+    // Check if the update affected any rows
+    if (result.affectedRows > 0) {
+      res.json({
+        message: 'Request status updated successfully',
+        requestID,
+        newStatus,
+      });
+    } else {
+      res.status(404).json({ message: 'Request not found' });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 router.get('/get-approved-requests-by-approver-id', async (req, res, next) => {
   const Approver_ID = req.query.approverID;
 
@@ -302,6 +338,29 @@ router.put('/request/updateComments', async (req, res, next) => {
   try {
     let [result] = await executeQuery(
       `UPDATE WFH_Request SET Comments = '${comments}' WHERE Request_ID = ${requestID}`,
+    );
+
+    if (result.affectedRows > 0) {
+      res.json({
+        message: 'Request comments updated successfully',
+        requestID,
+        comments,
+      });
+    } else {
+      res.status(404).json({ message: 'Request not found' });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/withdrawal/updateComments', async (req, res, next) => {
+  const requestID = req.query.requestID;
+  const comments = req.body.comments;
+
+  try {
+    let [result] = await executeQuery(
+      `UPDATE WFH_Withdrawal SET Comments = '${comments}' WHERE Request_ID = ${requestID}`,
     );
 
     if (result.affectedRows > 0) {

@@ -50,13 +50,21 @@
               <template v-if="!isRejecting[request.Request_ID]">
                 <StatusButton
                   v-if="request.Status == 'Pending'"
-                  @click="updateStatus(request.Request_ID, 'Approved')"
+                  @click="
+                    updateStatus(request.Request_ID, 'Pending', 'Approved')
+                  "
                   label="Accept"
                   class="accept-btn"
                 />
                 <StatusButton
                   v-if="request.Status == 'Withdrawal Pending'"
-                  @click="updateStatus(request.Request_ID, 'Withdrawn')"
+                  @click="
+                    updateStatus(
+                      request.Request_ID,
+                      'Withdrawal Pending',
+                      'Withdrawn',
+                    )
+                  "
                   label="Accept"
                   class="accept-withdrawal-btn"
                 />
@@ -103,7 +111,13 @@
             <td class="col-2">{{ request.Decision_Date }}</td>
             <td class="col-2" v-if="request.Status == 'Approved'">
               <StatusButton
-                @click="updateStatus(request.Request_ID, 'Withdrawn')"
+                @click="
+                  updateStatus(
+                    request.Request_ID,
+                    'Withdrawal Pending',
+                    'Withdrawn',
+                  )
+                "
                 label="Withdraw"
                 class="withdraw-btn"
               />
@@ -152,7 +166,7 @@ export default {
       rejectionReason: {},
     };
   },
-  emits: ['updateRequestStatus'],
+  emits: ['updateRequestStatus', 'updateWithdrawalStatus'],
   methods: {
     startRejection(requestID) {
       // Directly set the value
@@ -182,14 +196,25 @@ export default {
           'Approved',
           this.rejectionReason[requestID],
         );
+        this.$emit(
+          'updateWithdrawalStatus',
+          requestID,
+          'Rejected',
+          this.rejectionReason[requestID],
+        );
       }
 
       this.cancelRejection(requestID);
     },
-    updateStatus(requestID, newStatus) {
+    updateStatus(requestID, requestType, newStatus) {
       const validStatuses = ['Approved', 'Rejected', 'Withdrawn'];
       if (validStatuses.includes(newStatus)) {
-        this.$emit('updateRequestStatus', requestID, newStatus);
+        if (requestType == 'Withdrawal Pending') {
+          this.$emit('updateWithdrawalStatus', requestID, newStatus);
+          this.$emit('updateRequestStatus', requestID, newStatus);
+        } else {
+          this.$emit('updateRequestStatus', requestID, newStatus);
+        }
       } else {
         console.error(`Invalid status: ${newStatus}`);
       }

@@ -123,6 +123,34 @@ const updateRequestStatus = async (
   }
 };
 
+const updateWithdrawalStatus = async (
+  requestID,
+  newStatus,
+  commentsAdded = null,
+) => {
+  try {
+    // if withdrawal is rejected, check if policy allows
+    if (newStatus === 'Approved') {
+      await checkWFHPolicy(staffID.value);
+    }
+    if (commentsAdded !== null && commentsAdded !== '') {
+      await axios.put(
+        `${API_ROUTE}/wfh-request/withdrawal/updateComments`,
+        { comments: commentsAdded },
+        { params: { requestID } },
+      );
+    }
+    await axios.put(
+      `${API_ROUTE}/wfh-request/withdrawal/status`,
+      { status: newStatus },
+      { params: { requestID } },
+    );
+    await fetchWFHRequests();
+  } catch (error) {
+    console.error('Error updating request status:', error);
+  }
+};
+
 const checkWFHPolicy = async (reportingManagerID) => {
   try {
     const staffIDs = await axios.get(
@@ -162,12 +190,14 @@ onMounted(async () => {
       :requests="pendingRequests"
       status="pending"
       @updateRequestStatus="updateRequestStatus"
+      @updateWithdrawalStatus="updateWithdrawalStatus"
     />
     <RequestTable
       v-if="isActive('/previously-accepted')"
       :requests="acceptedRequests"
       status="accepted"
       @updateRequestStatus="updateRequestStatus"
+      @updateWithdrawalStatus="updateWithdrawalStatus"
     />
     <RequestTable
       v-if="isActive('/previously-rejected')"
