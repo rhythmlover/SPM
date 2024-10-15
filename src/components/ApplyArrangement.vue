@@ -83,6 +83,7 @@ export default {
         this.existingWFHDates = [...nonRecurringDates, ...recurringDates];
         console.log('Existing WFH Dates:', this.existingWFHDates);
       } catch (error) {
+        console.error('Error fetching WFH dates:', error);
         this.errorMessage = 'Failed to fetch existing WFH dates';
         console.log(error);
       }
@@ -106,7 +107,7 @@ export default {
       }
 
       if (this.isDateDisabled(this.WFH_Date)) {
-        this.errorMessage = 'This date already has a request or is a weekend.';
+        this.errorMessage = 'This date already has a request or is a weekend';
         return false;
       }
 
