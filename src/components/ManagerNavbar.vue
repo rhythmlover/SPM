@@ -1,14 +1,4 @@
 <script setup>
-import {
-  BNavbar,
-  BNavbarBrand,
-  BNavbarToggle,
-  BCollapse,
-  BNavbarNav,
-  BNavItem,
-  BNavItemDropdown,
-  BDropdownItem,
-} from 'bootstrap-vue-next';
 import { inject } from 'vue';
 import router from '@/router';
 import { highlightedNavItemStyle } from '@/utils/highlightedNavItemStyle';
