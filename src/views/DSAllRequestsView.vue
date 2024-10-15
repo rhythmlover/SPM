@@ -43,6 +43,20 @@ const fetchWFHRequests = async () => {
   }
 };
 
+const checkExpiredRequests = async () => {
+  try {
+    if (pendingRequests.value.length !== 0) {
+      await axios.put(`${API_ROUTE}/wfh-request/removeExpiredRequests`);
+      console.log('Successfully updated status');
+    }
+  } catch (error) {
+    console.error(
+      'Error updating expired pending requests to rejected:',
+      error,
+    );
+  }
+};
+
 const joinEmployeesToWFHRequests = () => {
   pendingRequests.value = [];
   acceptedRequests.value = [];
@@ -77,6 +91,7 @@ const joinEmployeesToWFHRequests = () => {
         break;
     }
   });
+  checkExpiredRequests();
 };
 
 const formatRequestDate = (isoDate) => {
