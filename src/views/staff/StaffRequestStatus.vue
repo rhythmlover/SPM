@@ -7,17 +7,20 @@ import { useRouter } from 'vue-router';
 const props = defineProps({
   requests: {
     type: Array,
-    default: () => [],  // Default empty array if no data is passed
-  }
+    default: () => [], // Default empty array if no data is passed
+  },
 });
 
 // Create a local copy of requests to safely modify it
 const localRequests = ref([...props.requests]);
 
 // Watch for changes in props.requests and update localRequests accordingly
-watch(() => props.requests, (newRequests) => {
-  localRequests.value = [...newRequests];
-});
+watch(
+  () => props.requests,
+  (newRequests) => {
+    localRequests.value = [...newRequests];
+  },
+);
 
 const API_ROUTE = inject('API_ROUTE', 'http://localhost:3000');
 
@@ -66,7 +69,10 @@ const getWFHRequests = async (staffID) => {
         Request_Period: request.Request_Period,
         Reason: request.Request_Reason,
         Status: request.Status,
-        showWithdrawButton: isWithinTwoWeeks(new Date(request.WFH_Date), request.Status),
+        showWithdrawButton: isWithinTwoWeeks(
+          new Date(request.WFH_Date),
+          request.Status,
+        ),
       }));
     } else {
       console.warn('No valid results found in the response.');
@@ -79,14 +85,18 @@ const getWFHRequests = async (staffID) => {
 // Delete a specific request
 const deleteRequest = async (requestID) => {
   try {
-    const confirmDelete = window.confirm('Confirm deletion of this pending request?');
+    const confirmDelete = window.confirm(
+      'Confirm deletion of this pending request?',
+    );
     if (!confirmDelete) return;
 
     await axios.delete(`${API_ROUTE}/wfh-request/request/delete/id`, {
       params: { requestID },
     });
 
-    localRequests.value = localRequests.value.filter(request => request.Request_ID !== requestID);
+    localRequests.value = localRequests.value.filter(
+      (request) => request.Request_ID !== requestID,
+    );
     window.alert(`Request with ID ${requestID} has been successfully deleted.`);
   } catch (error) {
     console.error('Error deleting WFH request:', error);
@@ -96,7 +106,9 @@ const deleteRequest = async (requestID) => {
 // Handle withdrawing an approved request
 const router = useRouter();
 const openWithdrawForm = (Request_ID, WFH_Date, Request_Period, Status) => {
-  const confirmWithdraw = window.confirm('Send request to manager to approve withdrawal of this request?');
+  const confirmWithdraw = window.confirm(
+    'Send request to manager to approve withdrawal of this request?',
+  );
   if (!confirmWithdraw) return;
 
   router.push({
@@ -145,15 +157,32 @@ onMounted(async () => {
               <td>{{ request.Status }}</td>
               <td>
                 <!-- Conditionally show Delete button if status is 'Pending' or 'pending' -->
-                <button v-if="request.Status.toLowerCase() === 'pending'" @click="deleteRequest(request.Request_ID)"
-                  class="btn btn-warning">
+                <button
+                  v-if="request.Status.toLowerCase() === 'pending'"
+                  @click="deleteRequest(request.Request_ID)"
+                  class="btn btn-warning"
+                >
                   Cancel
                 </button>
-                <button v-if="request.showWithdrawButton"
-                  @click="openWithdrawForm(request.Request_ID, request.WFH_Date, request.Request_Period, request.Status)" class="btn btn-danger">
+                <button
+                  v-if="request.showWithdrawButton"
+                  @click="
+                    openWithdrawForm(
+                      request.Request_ID,
+                      request.WFH_Date,
+                      request.Request_Period,
+                      request.Status,
+                    )
+                  "
+                  class="btn btn-danger"
+                >
                   Withdraw
                 </button>
-                <span v-if="request.Status.toLowerCase() === 'withdrawal pending'" class="text-muted">Withdrawal Pending</span>
+                <span
+                  v-if="request.Status.toLowerCase() === 'withdrawal pending'"
+                  class="text-muted"
+                  >Withdrawal Pending</span
+                >
               </td>
             </tr>
           </tbody>
@@ -221,4 +250,3 @@ tr:hover {
   background-color: #c82333;
 }
 </style>
-

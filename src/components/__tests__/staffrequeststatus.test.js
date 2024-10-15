@@ -20,7 +20,6 @@ const router = createRouter({
   routes,
 });
 
-
 describe('StaffRequestStatus.vue', () => {
   const request = [
     {
@@ -95,7 +94,6 @@ describe('StaffRequestStatus.vue', () => {
     }
   });
 
-
   it('Successful Deletion of Pending Request', async () => {
     const testId = 'TC-023';
     axios.delete.mockResolvedValueOnce({
@@ -120,7 +118,6 @@ describe('StaffRequestStatus.vue', () => {
       throw error;
     }
   });
-
 
   it('Render correct table headings', async () => {
     const testId = 'TC-025';
@@ -164,7 +161,6 @@ describe('StaffRequestStatus.vue', () => {
       throw error;
     }
   });
-
 
   it('User Cancels Process of Withdrawing Approved Request', async () => {
     const testId = 'TC-035';
@@ -211,7 +207,9 @@ describe('StaffRequestStatus.vue', () => {
 
       await wrapper.vm.$nextTick();
 
-      expect(wrapper.vm.$router.currentRoute.value.name).toBe('WithdrawRequestForm');
+      expect(wrapper.vm.$router.currentRoute.value.name).toBe(
+        'WithdrawRequestForm',
+      );
       expect(wrapper.vm.$router.currentRoute.value.params).toMatchObject({
         requestID: '2',
         WFH_Date: '2024-10-03',
@@ -240,26 +238,26 @@ describe('StaffRequestStatus.vue', () => {
 
       expect(requestRows.length).toBe(request_approved.length);
 
-      const statusCell = requestRows[0].findAll('td').at(6); 
+      const statusCell = requestRows[0].findAll('td').at(6);
       expect(statusCell.text()).toBe('Approved');
 
-      let withdrawButton = requestRows[0].find('.btn-danger'); 
+      let withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(true);
 
       await wrapper.setProps({
         requests: [
           {
             ...request_approved[0],
-            Status: 'Withdrawal Pending',  
+            Status: 'Withdrawal Pending',
             showWithdrawButton: false,
           },
         ],
       });
 
-      const updatedStatusCell = requestRows[0].findAll('td').at(6); 
+      const updatedStatusCell = requestRows[0].findAll('td').at(6);
       expect(updatedStatusCell.text()).toBe('Withdrawal Pending');
 
-      withdrawButton = requestRows[0].find('.btn-danger'); 
+      withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(false);
 
       await updateSheet(testId, 'Passed');
@@ -282,26 +280,26 @@ describe('StaffRequestStatus.vue', () => {
 
       expect(requestRows.length).toBe(request_pending_withdrawal.length);
 
-      const statusCell = requestRows[0].findAll('td').at(6); 
+      const statusCell = requestRows[0].findAll('td').at(6);
       expect(statusCell.text()).toBe('Withdrawal Pending');
 
-      let withdrawButton = requestRows[0].find('.btn-danger'); 
+      let withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(false);
 
       await wrapper.setProps({
         requests: [
           {
             ...request_pending_withdrawal[0],
-            Status: 'Withdrawn',  
+            Status: 'Withdrawn',
             showWithdrawButton: false,
           },
         ],
       });
 
-      const updatedStatusCell = requestRows[0].findAll('td').at(6); 
+      const updatedStatusCell = requestRows[0].findAll('td').at(6);
       expect(updatedStatusCell.text()).toBe('Withdrawn');
 
-      withdrawButton = requestRows[0].find('.btn-danger'); 
+      withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(false);
 
       await updateSheet(testId, 'Passed');
@@ -324,26 +322,26 @@ describe('StaffRequestStatus.vue', () => {
 
       expect(requestRows.length).toBe(request_pending_withdrawal.length);
 
-      const statusCell = requestRows[0].findAll('td').at(6); 
+      const statusCell = requestRows[0].findAll('td').at(6);
       expect(statusCell.text()).toBe('Withdrawal Pending');
 
-      let withdrawButton = requestRows[0].find('.btn-danger'); 
+      let withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(false);
 
       await wrapper.setProps({
         requests: [
           {
             ...request_pending_withdrawal[0],
-            Status: 'Approved',  
+            Status: 'Approved',
             showWithdrawButton: true,
           },
         ],
       });
 
-      const updatedStatusCell = requestRows[0].findAll('td').at(6); 
+      const updatedStatusCell = requestRows[0].findAll('td').at(6);
       expect(updatedStatusCell.text()).toBe('Approved');
 
-      withdrawButton = requestRows[0].find('.btn-danger'); 
+      withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(true);
 
       await updateSheet(testId, 'Passed');
@@ -374,5 +372,4 @@ describe('StaffRequestStatus.vue', () => {
       throw error;
     }
   });
-
 });
