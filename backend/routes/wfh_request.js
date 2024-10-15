@@ -424,4 +424,26 @@ router.get('/my-subordinate-and-me-requests', async (req, res, next) => {
   }
 });
 
+router.put('/removeExpiredRequests', async (req, res, next) => {
+  try {
+    // Execute the SQL query to update the records
+    const result = await executeQuery(
+      `UPDATE WFH_Request 
+       SET Status = 'Rejected', 
+           Comments = 'Expired more than 2 months ago' 
+       WHERE WFH_Date < DATE_SUB(CURDATE(), INTERVAL 2 MONTH)` // Closing parenthesis added here
+    );
+
+    // Log the result of the query execution
+    console.log("RESULTS: ", result);
+
+    // Send a success response
+    res.json({ message: 'Expired requests rejected successfully and comments updated.' });
+  } catch (error) {
+    // Handle any errors that occur
+    next(error);
+  }
+});
+
+
 export default router;
