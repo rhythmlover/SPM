@@ -1,4 +1,4 @@
-import ApplyArrangement from '../ApplyArrangement.vue';
+import ApplyArrangementRecurring from '../ApplyArrangementRecurring.vue';
 import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { nextTick } from 'vue';
@@ -48,7 +48,7 @@ vi.mock('axios', () => {
   };
 });
 
-describe('ApplyArrangement.vue', () => {
+describe('ApplyArrangementRecurring.vue', () => {
   beforeEach(() => {
     const staffID = '171015';
     localStorage.setItem('staffID', staffID);
@@ -66,9 +66,11 @@ describe('ApplyArrangement.vue', () => {
   const validRequest = {
     Staff_ID: '171015',
     Request_Date: '2024-10-15',
-    Request_Period: 'AM',
+    WFH_Date_Start: '2024-12-01',
+    WFH_Date_End: '2024-12-30',
+    WFH_Day: '1',
+    WFH_Period: 'AM',
     Request_Reason: 'Personal',
-    WFH_Date: '2024-10-15',
     Status: 'Pending',
     Approver_ID: '171018',
     Approver_Name: 'Ji Truong',
@@ -79,24 +81,22 @@ describe('ApplyArrangement.vue', () => {
     Request_Reason: '',
   };
 
-  const invalidRequestWeekend = {
-    ...validRequest,
-    WFH_Date: '2024-09-01',
-  };
-
   const invalidRequestOutRange = {
     ...validRequest,
-    WFH_Date: '2022-03-01',
+    WFH_Date_Start: '2022-03-01',
+    WFH_Date_End: '2022-03-30',
   };
 
   const existingRequest = {
     Staff_ID: '171015',
-    WFH_Date: '2024-10-15',
+    WFH_Date_Start: '2024-09-16',
+    WFH_Date_End: '2024-09-30',
+    WFH_Day: '1',
   };
 
   it('should apply arrangement successfully with a valid request', async () => {
-    const testId = 'TC-046';
-    const wrapper = mount(ApplyArrangement, {
+    const testId = 'TC-064';
+    const wrapper = mount(ApplyArrangementRecurring, {
       props: {
         API_ROUTE: 'http://localhost:3000',
       },
@@ -104,6 +104,7 @@ describe('ApplyArrangement.vue', () => {
 
     await wrapper.setData(validRequest);
     await flushPromises();
+
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
@@ -112,8 +113,8 @@ describe('ApplyArrangement.vue', () => {
   });
 
   it('should display an error message if a field is missing', async () => {
-    const testId = 'TC-047';
-    const wrapper = mount(ApplyArrangement, {
+    const testId = 'TC-065';
+    const wrapper = mount(ApplyArrangementRecurring, {
       props: {
         API_ROUTE: 'http://localhost:3000',
       },
@@ -127,27 +128,9 @@ describe('ApplyArrangement.vue', () => {
     await updateSheet(testId, 'Passed');
   });
 
-  it('should display an error message if WFH date is on a weekend', async () => {
-    const testId = 'TC-048';
-    const wrapper = mount(ApplyArrangement, {
-      props: {
-        API_ROUTE: 'http://localhost:3000',
-      },
-    });
-
-    await wrapper.setData(invalidRequestWeekend);
-    await wrapper.find('form').trigger('submit.prevent');
-    await flushPromises();
-
-    expect(wrapper.vm.errorMessage).toBe(
-      'This date already has a request or is a weekend',
-    );
-    await updateSheet(testId, 'Passed');
-  });
-
   it('should display an error message if the WFH date is out of valid range', async () => {
-    const testId = 'TC-049';
-    const wrapper = mount(ApplyArrangement, {
+    const testId = 'TC-066';
+    const wrapper = mount(ApplyArrangementRecurring, {
       props: {
         API_ROUTE: 'http://localhost:3000',
       },
@@ -158,14 +141,14 @@ describe('ApplyArrangement.vue', () => {
     await flushPromises();
 
     expect(wrapper.vm.errorMessage).toBe(
-      'Request date is outside the allowed range',
+      'No valid dates found for the selected range and day of the week',
     );
     await updateSheet(testId, 'Passed');
   });
 
   it('should display a success message upon successful application', async () => {
-    const testId = 'TC-050';
-    const wrapper = mount(ApplyArrangement, {
+    const testId = 'TC-067';
+    const wrapper = mount(ApplyArrangementRecurring, {
       props: {
         API_ROUTE: 'http://localhost:3000',
       },
@@ -179,27 +162,9 @@ describe('ApplyArrangement.vue', () => {
     await updateSheet(testId, 'Passed');
   });
 
-  it('should reset form fields after successful application', async () => {
-    const testId = 'TC-051';
-    const wrapper = mount(ApplyArrangement, {
-      props: {
-        API_ROUTE: 'http://localhost:3000',
-      },
-    });
-
-    await wrapper.setData(validRequest);
-    await wrapper.find('form').trigger('submit.prevent');
-    await flushPromises();
-
-    expect(wrapper.vm.Request_Reason).toBe('');
-    expect(wrapper.vm.Request_Period).toBe('');
-    expect(wrapper.vm.WFH_Date).toBe('');
-    await updateSheet(testId, 'Passed');
-  });
-
   it('should display an error message if the user tries to submit for the same day', async () => {
-    const testId = 'TC-052';
-    const wrapper = mount(ApplyArrangement, {
+    const testId = 'TC-068';
+    const wrapper = mount(ApplyArrangementRecurring, {
       props: {
         API_ROUTE: 'http://localhost:3000',
       },
@@ -213,16 +178,18 @@ describe('ApplyArrangement.vue', () => {
     await updateSheet(testId, 'Passed');
   });
 
-  it('should correctly set the date of request', async () => {
-    const testId = 'TC-053';
-    const wrapper = mount(ApplyArrangement, {
+  it('should correctly retrieve the applied dates in accordance to date range', async () => {
+    const testId = 'TC-069';
+    const wrapper = mount(ApplyArrangementRecurring, {
       props: {
         API_ROUTE: 'http://localhost:3000',
       },
     });
 
     await wrapper.setData(validRequest);
-    expect(wrapper.vm.Request_Date).toBe(validRequest.Request_Date);
+    expect(wrapper.find('.alert-info').text()).toBe(
+      'Applied Dates:2024-12-022024-12-092024-12-162024-12-232024-12-30',
+    );
     await updateSheet(testId, 'Passed');
   });
 });
