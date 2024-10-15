@@ -1,4 +1,5 @@
 import app from './server.js';
+import { closeConnection } from './mysqlConnection.js';
 
 const port = 3000;
 

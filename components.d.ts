@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     ApplyArrangement: typeof import('./src/components/ApplyArrangement.vue')['default']
     ApprovedRequestWithdrawal: typeof import('./src/views/staff/ApprovedRequestWithdrawal.vue')['default']
+    ApplyArrangementRecurring: typeof import('./src/components/ApplyArrangementRecurring.vue')['default']
     BAlert: typeof import('bootstrap-vue-next/components/BAlert')['BAlert']
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
@@ -30,12 +31,13 @@ declare module 'vue' {
     BTr: typeof import('bootstrap-vue-next/components/BTable')['BTr']
     ManagerNavbar: typeof import('./src/components/ManagerNavbar.vue')['default']
     RequestLinks: typeof import('./src/components/RequestLinks.vue')['default']
+    RequestRow: typeof import('./src/components/RequestRow.vue')['default']
     RequestTable: typeof import('./src/components/RequestTable.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScheduleList: typeof import('./src/components/staff/ScheduleList.vue')['default']
-    StaffNavbar: typeof import('./src/components/staff/StaffNavbar.vue')['default']
-    StaffTeamSchedule: typeof import('./src/components/staff/StaffTeamSchedule.vue')['default']
+    StaffNavbar: typeof import('./src/components/StaffNavbar.vue')['default']
+    StaffTeamSchedule: typeof import('./src/components/StaffTeamSchedule.vue')['default']
     StatusButton: typeof import('./src/components/StatusButton.vue')['default']
   }
 }
