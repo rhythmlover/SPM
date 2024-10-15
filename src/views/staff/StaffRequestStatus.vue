@@ -13,7 +13,7 @@ const props = defineProps({
 
 // Create a local copy of requests to safely modify it
 const localRequests = ref([...props.requests]);
-const staffID = inject('staffID').value;
+const staffID = localStorage.getItem('staffID');
 
 // Watch for changes in props.requests and update localRequests accordingly
 watch(

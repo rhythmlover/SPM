@@ -1,4 +1,3 @@
-<!-- StaffTeamSchedule.vue -->
 <template>
   <div>
     <b-row class="mb-4 align-items-center">

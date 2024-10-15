@@ -153,7 +153,6 @@ describe('StaffRequestStatus.vue', () => {
         },
       });
       const requestRows = wrapper.findAll('tbody tr');
-      console.log(requestRows.length);
       expect(requestRows.length).toBe(request.length);
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -234,7 +233,6 @@ describe('StaffRequestStatus.vue', () => {
         },
       });
       const requestRows = wrapper.findAll('tbody tr');
-      console.log(requestRows.length);
 
       expect(requestRows.length).toBe(request_approved.length);
 
@@ -276,7 +274,6 @@ describe('StaffRequestStatus.vue', () => {
         },
       });
       const requestRows = wrapper.findAll('tbody tr');
-      console.log(requestRows.length);
 
       expect(requestRows.length).toBe(request_pending_withdrawal.length);
 
@@ -318,7 +315,6 @@ describe('StaffRequestStatus.vue', () => {
         },
       });
       const requestRows = wrapper.findAll('tbody tr');
-      console.log(requestRows.length);
 
       expect(requestRows.length).toBe(request_pending_withdrawal.length);
 
