@@ -1,10 +1,25 @@
 <script setup>
 import axios from 'axios';
-import { inject, onMounted, ref } from 'vue';
+import { inject, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-const requests = ref([]);
-const API_ROUTE = inject('API_ROUTE');
+// Declare `requests` as a prop
+const props = defineProps({
+  requests: {
+    type: Array,
+    default: () => [],  // Default empty array if no data is passed
+  }
+});
+
+// Create a local copy of requests to safely modify it
+const localRequests = ref([...props.requests]);
+
+// Watch for changes in props.requests and update localRequests accordingly
+watch(() => props.requests, (newRequests) => {
+  localRequests.value = [...newRequests];
+});
+
+const API_ROUTE = inject('API_ROUTE', 'http://localhost:3000');
 
 const formatRequestDate = (isoDate) => {
   const date = new Date(isoDate);
@@ -18,9 +33,7 @@ const formatRequestDate = (isoDate) => {
     weekday: 'long',
     timeZone: 'UTC',
   });
-  const formattedDate = `${month} ${day}, ${year} (${weekday})`;
-
-  return formattedDate;
+  return `${month} ${day}, ${year} (${weekday})`;
 };
 
 const isWithinTwoWeeks = (WFH_Date, Status) => {
@@ -30,7 +43,11 @@ const isWithinTwoWeeks = (WFH_Date, Status) => {
   const twoWeeksAfter = new Date(WFH_Date);
   twoWeeksAfter.setDate(twoWeeksAfter.getDate() + 14);
 
-  return (currentDate >= twoWeeksBefore || currentDate <= twoWeeksAfter) && (Status.toLowerCase() === 'approved');
+  return (
+    currentDate >= twoWeeksBefore &&
+    currentDate <= twoWeeksAfter &&
+    Status.toLowerCase() === 'approved'
+  );
 };
 
 // Fetch WFH requests for the correct staff
@@ -41,7 +58,7 @@ const getWFHRequests = async (staffID) => {
     });
 
     if (res.data && Array.isArray(res.data.results)) {
-      requests.value = res.data.results.map((request) => ({
+      localRequests.value = res.data.results.map((request) => ({
         StaffID: request.Staff_ID,
         Request_ID: request.Request_ID,
         Request_Date: formatRequestDate(request.Request_Date),
@@ -49,69 +66,49 @@ const getWFHRequests = async (staffID) => {
         Request_Period: request.Request_Period,
         Reason: request.Request_Reason,
         Status: request.Status,
-        showWithdrawButton: isWithinTwoWeeks(new Date(request.WFH_Date), request.Status)
+        showWithdrawButton: isWithinTwoWeeks(new Date(request.WFH_Date), request.Status),
       }));
     } else {
       console.warn('No valid results found in the response.');
-      requests.value = [];
     }
   } catch (error) {
     console.error('Error fetching WFH requests:', error);
   }
 };
 
-// Delete a specific request with confirmation and alert
+// Delete a specific request
 const deleteRequest = async (requestID) => {
   try {
-    const confirmDelete = window.confirm(
-      'Confirm deletion of this pending request?',
-    );
-
-    if (!confirmDelete) {
-      return; // Do nothing if user cancels
-    }
-
-    let API_ROUTE = import.meta.env.DEV
-      ? import.meta.env.VITE_LOCAL_API_ENDPOINT
-      : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
+    const confirmDelete = window.confirm('Confirm deletion of this pending request?');
+    if (!confirmDelete) return;
 
     await axios.delete(`${API_ROUTE}/wfh-request/request/delete/id`, {
       params: { requestID },
     });
 
-    // Remove the deleted request from the requests array
-    requests.value = requests.value.filter(
-      (request) => request.Request_ID !== requestID,
-    );
-
-    // Alert the user after successful deletion
+    localRequests.value = localRequests.value.filter(request => request.Request_ID !== requestID);
     window.alert(`Request with ID ${requestID} has been successfully deleted.`);
   } catch (error) {
     console.error('Error deleting WFH request:', error);
   }
 };
 
-
+// Handle withdrawing an approved request
 const router = useRouter();
 const openWithdrawForm = (Request_ID, WFH_Date, Request_Period, Status) => {
   const confirmWithdraw = window.confirm('Send request to manager to approve withdrawal of this request?');
-
-  if (!confirmWithdraw) {
-    return; 
-  }
+  if (!confirmWithdraw) return;
 
   router.push({
-    name: 'WithdrawRequestForm', 
-    params: { requestID: Request_ID, WFH_Date: WFH_Date, Request_Period: Request_Period, Status: Status }, 
+    name: 'WithdrawRequestForm',
+    params: { requestID: Request_ID, WFH_Date, Request_Period, Status },
   });
 };
 
-// Use onMounted to fetch data when the component is mounted
 onMounted(async () => {
-  // Hardcoded staffID for now after removing userstore, implement after local storage
-  const staffID = 171015; 
+  const staffID = 171015;
   if (staffID) {
-    await getWFHRequests(staffID); 
+    await getWFHRequests(staffID);
   } else {
     console.error('Staff ID is not available.');
   }
@@ -138,7 +135,7 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(request, index) in requests" :key="index">
+            <tr v-for="(request, index) in localRequests" :key="index">
               <td>{{ request.StaffID }}</td>
               <td>{{ request.Request_ID }}</td>
               <td>{{ request.Request_Date }}</td>

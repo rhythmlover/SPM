@@ -4,6 +4,16 @@ import { mapGetters } from 'vuex';
 import { inject } from 'vue';
 
 export default {
+  props: {
+    initialSuccessMessage: {
+      type: String,
+      default: '',
+    },
+    initialErrorMessage: {
+      type: String,
+      default: '',
+    },
+  },
   data() {
     return {
       Staff_Name: '',
@@ -17,10 +27,18 @@ export default {
       Status: this.$route.params.Status,
       Approver_ID: '',
       Approver_Name: '',
-      errorMessage: '',
-      successMessage: '',
+      errorMessage: this.initialErrorMessage,
+      successMessage: this.initialSuccessMessage,
       existingRequestDates: [],
     };
+  },
+  watch: {
+    initialSuccessMessage(newVal) {
+      this.successMessage = newVal;
+    },
+    initialErrorMessage(newVal) {
+      this.errorMessage = newVal;
+    },
   },
   computed: {
     ...mapGetters(['getStaffID']),
@@ -105,6 +123,7 @@ export default {
         });
 
         this.successMessage = 'Withdrawal Request Submitted Successfully';
+        // this.updateSuccessMessage('Withdrawal Request Submitted Successfully');
         this.errorMessage = '';
         console.log(response);
 
@@ -120,7 +139,7 @@ export default {
         } else {
           this.errorMessage = 'Withdrawal Application Submission Failed';
         }
-        this.successMessage = '';
+        this.successMessage('');
       }
     },
     cancel() {
