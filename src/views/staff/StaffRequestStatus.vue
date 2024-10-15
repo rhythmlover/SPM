@@ -13,6 +13,7 @@ const props = defineProps({
 
 // Create a local copy of requests to safely modify it
 const localRequests = ref([...props.requests]);
+const staffID = inject('staffID').value;
 
 // Watch for changes in props.requests and update localRequests accordingly
 watch(
@@ -118,7 +119,6 @@ const openWithdrawForm = (Request_ID, WFH_Date, Request_Period, Status) => {
 };
 
 onMounted(async () => {
-  const staffID = 171015;
   if (staffID) {
     await getWFHRequests(staffID);
   } else {

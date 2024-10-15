@@ -17,7 +17,7 @@ export default {
   data() {
     return {
       Staff_Name: '',
-      Staff_ID: '171015',
+      Staff_ID: '',
       Staff_Position: '',
       Request_ID: this.$route.params.requestID,
       WFH_Date: this.$route.params.WFH_Date,
@@ -90,7 +90,7 @@ export default {
       }
     },
     async fetchStaffPosition() {
-      const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
+      const API_ROUTE = inject('API_ROUTE');
       try {
         const response = await axios.get(
           API_ROUTE + '/employee/getStaffPositionByID',
