@@ -48,6 +48,20 @@ const login = async () => {
   staffPosition.value = res.data.Position;
   // Re-route
   redirectRoute();
+
+  // Check expired requests
+  try {
+    const staffIDValue = res.data.Staff_ID;
+    await axios.put(`${API_ROUTE}/wfh-request/removeExpiredRequests`, {
+      staffID: staffIDValue,
+    });
+    console.log('Successfully updated status');
+  } catch (error) {
+    console.error(
+      'Error updating expired pending requests to rejected:',
+      error,
+    );
+  }
 };
 
 onMounted(() => {
