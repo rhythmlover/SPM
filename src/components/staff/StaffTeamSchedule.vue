@@ -1,4 +1,3 @@
-<!-- StaffTeamSchedule.vue -->
 <template>
   <div>
     <BRow class="my-2">
