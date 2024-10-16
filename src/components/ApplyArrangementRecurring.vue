@@ -12,7 +12,7 @@ export default {
       WFH_Date_Start: '',
       WFH_Date_End: '',
       WFH_Day: '',
-      WFH_Period: '',
+      Request_Period: '',
       Status: 'Pending',
       Approver_ID: '',
       Approver_Name: '',
@@ -143,7 +143,7 @@ export default {
         !this.WFH_Date_Start ||
         !this.WFH_Date_End ||
         !this.WFH_Day ||
-        !this.WFH_Period ||
+        !this.Request_Period ||
         !this.Request_Reason
       ) {
         this.errorMessage = 'Please fill in all fields';
@@ -185,7 +185,7 @@ export default {
             WFH_Date_Start: this.WFH_Date_Start,
             WFH_Date_End: this.WFH_Date_End,
             WFH_Day: this.WFH_Day,
-            WFH_Period: this.WFH_Period,
+            Request_Period: this.Request_Period,
             Request_Date: this.Request_Date,
             Request_Reason: this.Request_Reason,
             Approver_ID: this.Approver_ID,
@@ -213,7 +213,7 @@ export default {
         this.WFH_Date_Start = '';
         this.WFH_Date_End = '';
         this.WFH_Day = '';
-        this.WFH_Period = '';
+        this.Request_Period = '';
         this.Request_Reason = '';
       }
     },
@@ -221,7 +221,7 @@ export default {
       this.WFH_Date_Start = '';
       this.WFH_Date_End = '';
       this.WFH_Day = '';
-      this.WFH_Period = '';
+      this.Request_Period = '';
       this.Request_Reason = '';
       this.errorMessage = '';
       this.successMessage = '';
@@ -290,8 +290,8 @@ export default {
         </ul>
       </div>
       <div class="form-group mb-3">
-        <label for="wfh_period">Period:</label>
-        <select v-model="WFH_Period" id="wfh_period" class="form-control">
+        <label for="request_period">Period:</label>
+        <select v-model="Request_Period" id="request_period" class="form-control">
           <option value="AM">AM</option>
           <option value="PM">PM</option>
           <option value="Full-Day">Full-Day</option>
