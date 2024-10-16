@@ -178,7 +178,7 @@ router.post('/apply-recurring', async (req, res, next) => {
       WFH_Date_Start,
       WFH_Date_End,
       WFH_Day,
-      WFH_Period,
+      Request_Period,
       Request_Date,
       Request_Reason,
       Approver_ID,
@@ -188,7 +188,7 @@ router.post('/apply-recurring', async (req, res, next) => {
       !WFH_Date_Start ||
       !WFH_Date_End ||
       !WFH_Day ||
-      !WFH_Period ||
+      !Request_Period ||
       !Request_Reason
     ) {
       return res.status(400).json({ message: 'Please fill in all fields' });
@@ -233,7 +233,7 @@ router.post('/apply-recurring', async (req, res, next) => {
 
     try {
       const [results] = await executeQuery(
-        `INSERT INTO WFH_Request_Recurring (Staff_ID, WFH_Date_Start, WFH_Date_End, WFH_Day, WFH_Period, Request_Date, Request_Reason, Status, Approver_ID) VALUES (${Staff_ID}, '${WFH_Date_Start}', '${WFH_Date_End}', '${WFH_Day}', '${WFH_Period}', '${Request_Date}', '${Request_Reason}', 'Pending', ${Approver_ID})`,
+        `INSERT INTO WFH_Request_Recurring (Staff_ID, WFH_Date_Start, WFH_Date_End, WFH_Day, Request_Period, Request_Date, Request_Reason, Status, Approver_ID) VALUES (${Staff_ID}, '${WFH_Date_Start}', '${WFH_Date_End}', '${WFH_Day}', '${Request_Period}', '${Request_Date}', '${Request_Reason}', 'Pending', ${Approver_ID})`,
       );
 
       if (!results) {

@@ -69,7 +69,7 @@ describe('ApplyArrangementRecurring.vue', () => {
     WFH_Date_Start: '2024-12-01',
     WFH_Date_End: '2024-12-30',
     WFH_Day: '1',
-    WFH_Period: 'AM',
+    Request_Period: 'AM',
     Request_Reason: 'Personal',
     Status: 'Pending',
     Approver_ID: '171018',
