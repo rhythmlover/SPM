@@ -291,10 +291,14 @@ export default {
       </div>
       <div class="form-group mb-3">
         <label for="request_period">Period:</label>
-        <select v-model="Request_Period" id="request_period" class="form-control">
+        <select
+          v-model="Request_Period"
+          id="request_period"
+          class="form-control"
+        >
           <option value="AM">AM</option>
           <option value="PM">PM</option>
-          <option value="Full-Day">Full-Day</option>
+          <option value="Full">Full-Day</option>
         </select>
       </div>
       <div class="form-group mb-3">
