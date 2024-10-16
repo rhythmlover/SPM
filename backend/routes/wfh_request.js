@@ -478,21 +478,24 @@ router.post('/withdraw/post/id', async (req, res, next) => {
 
 router.put('/removeExpiredRequests', async (req, res, next) => {
   try {
-    // Execute the SQL query to update the records
+    const { staffID } = req.body; 
+    console.log("Received staffID:", staffID); 
+
+    if (!staffID) {
+      return res.status(400).json({ error: 'staffID is required' });
+    }
+
     const result = await executeQuery(
       `UPDATE WFH_Request 
        SET Status = 'Rejected', 
-           Comments = 'Expired more than 2 months ago' 
-       WHERE WFH_Date < DATE_SUB(CURDATE(), INTERVAL 2 MONTH)` // Closing parenthesis added here
+           Comments = 'Expired more than 2 months ago',
+           Decision_Date = CURDATE()
+       WHERE WFH_Date < DATE_SUB(CURDATE(), INTERVAL 2 MONTH) 
+       AND Staff_ID = ${staffID}`
     );
-
-    // Log the result of the query execution
-    console.log("RESULTS: ", result);
-
-    // Send a success response
-    res.json({ message: 'Expired requests rejected successfully and comments updated.' });
+    res.json({ message: `Expired requests for staffID ${staffID} rejected successfully and comments updated.` });
   } catch (error) {
-    // Handle any errors that occur
+    console.error("Error occurred:", error); // Log any errors that occur
     next(error);
   }
 });
