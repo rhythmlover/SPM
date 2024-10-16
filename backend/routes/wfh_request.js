@@ -485,13 +485,13 @@ router.put('/removeExpiredRequests', async (req, res, next) => {
       return res.status(400).json({ error: 'staffID is required' });
     }
 
-    const result = await executeQuery(
+    await executeQuery(
       `UPDATE WFH_Request 
-       SET Status = 'Rejected', 
-           Comments = 'Expired more than 2 months ago',
-           Decision_Date = CURDATE()
-       WHERE WFH_Date < DATE_SUB(CURDATE(), INTERVAL 2 MONTH) 
-       AND Staff_ID = ${staffID}`
+      SET Status = 'Rejected', 
+          Comments = 'Expired more than 2 months ago',
+          Decision_Date = CURDATE()
+      WHERE WFH_Date < DATE_SUB(CURDATE(), INTERVAL 2 MONTH) 
+      AND (Staff_ID = ${staffID} OR Approver_ID = ${staffID})`
     );
     res.json({ message: `Expired requests for staffID ${staffID} rejected successfully and comments updated.` });
   } catch (error) {
