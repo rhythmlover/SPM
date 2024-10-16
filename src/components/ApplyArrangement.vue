@@ -200,7 +200,7 @@ export default {
         >
           <option value="AM">AM</option>
           <option value="PM">PM</option>
-          <option value="Full">Full-Day</option>
+          <option value="FULL">Full-Day</option>
         </select>
       </div>
       <div class="form-group mb-3">
