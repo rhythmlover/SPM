@@ -185,11 +185,8 @@ onMounted(async () => {
               </td>
               <td class="col-2">
                 <!-- Conditionally show Delete button if status is 'Pending' or 'pending' -->
-                <button
-                  v-if="request.Status.toLowerCase() === 'pending'"
-                  @click="deleteRequest(request.Request_ID)"
-                  class="btn btn-warning"
-                >
+                <button v-if="request.Status.toLowerCase() === 'pending'" @click="deleteRequest(request.Request_ID)"
+                  class="btn btn-warning">
                   Cancel
                 </button>
                 <button v-if="request.showWithdrawButton" @click="
@@ -203,11 +200,8 @@ onMounted(async () => {
                   " class="btn btn-danger">
                   Withdraw
                 </button>
-                <span
-                  v-if="request.Status.toLowerCase() === 'withdrawal pending'"
-                  class="text-muted"
-                  >Withdrawal Pending</span
-                >
+                <span v-if="request.Status.toLowerCase() === 'withdrawal pending'" class="text-muted">Withdrawal
+                  Pending</span>
               </td>
               <td class="col-2">{{ request.Comments }}</td>
             </tr>
