@@ -17,7 +17,7 @@ export default {
   data() {
     return {
       Staff_Name: '',
-      Staff_ID: '',
+      Staff_ID: this.$route.params.staffID,
       Staff_Position: '',
       Request_ID: this.$route.params.requestID,
       WFH_Date: this.$route.params.WFH_Date,
