@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted } from 'vue';
 
-// Define props
 const props = defineProps({
   wfhRequests: {
     type: Object,
@@ -10,9 +9,6 @@ const props = defineProps({
     },
   },
 });
-
-// const isLoading = ref(true);
-// const scheduleListError = ref(null);
 
 const formatDateFromStr = (dateString) => {
   const date = new Date(dateString);
@@ -23,9 +19,6 @@ const formatDateFromStr = (dateString) => {
   });
 };
 
-/**
- * Get status color for pill
- */
 const getStatusPillColor = (status) => {
   switch (status.toLowerCase()) {
     case 'approved':
@@ -62,7 +55,7 @@ onMounted(() => {
                 </h4>
               </template>
               <BTableSimple
-                v-if="dateObject['requests'].length > 0"
+                v-if="dateObject.requests && dateObject.requests.length > 0"
                 hover
                 caption-top
               >
@@ -76,22 +69,22 @@ onMounted(() => {
                 </BThead>
                 <BTbody>
                   <BTr
-                    v-for="requestObj in dateObject['requests']"
-                    :key="requestObj['Request_ID']"
+                    v-for="requestObj in dateObject.requests"
+                    :key="requestObj.Request_ID"
                   >
                     <BTd>
                       {{
-                        `${requestObj['Staff']['Staff_FName']} ${requestObj['Staff']['Staff_LName']}`
+                        `${requestObj.Staff.Staff_FName} ${requestObj.Staff.Staff_LName}`
                       }}
                     </BTd>
-                    <BTd> {{ requestObj['Staff']['Position'] }}</BTd>
-                    <BTd> {{ requestObj['Request_Period'] }}</BTd>
+                    <BTd>{{ requestObj.Staff.Position }}</BTd>
+                    <BTd>{{ requestObj.Request_Period }}</BTd>
                     <BTd>
                       <BBadge
-                        :variant="getStatusPillColor(requestObj['Status'])"
+                        :variant="getStatusPillColor(requestObj.Status)"
                         pill
                       >
-                        {{ requestObj['Status'] }}
+                        {{ requestObj.Status }}
                       </BBadge>
                     </BTd>
                   </BTr>
