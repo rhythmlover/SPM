@@ -48,7 +48,9 @@ const getWFHRequests = async () => {
     });
 
     if (typeof res.data === 'string' && res.data.includes('<!DOCTYPE html>')) {
-      throw new Error('Received HTML instead of JSON. Check API endpoint configuration.');
+      throw new Error(
+        'Received HTML instead of JSON. Check API endpoint configuration.',
+      );
     }
 
     if (!Array.isArray(res.data.employeeRequests)) {
@@ -57,7 +59,9 @@ const getWFHRequests = async () => {
 
     const requests = res.data.employeeRequests.flatMap((employeeObj) => {
       if (!Array.isArray(employeeObj.wfhRequests)) {
-        console.warn(`Invalid wfhRequests for employee ${employeeObj.employee.Staff_ID}`);
+        console.warn(
+          `Invalid wfhRequests for employee ${employeeObj.employee.Staff_ID}`,
+        );
         return [];
       }
       return employeeObj.wfhRequests.map((wfhRequest) => ({
@@ -72,15 +76,19 @@ const getWFHRequests = async () => {
       }));
     });
 
-    teammates.value = [...new Set(
-      res.data.employeeRequests.map((employeeObj) => ({
-        Staff_ID: employeeObj.employee.Staff_ID.toString(),
-        Staff_FName: employeeObj.employee.Staff_FName,
-        Staff_LName: employeeObj.employee.Staff_LName,
-      }))
-    )];
+    teammates.value = [
+      ...new Set(
+        res.data.employeeRequests.map((employeeObj) => ({
+          Staff_ID: employeeObj.employee.Staff_ID.toString(),
+          Staff_FName: employeeObj.employee.Staff_FName,
+          Staff_LName: employeeObj.employee.Staff_LName,
+        })),
+      ),
+    ];
 
-    selectedTeammates.value = teammates.value.map((teammate) => teammate.Staff_ID);
+    selectedTeammates.value = teammates.value.map(
+      (teammate) => teammate.Staff_ID,
+    );
 
     return requests;
   } catch (error) {
@@ -99,7 +107,7 @@ const mapRequestsToDates = (requests) => {
       }
       // Check if the request already exists to avoid duplicates
       const existingRequestIndex = dateMap[datestr].requests.findIndex(
-        (r) => r.Request_ID === request.Request_ID
+        (r) => r.Request_ID === request.Request_ID,
       );
       if (existingRequestIndex === -1) {
         dateMap[datestr].requests.push(request);
@@ -130,9 +138,11 @@ const filteredWFHRequests = computed(() => {
   const filtered = {};
   Object.entries(wfhRequests.value).forEach(([date, dayInfo]) => {
     if (dayInfo.requests && Array.isArray(dayInfo.requests)) {
-      const filteredRequests = dayInfo.requests.filter((request) =>
-        selectedTeammates.value.includes(request.Staff.Staff_ID) &&
-        (selectedStatuses.value.length === 0 || selectedStatuses.value.includes(request.Status))
+      const filteredRequests = dayInfo.requests.filter(
+        (request) =>
+          selectedTeammates.value.includes(request.Staff.Staff_ID) &&
+          (selectedStatuses.value.length === 0 ||
+            selectedStatuses.value.includes(request.Status)),
       );
       filtered[date] = { ...dayInfo, requests: filteredRequests };
     } else {
@@ -162,7 +172,8 @@ onMounted(async () => {
                 :disabled="!getAbleToShiftPeriod(-1)[0]"
                 @click="shiftPeriod(-1)"
                 variant="outline-primary"
-              >Previous</BButton>
+                >Previous</BButton
+              >
             </BCol>
             <BCol class="text-center">
               <h2>{{ currentPeriodString }}</h2>
@@ -172,7 +183,8 @@ onMounted(async () => {
                 :disabled="!getAbleToShiftPeriod(1)[0]"
                 @click="shiftPeriod(1)"
                 variant="outline-primary"
-              >Next</BButton>
+                >Next</BButton
+              >
             </BCol>
           </BRow>
 

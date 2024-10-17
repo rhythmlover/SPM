@@ -8,6 +8,8 @@ describe('TeammateFilter', () => {
   let wrapper;
   let teammates;
   let selectedTeammates;
+  let statusOptions;
+  let selectedStatuses;
 
   beforeEach(() => {
     teammates = [
@@ -16,20 +18,33 @@ describe('TeammateFilter', () => {
       { Staff_ID: '3', Staff_FName: 'Bob', Staff_LName: 'Johnson' },
     ];
     selectedTeammates = ref([]);
+    statusOptions = [
+      { value: 'Pending', text: 'Pending' },
+      { value: 'Approved', text: 'Approved' },
+      { value: 'Rejected', text: 'Rejected' },
+    ];
+    selectedStatuses = ref([]);
     wrapper = mount(TeammateFilter, {
-      props: { teammates, selectedTeammates: selectedTeammates.value },
+      props: {
+        teammates,
+        selectedTeammates: selectedTeammates.value,
+        statusOptions,
+        selectedStatuses: selectedStatuses.value,
+      },
       global: {
         stubs: ['BDropdown', 'BDropdownForm', 'BFormCheckbox'],
       },
     });
   });
 
-  it('should initialize with all teammates selected', async () => {
+  it('should initialize with all teammates and statuses selected', async () => {
     const testId = 'TC-046';
     try {
       await nextTick();
       expect(wrapper.vm.localSelectedTeammates.size).toBe(3);
+      expect(wrapper.vm.localSelectedStatuses.size).toBe(3);
       expect(wrapper.vm.selectAllTeammates).toBe(true);
+      expect(wrapper.vm.selectAllStatuses).toBe(true);
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -98,6 +113,23 @@ describe('TeammateFilter', () => {
       expect(wrapper.vm.localSelectedTeammates.size).toBe(3);
       expect(wrapper.emitted()['update:selectedTeammates'][0]).toEqual([
         ['1', '2', '3'],
+      ]);
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('should toggle status selection', async () => {
+    const testId = 'TC-051';
+    try {
+      wrapper.vm.toggleStatus('Approved');
+      await nextTick();
+      expect(wrapper.vm.localSelectedStatuses.size).toBe(2);
+      expect(wrapper.vm.selectAllStatuses).toBe(false);
+      expect(wrapper.emitted()['update:selectedStatuses'][0]).toEqual([
+        ['Pending', 'Approved', 'Rejected'],
       ]);
       await updateSheet(testId, 'Passed');
     } catch (error) {

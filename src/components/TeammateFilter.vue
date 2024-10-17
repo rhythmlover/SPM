@@ -16,10 +16,15 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['update:selectedTeammates', 'update:selectedStatuses']);
+const emit = defineEmits([
+  'update:selectedTeammates',
+  'update:selectedStatuses',
+]);
 
 const localSelectedTeammates = ref(new Set(props.selectedTeammates));
-const localSelectedStatuses = ref(new Set(props.statusOptions.map(status => status.value)));
+const localSelectedStatuses = ref(
+  new Set(props.statusOptions.map((status) => status.value)),
+);
 
 const selectAllTeammates = computed({
   get: () => localSelectedTeammates.value.size === props.teammates.length,
