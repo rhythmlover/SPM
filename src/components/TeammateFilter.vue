@@ -10,11 +10,16 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  statusOptions: {
+    type: Array,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['update:selectedTeammates']);
+const emit = defineEmits(['update:selectedTeammates', 'update:selectedStatuses']);
 
 const localSelectedTeammates = ref(new Set(props.selectedTeammates));
+const localSelectedStatuses = ref(new Set(props.statusOptions.map(status => status.value)));
 
 const selectAllTeammates = computed({
   get: () => localSelectedTeammates.value.size === props.teammates.length,
@@ -30,8 +35,25 @@ const selectAllTeammates = computed({
   },
 });
 
+const selectAllStatuses = computed({
+  get: () => localSelectedStatuses.value.size === props.statusOptions.length,
+  set: (value) => {
+    if (value) {
+      localSelectedStatuses.value = new Set(
+        props.statusOptions.map((status) => status.value),
+      );
+    } else {
+      localSelectedStatuses.value.clear();
+    }
+    emitUpdateStatuses();
+  },
+});
+
 const isTeammateSelected = (staffId) =>
   localSelectedTeammates.value.has(staffId);
+
+const isStatusSelected = (statusValue) =>
+  localSelectedStatuses.value.has(statusValue);
 
 const toggleTeammate = (staffId) => {
   if (localSelectedTeammates.value.has(staffId)) {
@@ -42,8 +64,21 @@ const toggleTeammate = (staffId) => {
   emitUpdate();
 };
 
+const toggleStatus = (statusValue) => {
+  if (localSelectedStatuses.value.has(statusValue)) {
+    localSelectedStatuses.value.delete(statusValue);
+  } else {
+    localSelectedStatuses.value.add(statusValue);
+  }
+  emitUpdateStatuses();
+};
+
 const emitUpdate = () => {
   emit('update:selectedTeammates', Array.from(localSelectedTeammates.value));
+};
+
+const emitUpdateStatuses = () => {
+  emit('update:selectedStatuses', Array.from(localSelectedStatuses.value));
 };
 
 watch(
@@ -61,21 +96,37 @@ onMounted(() => {
     );
     emitUpdate();
   }
+  emitUpdateStatuses();
 });
 </script>
 
 <template>
-  <BDropdown text="Filter by Teammate" class="float-end">
-    <BDropdownForm>
-      <BFormCheckbox v-model="selectAllTeammates"> Select All </BFormCheckbox>
-      <BFormCheckbox
-        v-for="teammate in teammates"
-        :key="teammate.Staff_ID"
-        :modelValue="isTeammateSelected(teammate.Staff_ID)"
-        @update:modelValue="() => toggleTeammate(teammate.Staff_ID)"
-      >
-        {{ teammate.Staff_FName }} {{ teammate.Staff_LName }}
-      </BFormCheckbox>
-    </BDropdownForm>
-  </BDropdown>
+  <div class="d-flex">
+    <BDropdown text="Filter by Teammate" class="me-2">
+      <BDropdownForm>
+        <BFormCheckbox v-model="selectAllTeammates"> Select All </BFormCheckbox>
+        <BFormCheckbox
+          v-for="teammate in teammates"
+          :key="teammate.Staff_ID"
+          :modelValue="isTeammateSelected(teammate.Staff_ID)"
+          @update:modelValue="() => toggleTeammate(teammate.Staff_ID)"
+        >
+          {{ teammate.Staff_FName }} {{ teammate.Staff_LName }}
+        </BFormCheckbox>
+      </BDropdownForm>
+    </BDropdown>
+    <BDropdown text="Filter by Status">
+      <BDropdownForm>
+        <BFormCheckbox v-model="selectAllStatuses"> Select All </BFormCheckbox>
+        <BFormCheckbox
+          v-for="status in statusOptions"
+          :key="status.value"
+          :modelValue="isStatusSelected(status.value)"
+          @update:modelValue="() => toggleStatus(status.value)"
+        >
+          {{ status.text }}
+        </BFormCheckbox>
+      </BDropdownForm>
+    </BDropdown>
+  </div>
 </template>
