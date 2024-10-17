@@ -75,7 +75,7 @@ const getWFHRequests = async (staffID) => {
 
     if (res.data && Array.isArray(res.data.results)) {
       localRequests.value = res.data.results.map((request) => ({
-        StaffID: request.Staff_ID,
+        Staff_ID: request.Staff_ID,
         Request_ID: request.Request_ID,
         Request_Date: formatRequestDate(request.Request_Date),
         WFH_Date: formatRequestDate(request.WFH_Date),
@@ -119,7 +119,7 @@ const deleteRequest = async (requestID) => {
 
 // Handle withdrawing an approved request
 const router = useRouter();
-const openWithdrawForm = (Request_ID, WFH_Date, Request_Period, Status) => {
+const openWithdrawForm = (staffID, Request_ID, WFH_Date, Request_Period, Status) => {
   const confirmWithdraw = window.confirm(
     'Send request to manager to approve withdrawal of this request?',
   );
@@ -127,7 +127,7 @@ const openWithdrawForm = (Request_ID, WFH_Date, Request_Period, Status) => {
 
   router.push({
     name: 'WithdrawRequestForm',
-    params: { requestID: Request_ID, WFH_Date, Request_Period, Status },
+    params: { staffID, requestID: Request_ID, WFH_Date, Request_Period, Status },
   });
 };
 
@@ -192,18 +192,15 @@ onMounted(async () => {
                 >
                   Cancel
                 </button>
-                <button
-                  v-if="request.showWithdrawButton"
-                  @click="
-                    openWithdrawForm(
-                      request.Request_ID,
-                      request.WFH_Date,
-                      request.Request_Period,
-                      request.Status,
-                    )
-                  "
-                  class="btn btn-danger"
-                >
+                <button v-if="request.showWithdrawButton" @click="
+                  openWithdrawForm(
+                    staffID,
+                    request.Request_ID,
+                    request.WFH_Date,
+                    request.Request_Period,
+                    request.Status,
+                  )
+                  " class="btn btn-danger">
                   Withdraw
                 </button>
                 <span
