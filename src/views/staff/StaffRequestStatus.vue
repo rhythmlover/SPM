@@ -160,7 +160,13 @@ onMounted(async () => {
           <tbody>
             <tr v-for="(request, index) in localRequests" :key="index">
               <td class="col-2">{{ request.Reason }}</td>
-              <td class="col-2">{{ request.WFH_Date + ', ' + get_WFH_period(request.Request_Period) }}</td>
+              <td class="col-2">
+                {{
+                  request.WFH_Date +
+                  ', ' +
+                  get_WFH_period(request.Request_Period)
+                }}
+              </td>
               <td class="col-2">{{ request.Request_Date }}</td>
               <td class="col-2" v-if="request.Status == 'Pending'">
                 <BBadge pill variant="info">Pending</BBadge>
@@ -179,22 +185,32 @@ onMounted(async () => {
               </td>
               <td class="col-2">
                 <!-- Conditionally show Delete button if status is 'Pending' or 'pending' -->
-                <button v-if="request.Status.toLowerCase() === 'pending'" @click="deleteRequest(request.Request_ID)"
-                  class="btn btn-warning">
+                <button
+                  v-if="request.Status.toLowerCase() === 'pending'"
+                  @click="deleteRequest(request.Request_ID)"
+                  class="btn btn-warning"
+                >
                   Cancel
                 </button>
-                <button v-if="request.showWithdrawButton" @click="
-                  openWithdrawForm(
-                    request.Request_ID,
-                    request.WFH_Date,
-                    request.Request_Period,
-                    request.Status,
-                  )
-                  " class="btn btn-danger">
+                <button
+                  v-if="request.showWithdrawButton"
+                  @click="
+                    openWithdrawForm(
+                      request.Request_ID,
+                      request.WFH_Date,
+                      request.Request_Period,
+                      request.Status,
+                    )
+                  "
+                  class="btn btn-danger"
+                >
                   Withdraw
                 </button>
-                <span v-if="request.Status.toLowerCase() === 'withdrawal pending'" class="text-muted">Withdrawal
-                  Pending</span>
+                <span
+                  v-if="request.Status.toLowerCase() === 'withdrawal pending'"
+                  class="text-muted"
+                  >Withdrawal Pending</span
+                >
               </td>
               <td class="col-2">{{ request.Comments }}</td>
             </tr>
