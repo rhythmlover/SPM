@@ -1,8 +1,9 @@
 <script setup>
-import { provide, ref, onMounted, computed } from 'vue';
+import { provide, ref, onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import StaffNavbar from './components/staff/StaffNavbar.vue';
 import ManagerNavbar from './components/ManagerNavbar.vue';
+import HrNavbar from './components/hr/HrNavbar.vue';
 
 const roleID = ref(null);
 const staffID = ref(null);
@@ -30,19 +31,25 @@ onMounted(() => {
     : '';
 });
 
-const isManager = computed(() => {
-  return (
+const getPosition = () => {
+  if (
     staffPosition.value.includes('Manager') ||
     staffPosition.value.includes('Director') ||
     staffPosition.value.includes('MD')
-  );
-});
+  ) {
+    return 'manager';
+  } else if (staffPosition.value.includes('HR')) {
+    return 'hr';
+  }
+  return 'staff';
+};
 </script>
 
 <template>
   <div class="app-container">
     <div v-if="staffPosition == ''"></div>
-    <ManagerNavbar v-else-if="isManager" />
+    <ManagerNavbar v-else-if="getPosition() == 'manager'" />
+    <HrNavbar v-else-if="getPosition() == 'hr'" />
     <StaffNavbar v-else />
     <main class="">
       <div class="navbar-spacing"></div>

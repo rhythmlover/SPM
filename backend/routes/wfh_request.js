@@ -6,6 +6,28 @@ const router = express.Router();
 router.get('/all', async (req, res, next) => {
   try {
     let [results, _] = await executeQuery('SELECT * FROM `WFH_Request`');
+
+    // Attach other info into request
+    for (let r of results) {
+      // Query Staff_ID and Approver_ID for more info on Employee
+      let [approverresults] = await executeQuery(
+        `SELECT * FROM Employee WHERE Staff_ID = ${r['Approver_ID']}`,
+      );
+
+      // Fetch current staff information
+      let [currstaffresults] = await executeQuery(
+        `SELECT * FROM Employee WHERE Staff_ID = ${r['Staff_ID']}`,
+      );
+      // Map department ID to name
+      let [departmentresults] = await executeQuery(
+        `SELECT * FROM Department WHERE Dept_ID = ${currstaffresults[0]['Dept_ID']}`,
+      );
+      currstaffresults[0]['Department'] = departmentresults[0];
+
+      r['Staff'] = currstaffresults[0];
+      r['Approver'] = approverresults[0];
+    }
+
     res.json({ results });
   } catch (error) {
     next(error);
@@ -289,18 +311,18 @@ router.put('/withdrawal/status', async (req, res, next) => {
   try {
     let result;
 
-    if (newStatus === "Rejected") {
+    if (newStatus === 'Rejected') {
       // If newStatus is "Approved", update Status to "Rejected"
       [result] = await executeQuery(
-        `UPDATE WFH_Withdrawal SET Status = 'Rejected' WHERE Request_ID = ${requestID}`
+        `UPDATE WFH_Withdrawal SET Status = 'Rejected' WHERE Request_ID = ${requestID}`,
       );
-    }  
-    if (newStatus === "Withdrawn") {
+    }
+    if (newStatus === 'Withdrawn') {
       // If newStatus is "Withdrawn", update Status to "Approved"
       [result] = await executeQuery(
-        `UPDATE WFH_Withdrawal SET Status = 'Approved' WHERE Request_ID = ${requestID}`
+        `UPDATE WFH_Withdrawal SET Status = 'Approved' WHERE Request_ID = ${requestID}`,
       );
-    } 
+    }
 
     // Check if the update affected any rows
     if (result.affectedRows > 0) {
@@ -316,7 +338,6 @@ router.put('/withdrawal/status', async (req, res, next) => {
     next(error);
   }
 });
-
 
 router.get('/get-approved-requests-by-approver-id', async (req, res, next) => {
   const Approver_ID = req.query.approverID;
@@ -390,8 +411,6 @@ router.put('/withdrawal/updateComments', async (req, res, next) => {
   }
 });
 
-
-
 router.get('/my-subordinate-and-me-requests', async (req, res, next) => {
   const staffID = req.query.staffID;
 
@@ -440,7 +459,15 @@ router.get('/my-subordinate-and-me-requests', async (req, res, next) => {
 });
 
 router.post('/withdraw/post/id', async (req, res, next) => {
-  const { Request_ID, Staff_Name, Staff_Position, Request_Period, Request_Reason, Approver_Name, WFH_Date } = req.body;
+  const {
+    Request_ID,
+    Staff_Name,
+    Staff_Position,
+    Request_Period,
+    Request_Reason,
+    Approver_Name,
+    WFH_Date,
+  } = req.body;
 
   // Check for missing fields
   if (!Request_Reason) {
@@ -451,35 +478,46 @@ router.post('/withdraw/post/id', async (req, res, next) => {
     // Insert the withdrawal request into the database
     const [results] = await executeQuery(
       `INSERT INTO WFH_Withdrawal (Request_ID, Staff_Name, Staff_Position, Request_Period, Request_Reason, Status, Approver_Name, WFH_Date) 
-      VALUES (${Request_ID}, '${Staff_Name}', '${Staff_Position}', '${Request_Period}', '${Request_Reason}', 'Pending', '${Approver_Name}', '${WFH_Date}')`
+      VALUES (${Request_ID}, '${Staff_Name}', '${Staff_Position}', '${Request_Period}', '${Request_Reason}', 'Pending', '${Approver_Name}', '${WFH_Date}')`,
     );
 
     if (!results) {
-      return res.status(400).json({ message: 'Withdrawal Application Submission Failed', error: 'Invalid Request' });
+      return res.status(400).json({
+        message: 'Withdrawal Application Submission Failed',
+        error: 'Invalid Request',
+      });
     }
 
     // Update the Status in the wfh_request table
     const [updateResults] = await executeQuery(
       `UPDATE WFH_Request 
        SET Status = 'Withdrawal Pending' 
-       WHERE Request_ID = ${Request_ID}`
+       WHERE Request_ID = ${Request_ID}`,
     );
 
     if (!updateResults) {
-      return res.status(400).json({ message: 'Failed to update the WFH request status' });
+      return res
+        .status(400)
+        .json({ message: 'Failed to update the WFH request status' });
     }
 
-    res.status(200).json({ message: 'Withdrawal Application Submitted Successfully', data: results });
+    res.status(200).json({
+      message: 'Withdrawal Application Submitted Successfully',
+      data: results,
+    });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ message: 'Withdrawal Application Submission Failed', error: error.message });
+    res.status(500).json({
+      message: 'Withdrawal Application Submission Failed',
+      error: error.message,
+    });
   }
 });
 
 router.put('/removeExpiredRequests', async (req, res, next) => {
   try {
-    const { staffID } = req.body; 
-    console.log("Received staffID:", staffID); 
+    const { staffID } = req.body;
+    console.log('Received staffID:', staffID);
 
     if (!staffID) {
       return res.status(400).json({ error: 'staffID is required' });
@@ -491,11 +529,13 @@ router.put('/removeExpiredRequests', async (req, res, next) => {
           Comments = 'Expired more than 2 months ago',
           Decision_Date = CURDATE()
       WHERE WFH_Date < DATE_SUB(CURDATE(), INTERVAL 2 MONTH) 
-      AND (Staff_ID = ${staffID} OR Approver_ID = ${staffID})`
+      AND (Staff_ID = ${staffID} OR Approver_ID = ${staffID})`,
     );
-    res.json({ message: `Expired requests for staffID ${staffID} rejected successfully and comments updated.` });
+    res.json({
+      message: `Expired requests for staffID ${staffID} rejected successfully and comments updated.`,
+    });
   } catch (error) {
-    console.error("Error occurred:", error); // Log any errors that occur
+    console.error('Error occurred:', error); // Log any errors that occur
     next(error);
   }
 });

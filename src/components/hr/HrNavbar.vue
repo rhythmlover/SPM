@@ -1,11 +1,21 @@
 <script setup>
+import {
+  BNavbar,
+  BNavbarBrand,
+  BNavbarToggle,
+  BCollapse,
+  BNavbarNav,
+  BNavItem,
+  BNavItemDropdown,
+  BDropdownItem,
+} from 'bootstrap-vue-next';
 import { inject } from 'vue';
 import router from '@/router';
 import { highlightedNavItemStyle } from '@/utils/utils';
 
+const staffFName = inject('staffFName');
 const roleID = inject('roleID');
 const staffID = inject('staffID');
-const staffFName = inject('staffFName');
 const staffPosition = inject('staffPosition');
 
 const logout = () => {
@@ -26,20 +36,16 @@ const logout = () => {
     variant="primary"
     class="py-2"
   >
-    <BNavbarBrand class="fw-bold">Manager Portal</BNavbarBrand>
+    <BNavbarBrand class="fw-bold">HR Portal</BNavbarBrand>
+
     <BNavbarToggle target="nav-collapse" />
 
     <BCollapse id="nav-collapse" is-nav>
-      <BNavbarNav>
+      <BNavbarNav pills>
         <BNavItem
-          :class="highlightedNavItemStyle('manager-view-schedule')"
-          to="/manager-view-schedule"
-          >Team's Schedule</BNavItem
-        >
-        <BNavItem
-          :class="highlightedNavItemStyle('pending-requests')"
-          to="/pending-requests"
-          >View Requests</BNavItem
+          :class="highlightedNavItemStyle('hr-view-schedule')"
+          to="/hr-view-schedule"
+          >Team Schedule</BNavItem
         >
       </BNavbarNav>
 

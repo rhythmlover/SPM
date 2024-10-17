@@ -26,6 +26,11 @@ const redirectRoute = async () => {
   ) {
     router.push('/manager-view-schedule');
   }
+  // HR
+  else if (position.includes('HR')) {
+    // 160065, John Tan
+    router.push('/hr-view-schedule');
+  }
   // Everyone else
   else {
     router.push('/staff-myschedule');
@@ -55,7 +60,6 @@ const login = async () => {
     await axios.put(`${API_ROUTE}/wfh-request/removeExpiredRequests`, {
       staffID: staffIDValue,
     });
-    console.log('Successfully updated status');
   } catch (error) {
     console.error(
       'Error updating expired pending requests to rejected:',
