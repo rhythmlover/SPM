@@ -119,15 +119,19 @@ const deleteRequest = async (requestID) => {
 
 // Handle withdrawing an approved request
 const router = useRouter();
-const openWithdrawForm = (staffID, Request_ID, WFH_Date, Request_Period, Status) => {
+const openWithdrawForm = (Request_ID, WFH_Date, Request_Period) => {
   const confirmWithdraw = window.confirm(
     'Send request to manager to approve withdrawal of this request?',
   );
   if (!confirmWithdraw) return;
 
   router.push({
-    name: 'WithdrawRequestForm',
-    params: { staffID, requestID: Request_ID, WFH_Date, Request_Period, Status },
+    name: 'staff-approved-requests-withdrawal',
+    params: {
+      requestID: Request_ID,
+      WFH_Date,
+      Request_Period,
+    },
   });
 };
 
@@ -192,15 +196,17 @@ onMounted(async () => {
                 >
                   Cancel
                 </button>
-                <button v-if="request.showWithdrawButton" @click="
-                  openWithdrawForm(
-                    staffID,
-                    request.Request_ID,
-                    request.WFH_Date,
-                    request.Request_Period,
-                    request.Status,
-                  )
-                  " class="btn btn-danger">
+                <button
+                  v-if="request.showWithdrawButton"
+                  @click="
+                    openWithdrawForm(
+                      request.Request_ID,
+                      request.WFH_Date,
+                      request.Request_Period,
+                    )
+                  "
+                  class="btn btn-danger"
+                >
                   Withdraw
                 </button>
                 <span
