@@ -178,7 +178,7 @@ router.post('/apply-recurring', async (req, res, next) => {
       WFH_Date_Start,
       WFH_Date_End,
       WFH_Day,
-      WFH_Period,
+      Request_Period,
       Request_Date,
       Request_Reason,
       Approver_ID,
@@ -188,7 +188,7 @@ router.post('/apply-recurring', async (req, res, next) => {
       !WFH_Date_Start ||
       !WFH_Date_End ||
       !WFH_Day ||
-      !WFH_Period ||
+      !Request_Period ||
       !Request_Reason
     ) {
       return res.status(400).json({ message: 'Please fill in all fields' });
@@ -233,7 +233,7 @@ router.post('/apply-recurring', async (req, res, next) => {
 
     try {
       const [results] = await executeQuery(
-        `INSERT INTO WFH_Request_Recurring (Staff_ID, WFH_Date_Start, WFH_Date_End, WFH_Day, WFH_Period, Request_Date, Request_Reason, Status, Approver_ID) VALUES (${Staff_ID}, '${WFH_Date_Start}', '${WFH_Date_End}', '${WFH_Day}', '${WFH_Period}', '${Request_Date}', '${Request_Reason}', 'Pending', ${Approver_ID})`,
+        `INSERT INTO WFH_Request_Recurring (Staff_ID, WFH_Date_Start, WFH_Date_End, WFH_Day, Request_Period, Request_Date, Request_Reason, Status, Approver_ID) VALUES (${Staff_ID}, '${WFH_Date_Start}', '${WFH_Date_End}', '${WFH_Day}', '${Request_Period}', '${Request_Date}', '${Request_Reason}', 'Pending', ${Approver_ID})`,
       );
 
       if (!results) {
@@ -478,21 +478,24 @@ router.post('/withdraw/post/id', async (req, res, next) => {
 
 router.put('/removeExpiredRequests', async (req, res, next) => {
   try {
-    // Execute the SQL query to update the records
-    const result = await executeQuery(
+    const { staffID } = req.body; 
+    console.log("Received staffID:", staffID); 
+
+    if (!staffID) {
+      return res.status(400).json({ error: 'staffID is required' });
+    }
+
+    await executeQuery(
       `UPDATE WFH_Request 
-       SET Status = 'Rejected', 
-           Comments = 'Expired more than 2 months ago' 
-       WHERE WFH_Date < DATE_SUB(CURDATE(), INTERVAL 2 MONTH)` // Closing parenthesis added here
+      SET Status = 'Rejected', 
+          Comments = 'Expired more than 2 months ago',
+          Decision_Date = CURDATE()
+      WHERE WFH_Date < DATE_SUB(CURDATE(), INTERVAL 2 MONTH) 
+      AND (Staff_ID = ${staffID} OR Approver_ID = ${staffID})`
     );
-
-    // Log the result of the query execution
-    console.log("RESULTS: ", result);
-
-    // Send a success response
-    res.json({ message: 'Expired requests rejected successfully and comments updated.' });
+    res.json({ message: `Expired requests for staffID ${staffID} rejected successfully and comments updated.` });
   } catch (error) {
-    // Handle any errors that occur
+    console.error("Error occurred:", error); // Log any errors that occur
     next(error);
   }
 });
