@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi } from 'vitest';
 import ApprovedRequestWithdrawal from '../../views/staff/ApprovedRequestWithdrawal.vue';
 import { updateSheet } from '../../../updateGoogleSheet';
+import { inject } from 'vue';
 import axios from 'axios';
 
 vi.mock('axios');
@@ -28,7 +29,8 @@ describe('ApprovedRequestWithdrawal.vue', () => {
             },
             inject: (key) => {
               if (key === 'API_ROUTE') {
-                return 'http://localhost:3000';
+                return inject('API_ROUTE');
+                // return 'http://localhost:3000';
               }
             },
           },
@@ -105,7 +107,8 @@ describe('ApprovedRequestWithdrawal.vue', () => {
             },
             inject: (key) => {
               if (key === 'API_ROUTE') {
-                return 'http://localhost:3000'; // Mock API base URL
+                return inject('API_ROUTE');
+                // return 'http://localhost:3000'; // Mock API base URL
               }
             },
           },
