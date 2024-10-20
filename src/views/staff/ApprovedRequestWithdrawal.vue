@@ -69,9 +69,8 @@ export default {
       }
     },
     async withdrawRequest() {
-      const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
+      const API_ROUTE = import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
       try {
-        // Step 1: Send the withdrawal request to the backend
         await axios.post(`${API_ROUTE}/wfh-request/withdraw/post/id`, {
           Staff_Name: this.Staff_Name,
           Staff_Position: this.Staff_Position,
