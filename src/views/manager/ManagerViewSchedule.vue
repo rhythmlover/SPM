@@ -1,11 +1,14 @@
-z<script setup>
-import { inject, ref, onMounted, watch } from 'vue';
+<!-- ManagerViewSchedule.vue -->
+<script setup>
+import { inject, ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { usePeriodChange } from '@/components/usePeriodChange';
+import ScheduleList from '@/components/staff/ScheduleList.vue';
 
 const API_ROUTE = inject('API_ROUTE');
-const myWFHRequests = ref({});
-const myDates = ref({});
+const subordinateHierarchy = ref(null);
+const allRequests = ref([]);
+const isLoading = ref(true);
 const dayWeekFilterDropdownSelectOptions = [
   { value: true, text: 'Month' },
   { value: false, text: 'Week' },
@@ -22,70 +25,86 @@ const {
   isMonthView: isMonthView,
 });
 
-/**
- * Retrieve all of my WFH requests that have same date present in dateMap
- */
-const getWFHRequests = async () => {
-  let requestsMap = {};
-  let staffID = localStorage.getItem('staffID');
+// Filter-related refs
+const statusOptions = ref([
+  { value: 'Approved', text: 'Approved' },
+  { value: 'Pending', text: 'Pending' },
+  { value: 'Rejected', text: 'Rejected' },
+  { value: 'Withdrawn', text: 'Withdrawn' },
+  { value: 'Withdrawal Pending', text: 'Withdrawal Pending' },
+]);
+const selectedStatuses = ref([]);
+const wfhTimeOptions = ref([
+  { value: 'FULL', text: 'Full Day' },
+  { value: 'AM', text: 'AM' },
+  { value: 'PM', text: 'PM' },
+]);
+const selectedWfhTimes = ref([]);
+const selectAllWfhTimes = ref(true);
+
+//Calls subordinateHierarchy API, gets all the WFH requests and then updates the calender list view
+const updateAllSubordinateWFH = async () => {
+  isLoading.value = true;
+  let Staff_ID = localStorage.getItem('staffID');
 
   try {
-    // Fetch requests
-    let res = await axios.get(
-      API_ROUTE + '/wfh-request/my-subordinate-and-me-requests',
-      {
-        params: { staffID },
-      },
+    let res = await axios.get(API_ROUTE + '/teamlist/subordinateHierarchy', {
+      params: { Staff_ID },
+    });
+    subordinateHierarchy.value = res.data;
+    console.log('Subordinate Hierarchy:', subordinateHierarchy.value);
+
+    // Populate allRequests
+    allRequests.value = subordinateHierarchy.value.subordinates.flatMap(
+      (subordinate) =>
+        subordinate.wfhRequests.map((request) => ({
+          ...request,
+          Staff: {
+            Staff_ID: subordinate.Staff_ID,
+            Staff_FName: subordinate.Staff_FName,
+            Staff_LName: subordinate.Staff_LName,
+            Position: subordinate.position,
+            Reporting_Manager: subordinate.Reporting_Manager,
+          },
+        })),
     );
-
-    for (let requestObj of res.data.results) {
-      // Convert MySQL date into JS Date object and String representations
-      let requestDateObj = new Date(requestObj['WFH_Date']);
-      let requestDateString = requestDateObj.toLocaleDateString('en-CA');
-      requestObj['WFH_Date'] = requestDateString;
-
-      // Date created before?
-      if (!(requestDateString in requestsMap)) {
-        requestsMap[requestDateString] = [];
-      }
-      // Add into map
-      requestsMap[requestDateString].push(requestObj);
-    }
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching subordinate hierarchy:', error);
+  } finally {
+    isLoading.value = false;
   }
-  // Update ref
-  myWFHRequests.value = requestsMap;
-  return requestsMap;
 };
 
-/**
- * Map WFH requests to dates in period from usePeriodChange() Hook
- */
-const mapRequestsToDates = () => {
-  let dateMap = {};
-  try {
-    // Get dates in period
-    dateMap = { ...datesInPeriod.value };
-    // Map requests to date
-    for (const datestr in dateMap) {
-      if (!(datestr in myWFHRequests.value)) continue;
-      dateMap[datestr]['requests'] = myWFHRequests.value[datestr];
-    }
-  } catch (error) {
-    console.error(error);
-  }
-
-  // Update ref
-  myDates.value = dateMap;
-};
-
-watch([currentPeriodString, isMonthView], async () => {
-  mapRequestsToDates();
+const filteredDates = computed(() => {
+  const filtered = {};
+  Object.entries(datesInPeriod.value).forEach(([date, dayInfo]) => {
+    const filteredRequests = allRequests.value.filter(
+      (request) =>
+        new Date(request.WFH_Date).toLocaleDateString('en-CA') === date &&
+        selectedStatuses.value.includes(request.Status) &&
+        selectedWfhTimes.value.includes(request.Request_Period),
+    );
+    filtered[date] = { ...dayInfo, requests: filteredRequests };
+  });
+  return filtered;
 });
+
 onMounted(async () => {
-  await getWFHRequests();
-  mapRequestsToDates();
+  await updateAllSubordinateWFH();
+  selectedStatuses.value = statusOptions.value.map((status) => status.value);
+  selectedWfhTimes.value = wfhTimeOptions.value.map((option) => option.value);
+});
+
+const toggleAllWfhTimes = () => {
+  if (selectAllWfhTimes.value) {
+    selectedWfhTimes.value = wfhTimeOptions.value.map((option) => option.value);
+  } else {
+    selectedWfhTimes.value = [];
+  }
+};
+
+watch(selectedWfhTimes, (newValue) => {
+  selectAllWfhTimes.value = newValue.length === wfhTimeOptions.value.length;
 });
 </script>
 
@@ -118,21 +137,55 @@ onMounted(async () => {
 
           <!-- Filters -->
           <BRow class="my-2">
-            <!-- Day / Week Filter -->
             <BCol class="col-4 col-md-2">
               <BFormSelect
                 v-model="isMonthView"
                 :options="dayWeekFilterDropdownSelectOptions"
               />
             </BCol>
+            <BCol>
+              <BDropdown text="Filter by Status">
+                <BDropdownForm>
+                  <BFormCheckbox
+                    v-for="option in statusOptions"
+                    :key="option.value"
+                    v-model="selectedStatuses"
+                    :value="option.value"
+                  >
+                    {{ option.text }}
+                  </BFormCheckbox>
+                </BDropdownForm>
+              </BDropdown>
+            </BCol>
+            <BCol>
+              <BDropdown text="Filter by WFH Time">
+                <BDropdownForm>
+                  <BFormCheckbox
+                    v-model="selectAllWfhTimes"
+                    @change="toggleAllWfhTimes"
+                  >
+                    Select All
+                  </BFormCheckbox>
+                  <BFormCheckbox
+                    v-for="option in wfhTimeOptions"
+                    :key="option.value"
+                    v-model="selectedWfhTimes"
+                    :value="option.value"
+                  >
+                    {{ option.text }}
+                  </BFormCheckbox>
+                </BDropdownForm>
+              </BDropdown>
+            </BCol>
           </BRow>
         </BContainer>
 
-        <!-- <BSpinner /> -->
-        <ScheduleList :wfh-requests="myDates" />
+        <BOverlay :show="isLoading" rounded="sm">
+          <ScheduleList :wfh-requests="filteredDates" />
+        </BOverlay>
       </BCol>
     </BRow>
   </BContainer>
 </template>
 
-<style></style>
+<style scoped></style>
