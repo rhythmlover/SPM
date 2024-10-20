@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi } from 'vitest';
-import ApprovedRequestWithdrawal from '../../views/staff/ApprovedRequestWithdrawal.vue';
+import ApprovedRequestWithdrawal from '../../views/staff/ApprovedRequestWithdrawalView.vue';
 import { updateSheet } from '../../../updateGoogleSheet';
 import axios from 'axios';
 

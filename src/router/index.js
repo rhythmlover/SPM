@@ -7,7 +7,7 @@ import ManagerViewSchedule from '@/views/manager/ManagerViewSchedule.vue';
 import StaffRequestStatus from '../views/staff/StaffRequestStatus.vue';
 import StaffTeamSchedule from '../views/staff/StaffTeamScheduleView.vue';
 import ApplyRecurringView from '../views/ApplyRecurringView.vue';
-import StaffApprovedRequestWithdrawal from '../views/staff/ApprovedRequestWithdrawal.vue';
+import StaffApprovedRequestWithdrawal from '../views/staff/ApprovedRequestWithdrawalView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
