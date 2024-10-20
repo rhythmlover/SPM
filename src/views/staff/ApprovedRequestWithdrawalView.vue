@@ -16,6 +16,7 @@ export default {
   },
   data() {
     return {
+      API_ROUTE: inject('API_ROUTE'),
       Staff_Name: localStorage.staffFName,
       Staff_ID: localStorage.staffID,
       Staff_Position: localStorage.staffPosition,
@@ -46,10 +47,9 @@ export default {
   },
   methods: {
     async fetchReportingManagerID() {
-      const API_ROUTE = inject('API_ROUTE');
       try {
         const response = await axios.get(
-          API_ROUTE + '/employee/get-staff-reporting-manager',
+          this.API_ROUTE + '/employee/get-staff-reporting-manager',
           {
             params: { staffID: this.Staff_ID },
           },
@@ -58,7 +58,7 @@ export default {
         this.Approver_ID = reportingManagerID;
 
         const reportingManagerName = await axios.get(
-          API_ROUTE + '/employee/get-staff-name-by-id',
+          this.API_ROUTE + '/employee/get-staff-name-by-id',
           {
             params: { staffID: reportingManagerID },
           },
@@ -69,9 +69,8 @@ export default {
       }
     },
     async withdrawRequest() {
-      const API_ROUTE = import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
       try {
-        await axios.post(`${API_ROUTE}/wfh-request/withdraw/post/id`, {
+        await axios.post(`${this.API_ROUTE}/wfh-request/withdraw/post/id`, {
           Staff_Name: this.Staff_Name,
           Staff_Position: this.Staff_Position,
           Request_ID: this.Request_ID,
@@ -108,8 +107,6 @@ export default {
   },
   mounted() {
     this.fetchReportingManagerID();
-    // this.fetchStaffName();
-    // this.fetchStaffPosition();
   },
 };
 </script>

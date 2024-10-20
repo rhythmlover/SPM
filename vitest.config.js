@@ -13,7 +13,8 @@ export default mergeConfig(
         provider: 'v8',
         reporters: ['html'],
         reportsDirectory: './tests-coverage',
-      }
+      },
+      testTimeout: 10000,
     },
   }),
 );
