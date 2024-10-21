@@ -500,4 +500,17 @@ router.put('/removeExpiredRequests', async (req, res, next) => {
   }
 });
 
+router.get('/ds-recurring', async (req, res, next) => {
+  const staffID = req.query.staffID;
+
+  try {
+    let [results] = await executeQuery(
+      `SELECT * FROM WFH_Request_Recurring WHERE Approver_ID = ${staffID}`,
+    );
+    res.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
