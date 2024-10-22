@@ -31,7 +31,7 @@ describe('StaffRequestStatus.vue', () => {
       Status: 'Pending',
       showWithdrawButton: true,
       Comments: 'Some comments',
-      Request_Period: 'AM'
+      Request_Period: 'AM',
     },
   ];
 
@@ -45,7 +45,7 @@ describe('StaffRequestStatus.vue', () => {
       Status: 'Approved',
       showWithdrawButton: true,
       Comments: 'Some comments',
-      Request_Period: 'AM'
+      Request_Period: 'AM',
     },
   ];
 
@@ -59,8 +59,7 @@ describe('StaffRequestStatus.vue', () => {
       Status: 'Approved',
       showWithdrawButton: false,
       Comments: 'Some comments',
-      Request_Period: 'PM'
-
+      Request_Period: 'PM',
     },
   ];
 
@@ -74,7 +73,7 @@ describe('StaffRequestStatus.vue', () => {
       Status: 'Withdrawal Pending',
       showWithdrawButton: false,
       Comments: 'Some comments',
-      Request_Period: 'FULL'
+      Request_Period: 'FULL',
     },
   ];
 
@@ -241,7 +240,7 @@ describe('StaffRequestStatus.vue', () => {
   //     // expect(statusCell.text()).toContain('Approved');
   //     let statusCell = requestRows[0].find('td.col-2');
   //   expect(statusCell.exists()).toBe(true);
-    
+
   //   let badge = statusCell.find('BBadge');
   //   expect(badge.exists()).toBe(true);
 
@@ -267,7 +266,7 @@ describe('StaffRequestStatus.vue', () => {
   //     const updatedRequestRows = wrapper.findAll('tbody tr');
   //   statusCell = updatedRequestRows[0].find('td.col-2');
   //   expect(statusCell.exists()).toBe(true);
-    
+
   //   badge = statusCell.find('BBadge');
   //   expect(badge.exists()).toBe(true);
   //   expect(badge.classes()).toContain('badge-light');
@@ -306,7 +305,7 @@ describe('StaffRequestStatus.vue', () => {
 
       let withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(true);
-  
+
       // Simulate the status update by changing the props
       await wrapper.setProps({
         requests: [
@@ -327,7 +326,7 @@ describe('StaffRequestStatus.vue', () => {
 
       withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(false);
-  
+
       // Mark the test as passed
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -335,7 +334,7 @@ describe('StaffRequestStatus.vue', () => {
       await updateSheet(testId, 'Failed');
       throw error;
     }
-  });  
+  });
 
   it('Status of Withdrawal Has Been Approved', async () => {
     const testId = 'TC-040';

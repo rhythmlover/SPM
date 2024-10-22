@@ -72,21 +72,18 @@ describe('ManagerFilter', () => {
     const testId = 'TC-071';
     try {
       wrapper.vm.toggleStatus('Approved');
-      await nextTick(); 
-  
-      expect(wrapper.vm.localSelectedStatuses.size).toBe(4); 
+      await nextTick();
+
+      expect(wrapper.vm.localSelectedStatuses.size).toBe(4);
       expect(wrapper.vm.selectAllStatuses).toBe(false);
       expect(wrapper.emitted()['update:selectedStatuses'][0]).toEqual([
-        ['Approved', 'Pending', 'Rejected', 'Withdrawn', 'Withdrawal Pending'], 
+        ['Approved', 'Pending', 'Rejected', 'Withdrawn', 'Withdrawal Pending'],
       ]);
-  
+
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
       throw error;
     }
   });
-  
-
 });
-
