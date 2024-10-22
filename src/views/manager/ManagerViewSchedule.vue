@@ -144,7 +144,7 @@ watch(selectedWfhTimes, (newValue) => {
               />
             </BCol>
             <BCol>
-              <BDropdown text="Filter by Status">
+              <BDropdown text="Filter by Status" auto-close="outside">
                 <BDropdownForm>
                   <BFormCheckbox
                     v-for="option in statusOptions"
@@ -158,7 +158,7 @@ watch(selectedWfhTimes, (newValue) => {
               </BDropdown>
             </BCol>
             <BCol>
-              <BDropdown text="Filter by WFH Time">
+              <BDropdown text="Filter by WFH Time" auto-close="outside">
                 <BDropdownForm>
                   <BFormCheckbox
                     v-model="selectAllWfhTimes"
