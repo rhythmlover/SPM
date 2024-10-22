@@ -61,26 +61,27 @@ const fetchWFHRequests = async () => {
   }
 };
 
-const checkExpiredRequests = async () => {
+const fetchWithdrawalReason = async (request_ID) => {
   try {
-    if (pendingRequests.value.length !== 0) {
-      await axios.put(`${API_ROUTE}/wfh-request/removeExpiredRequests`);
-      console.log('Successfully updated status');
-    }
+    const res = await axios.get(
+      `${API_ROUTE}/wfh-request/withdrawal/get-request-reason-of-request-id`,
+      { params: { requestID: request_ID } },
+    );
+    return res.data.request_reason || null;
   } catch (error) {
     console.error(
-      'Error updating expired pending requests to rejected:',
+      `Error fetching withdrawal reason for request ID ${request_ID}:`,
       error,
     );
+    return null;
   }
 };
 
-const joinEmployeesToWFHRequests = () => {
-  pendingRequests.value = []; // Clear array first to combine new results
+const joinEmployeesToWFHRequests = async () => {
+  pendingRequests.value = [];
   acceptedRequests.value = [];
   rejectedRequests.value = [];
-
-  wfhRequests.value.forEach((request) => {
+  for (const request of wfhRequests.value) {
     const employee = employees.value.find(
       (emp) => emp.Staff_ID === request.Staff_ID,
     );
@@ -92,6 +93,11 @@ const joinEmployeesToWFHRequests = () => {
       Decision_Date: formatRequestDate(request.Decision_Date),
       WFH_Date: formatRequestDate(request.WFH_Date),
     };
+
+    if (combinedRequest.Status === 'Withdrawal Pending') {
+      const withdrawalReason = await fetchWithdrawalReason(request.Request_ID);
+      combinedRequest.Request_Reason = withdrawalReason;
+    }
 
     switch (combinedRequest.Status) {
       case 'Pending':
@@ -106,10 +112,9 @@ const joinEmployeesToWFHRequests = () => {
         rejectedRequests.value.push(combinedRequest);
         break;
       default:
-        // Handle any other cases if necessary
         break;
     }
-  });
+  }
 };
 
 const joinEmployeesToWFHRecurringRequests = () => {
@@ -132,8 +137,6 @@ const joinEmployeesToWFHRecurringRequests = () => {
     }
   });
   console.log('PENDING REQUESTS: ', pendingRequests);
-  // After both functions run, check for expired requests
-  checkExpiredRequests();
 };
 
 const formatRequestDate = (isoDate) => {

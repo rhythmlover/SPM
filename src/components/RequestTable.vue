@@ -133,17 +133,32 @@
             <td class="col-2">{{ request.Request_Date }}</td>
             <td class="col-2">{{ request.Decision_Date }}</td>
             <td class="col-2" v-if="request.Status == 'Approved'">
-              <StatusButton
-                @click="
-                  updateStatus(
-                    request.Request_ID,
-                    'Withdrawal Pending',
-                    'Withdrawn',
-                  )
-                "
-                label="Withdraw"
-                class="withdraw-btn"
-              />
+              <template v-if="!isWithdrawing[request.Request_ID]">
+                <StatusButton
+                  @click="startWithdrawal(request.Request_ID)"
+                  label="Withdraw"
+                  class="withdraw-btn"
+                />
+              </template>
+              <template v-else>
+                <textarea
+                  v-model="withdrawalReason[request.Request_ID]"
+                  placeholder="Enter withdrawal reason"
+                  rows="2"
+                ></textarea>
+                <div class="withdraw-buttons">
+                  <StatusButton
+                    @click="submitWithdrawal(request.Request_ID)"
+                    label="Submit"
+                    class="withdraw-submit-btn"
+                  />
+                  <StatusButton
+                    @click="cancelWithdrawal(request.Request_ID)"
+                    label="Cancel"
+                    class="withdraw-cancel-btn"
+                  />
+                </div>
+              </template>
             </td>
             <td class="col-2" v-if="request.Status == 'Withdrawn'">
               <button type="button" class="btn btn-outline-success" disabled>
@@ -187,17 +202,25 @@ export default {
     return {
       isRejecting: {},
       rejectionReason: {},
+      isWithdrawing: {},
+      withdrawalReason: {},
     };
   },
   emits: ['updateRequestStatus', 'updateWithdrawalStatus'],
   methods: {
     startRejection(requestID) {
-      // Directly set the value
       this.isRejecting[requestID] = true;
     },
+    startWithdrawal(requestID) {
+      this.isWithdrawing[requestID] = true;
+    },
     cancelRejection(requestID) {
-      this.isRejecting[requestID] = false; // Reset the rejecting state
-      this.rejectionReason[requestID] = ''; // Clear the rejection reason
+      this.isRejecting[requestID] = false;
+      this.rejectionReason[requestID] = '';
+    },
+    cancelWithdrawal(requestID) {
+      this.isWithdrawing[requestID] = false;
+      this.withdrawalReason[requestID] = '';
     },
     submitRejection(requestID, status) {
       if (!this.rejectionReason[requestID]?.trim()) {
@@ -228,6 +251,19 @@ export default {
       }
 
       this.cancelRejection(requestID);
+    },
+    submitWithdrawal(requestID) {
+      if (!this.withdrawalReason[requestID]?.trim()) {
+        alert('Withdrawal reason is required');
+        return;
+      }
+      this.$emit(
+        'updateRequestStatus',
+        requestID,
+        'Withdrawn',
+        this.withdrawalReason[requestID],
+      );
+      this.cancelWithdrawal(requestID);
     },
     updateStatus(requestID, requestType, newStatus) {
       const validStatuses = ['Approved', 'Rejected', 'Withdrawn'];
