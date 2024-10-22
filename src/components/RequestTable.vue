@@ -4,7 +4,7 @@
       <table class="table">
         <thead>
           <tr v-if="status === 'pending' || status === 'withdrawal pending'">
-            <th class="col-2">Name</th>
+            <th class="col-1">Name</th>
             <th class="col-2">Reason for Request</th>
             <th class="col-2">WFH Date</th>
             <th class="col-2">Requested On</th>
@@ -34,13 +34,36 @@
               {{ request.Staff_FName }} {{ request.Staff_LName }}
             </td>
             <td class="col-2">{{ request.Request_Reason }}</td>
-            <td class="col-2">
+            <td class="col-2" v-if="request.WFH_Date_Start">
+              {{
+                request.WFH_Date_Start +
+                ' to ' +
+                request.WFH_Date_End +
+                ' | ' +
+                'Every ' +
+                getDay(request.WFH_Day) +
+                ', ' +
+                get_WFH_period(request.Request_Period)
+              }}
+            </td>
+            <td class="col-2" v-else>
               {{
                 request.WFH_Date + ', ' + get_WFH_period(request.Request_Period)
               }}
             </td>
             <td class="col-2">{{ request.Request_Date }}</td>
-            <td class="col-2" id="pending" v-if="request.Status == 'Pending'">
+            <td
+              class="col-2"
+              id="pending"
+              v-if="request.WFH_Date_Start && request.Status == 'Pending'"
+            >
+              <BBadge pill variant="info">New Recurring Request</BBadge>
+            </td>
+            <td
+              class="col-2"
+              id="pending"
+              v-if="!request.WFH_Date_Start && request.Status == 'Pending'"
+            >
               <BBadge pill variant="info">New Request</BBadge>
             </td>
             <td class="col-1" v-if="request.Status == 'Withdrawal Pending'">
@@ -229,6 +252,19 @@ export default {
       if (request_period == 'PM') {
         return '2pm - 6pm';
       }
+    },
+    getDay(dayOfWeek) {
+      const days = {
+        1: 'Mon',
+        2: 'Tue',
+        3: 'Wed',
+        4: 'Thu',
+        5: 'Fri',
+        6: 'Sat',
+        7: 'Sun',
+      };
+
+      return days[dayOfWeek];
     },
   },
 };

@@ -4,6 +4,7 @@ import { inject, ref, onMounted } from 'vue';
 
 const employees = ref([]);
 const wfhRequests = ref([]);
+const wfhRecurringRequests = ref([]);
 const pendingRequests = ref([]);
 const acceptedRequests = ref([]);
 const rejectedRequests = ref([]);
@@ -31,13 +32,30 @@ const fetchWFHRequests = async () => {
 
     const staffIds = employees.value.map((employee) => employee.Staff_ID);
 
+    // Fetch non-recurring WFH requests
     const res = await axios.get(`${API_ROUTE}/wfh-request/all`);
-
     wfhRequests.value = res.data.results.filter((request) =>
       staffIds.includes(request.Staff_ID),
     );
 
+    // Fetch recurring WFH requests
+    const recurringRes = await axios.get(
+      `${API_ROUTE}/wfh-request/ds-recurring`,
+      {
+        params: { staffID: staffID.value },
+      },
+    );
+
+    wfhRecurringRequests.value = recurringRes.data.results.filter((request) =>
+      staffIds.includes(request.Staff_ID),
+    );
+
+    // Now join both requests to employees
     joinEmployeesToWFHRequests();
+    joinEmployeesToWFHRecurringRequests();
+
+    // Output combined pending requests
+    console.log('OUTPUTS: ', pendingRequests);
   } catch (error) {
     console.error('Error fetching WFH requests:', error);
   }
@@ -58,9 +76,10 @@ const checkExpiredRequests = async () => {
 };
 
 const joinEmployeesToWFHRequests = () => {
-  pendingRequests.value = [];
+  pendingRequests.value = []; // Clear array first to combine new results
   acceptedRequests.value = [];
   rejectedRequests.value = [];
+
   wfhRequests.value.forEach((request) => {
     const employee = employees.value.find(
       (emp) => emp.Staff_ID === request.Staff_ID,
@@ -91,6 +110,29 @@ const joinEmployeesToWFHRequests = () => {
         break;
     }
   });
+};
+
+const joinEmployeesToWFHRecurringRequests = () => {
+  wfhRecurringRequests.value.forEach((recurringRequest) => {
+    const employee = employees.value.find(
+      (emp) => emp.Staff_ID === recurringRequest.Staff_ID,
+    );
+
+    const combinedRequest = {
+      ...recurringRequest,
+      ...employee,
+      Request_Date: formatRequestDate(recurringRequest.Request_Date),
+      Decision_Date: formatRequestDate(recurringRequest.Decision_Date),
+      WFH_Date_Start: formatRequestDate(recurringRequest.WFH_Date_Start),
+      WFH_Date_End: formatRequestDate(recurringRequest.WFH_Date_End),
+    };
+
+    if (combinedRequest.Status === 'Pending') {
+      pendingRequests.value.push(combinedRequest);
+    }
+  });
+  console.log('PENDING REQUESTS: ', pendingRequests);
+  // After both functions run, check for expired requests
   checkExpiredRequests();
 };
 
