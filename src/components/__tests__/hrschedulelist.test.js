@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from 'vitest';
-import { nextTick } from 'vue';
 import { mount } from '@vue/test-utils';
 import HrScheduleList from '../hr/HrScheduleList.vue';
 import { formatDateFromStr, getRequestStatusPillColor } from '@/utils/utils';

@@ -16,7 +16,7 @@ const props = defineProps({
 // const scheduleListError = ref(null);
 
 onMounted(() => {
-  console.log(props.wfhRequests);
+  // console.log(props.wfhRequests);
 });
 </script>
 

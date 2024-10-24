@@ -14,7 +14,7 @@ const dayWeekFilterDropdownSelectOptions = [
 ];
 const isMonthView = ref(true);
 const departmentFilterDropdownSelectOptions = [
-  { value: 'All', text: 'All' },
+  { value: 'All', text: 'All Department' },
   { value: 'CEO', text: 'CEO' },
   { value: 'Sales', text: 'Sales' },
   { value: 'Solutioning', text: 'Solutioning' },
@@ -26,6 +26,13 @@ const departmentFilterDropdownSelectOptions = [
 ];
 const departmentView = ref('All');
 const departmentCount = ref(0);
+const periodFilterDropdownSelectOptions = [
+  { value: 'All', text: 'All Period' },
+  { value: 'AM', text: 'AM' },
+  { value: 'PM', text: 'PM' },
+  { value: 'FULL', text: 'FULL' },
+];
+const periodView = ref('All');
 
 const todayDate = ref(new Date());
 const {
@@ -114,9 +121,11 @@ const getDepartmentCount = async (departmentName) => {
 };
 
 /**
- * Filter the WFH requests to only include from specified department
+ * Filter the WFH requests
+ * - to only include from specified department
+ * - to only include from specified period
  */
-const filterRequestsFromDepartment = async () => {
+const filterRequests = async () => {
   // Get total number of employees for filtered department
   let newDepartmentCount = await getDepartmentCount(departmentView.value);
 
@@ -133,6 +142,14 @@ const filterRequestsFromDepartment = async () => {
           r['Staff']['Department']['Dept_Name'] != departmentView.value
         )
           continue;
+        // Fiter by only that period
+        if (
+          periodView.value != 'All' &&
+          r['Request_Period'] != periodView.value
+        )
+          continue;
+
+        // Passes all filters
         validRequests.push(r);
 
         // Calculate how many employees WFH
@@ -150,17 +167,20 @@ const filterRequestsFromDepartment = async () => {
   myDates.value = dateMap;
 };
 
-watch([currentPeriodString, isMonthView, departmentView], async () => {
-  isLoading.value = true;
-  mapRequestsToDates();
-  await filterRequestsFromDepartment();
-  isLoading.value = false;
-});
+watch(
+  [currentPeriodString, isMonthView, departmentView, periodView],
+  async () => {
+    isLoading.value = true;
+    mapRequestsToDates();
+    await filterRequests();
+    isLoading.value = false;
+  },
+);
 onMounted(async () => {
   isLoading.value = true;
   await getWFHRequests();
   mapRequestsToDates();
-  await filterRequestsFromDepartment();
+  await filterRequests();
   isLoading.value = false;
 });
 </script>
@@ -206,6 +226,13 @@ onMounted(async () => {
               <BFormSelect
                 v-model="departmentView"
                 :options="departmentFilterDropdownSelectOptions"
+              />
+            </BCol>
+            <!-- Period Filter -->
+            <BCol class="col-4 col-md-2">
+              <BFormSelect
+                v-model="periodView"
+                :options="periodFilterDropdownSelectOptions"
               />
             </BCol>
           </BRow>
