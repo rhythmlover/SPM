@@ -9,6 +9,7 @@ import StaffTeamSchedule from '../views/staff/StaffTeamScheduleView.vue';
 import ApplyRecurringView from '../views/ApplyRecurringView.vue';
 import HrViewSchedule from '@/views/hr/HrViewSchedule.vue';
 import StaffApprovedRequestWithdrawal from '../views/staff/ApprovedRequestWithdrawalView.vue';
+import StaffRequestHistory from '../views/staff/StaffRequestHistory.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -64,6 +65,11 @@ const router = createRouter({
       component: StaffApprovedRequestWithdrawal,
       props: true,
     },
+    {
+      path: '/staff-request-history',
+      name: 'staff-request-history',
+      component: StaffRequestHistory,
+    }
   ],
 });
 
