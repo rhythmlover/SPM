@@ -2,7 +2,6 @@
 import { onMounted } from 'vue';
 import { formatDateFromStr, getRequestStatusPillColor } from '@/utils/utils';
 
-// Define props
 const props = defineProps({
   wfhRequests: {
     type: Object,
@@ -37,7 +36,7 @@ onMounted(() => {
                 </h4>
               </template>
               <BTableSimple
-                v-if="dateObject['requests'].length > 0"
+                v-if="dateObject.requests && dateObject.requests.length > 0"
                 hover
                 caption-top
               >
@@ -51,24 +50,22 @@ onMounted(() => {
                 </BThead>
                 <BTbody>
                   <BTr
-                    v-for="requestObj in dateObject['requests']"
-                    :key="requestObj['Request_ID']"
+                    v-for="requestObj in dateObject.requests"
+                    :key="requestObj.Request_ID"
                   >
                     <BTd>
                       {{
-                        `${requestObj['Staff']['Staff_FName']} ${requestObj['Staff']['Staff_LName']}`
+                        `${requestObj.Staff.Staff_FName} ${requestObj.Staff.Staff_LName}`
                       }}
                     </BTd>
-                    <BTd> {{ requestObj['Staff']['Position'] }}</BTd>
-                    <BTd> {{ requestObj['Request_Period'] }}</BTd>
+                    <BTd>{{ requestObj.Staff.Position }}</BTd>
+                    <BTd>{{ requestObj.Request_Period }}</BTd>
                     <BTd>
                       <BBadge
-                        :variant="
-                          getRequestStatusPillColor(requestObj['Status'])
-                        "
+                        :variant="getRequestStatusPillColor(requestObj['Status'])"
                         pill
                       >
-                        {{ requestObj['Status'] }}
+                        {{ requestObj.Status }}
                       </BBadge>
                     </BTd>
                   </BTr>

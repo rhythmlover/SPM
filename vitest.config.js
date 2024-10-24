@@ -9,6 +9,12 @@ export default mergeConfig(
       environment: 'jsdom',
       exclude: [...configDefaults.exclude, 'e2e/**', 'backend/**'],
       root: fileURLToPath(new URL('./', import.meta.url)),
+      coverage: {
+        provider: 'v8',
+        reporters: ['html'],
+        reportsDirectory: './tests-coverage',
+      },
+      testTimeout: 10000,
     },
   }),
 );

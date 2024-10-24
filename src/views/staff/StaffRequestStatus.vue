@@ -54,6 +54,18 @@ const isWithinTwoWeeks = (WFH_Date, Status) => {
   );
 };
 
+const get_WFH_period = (request_period) => {
+  if (request_period == 'FULL') {
+    return 'Full Day';
+  }
+  if (request_period == 'AM') {
+    return '9am - 1pm';
+  }
+  if (request_period == 'PM') {
+    return '2pm - 6pm';
+  }
+};
+
 // Fetch WFH requests for the correct staff
 const getWFHRequests = async (staffID) => {
   try {
@@ -63,13 +75,14 @@ const getWFHRequests = async (staffID) => {
 
     if (res.data && Array.isArray(res.data.results)) {
       localRequests.value = res.data.results.map((request) => ({
-        StaffID: request.Staff_ID,
+        Staff_ID: request.Staff_ID,
         Request_ID: request.Request_ID,
         Request_Date: formatRequestDate(request.Request_Date),
         WFH_Date: formatRequestDate(request.WFH_Date),
         Request_Period: request.Request_Period,
         Reason: request.Request_Reason,
         Status: request.Status,
+        Comments: request.Comments,
         showWithdrawButton: isWithinTwoWeeks(
           new Date(request.WFH_Date),
           request.Status,
@@ -106,15 +119,19 @@ const deleteRequest = async (requestID) => {
 
 // Handle withdrawing an approved request
 const router = useRouter();
-const openWithdrawForm = (Request_ID, WFH_Date, Request_Period, Status) => {
+const openWithdrawForm = (Request_ID, WFH_Date, Request_Period) => {
   const confirmWithdraw = window.confirm(
     'Send request to manager to approve withdrawal of this request?',
   );
   if (!confirmWithdraw) return;
 
   router.push({
-    name: 'WithdrawRequestForm',
-    params: { requestID: Request_ID, WFH_Date, Request_Period, Status },
+    name: 'staff-approved-requests-withdrawal',
+    params: {
+      requestID: Request_ID,
+      WFH_Date,
+      Request_Period,
+    },
   });
 };
 
@@ -136,26 +153,41 @@ onMounted(async () => {
         <table class="table">
           <thead>
             <tr>
-              <th>Staff ID</th>
-              <th>Request ID</th>
-              <th>Application Date</th>
+              <th>Reason for Request</th>
               <th>WFH Date</th>
-              <th>Request Period</th>
-              <th>Request Reason</th>
+              <th>Requested On</th>
               <th>Status</th>
-              <th>Action</th>
+              <th>Actions</th>
+              <th>Comments</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(request, index) in localRequests" :key="index">
-              <td>{{ request.StaffID }}</td>
-              <td>{{ request.Request_ID }}</td>
-              <td>{{ request.Request_Date }}</td>
-              <td>{{ request.WFH_Date }}</td>
-              <td>{{ request.Request_Period }}</td>
-              <td>{{ request.Reason }}</td>
-              <td>{{ request.Status }}</td>
-              <td>
+              <td class="col-2">{{ request.Reason }}</td>
+              <td class="col-2">
+                {{
+                  request.WFH_Date +
+                  ', ' +
+                  get_WFH_period(request.Request_Period)
+                }}
+              </td>
+              <td class="col-2">{{ request.Request_Date }}</td>
+              <td class="col-2" v-if="request.Status == 'Pending'">
+                <BBadge pill variant="info">Pending</BBadge>
+              </td>
+              <td class="col-2" v-if="request.Status == 'Withdrawn'">
+                <BBadge pill variant="secondary">Withdrawn</BBadge>
+              </td>
+              <td class="col-2" v-if="request.Status == 'Withdrawal Pending'">
+                <BBadge pill variant="light">Withdrawn</BBadge>
+              </td>
+              <td class="col-2" v-if="request.Status == 'Approved'">
+                <BBadge pill variant="success">Approved</BBadge>
+              </td>
+              <td class="col-2" v-if="request.Status == 'Rejected'">
+                <BBadge pill variant="danger">Rejected</BBadge>
+              </td>
+              <td class="col-2">
                 <!-- Conditionally show Delete button if status is 'Pending' or 'pending' -->
                 <button
                   v-if="request.Status.toLowerCase() === 'pending'"
@@ -171,7 +203,6 @@ onMounted(async () => {
                       request.Request_ID,
                       request.WFH_Date,
                       request.Request_Period,
-                      request.Status,
                     )
                   "
                   class="btn btn-danger"
@@ -184,6 +215,7 @@ onMounted(async () => {
                   >Withdrawal Pending</span
                 >
               </td>
+              <td class="col-2">{{ request.Comments }}</td>
             </tr>
           </tbody>
         </table>
@@ -210,10 +242,9 @@ onMounted(async () => {
   }
 
   table {
-    width: 100%;
-    border-collapse: collapse;
+    background-color: white;
+    border-radius: 10px;
     margin-top: 20px;
-    table-layout: fixed;
   }
 }
 
@@ -221,11 +252,11 @@ th,
 td {
   padding: 12px 15px;
   text-align: left;
+  vertical-align: middle;
   border: 1px solid #ddd;
-  word-wrap: break-word;
 }
 
-th {
+table th {
   background-color: #f4f4f4;
   font-weight: bold;
 }
@@ -246,7 +277,16 @@ tr:hover {
   font-weight: bold;
 }
 
-.btn-danger:hover {
-  background-color: #c82333;
+button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+button:hover {
+  opacity: 0.8;
 }
 </style>

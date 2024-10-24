@@ -8,6 +8,7 @@ import StaffRequestStatus from '../views/staff/StaffRequestStatus.vue';
 import StaffTeamSchedule from '../views/staff/StaffTeamScheduleView.vue';
 import ApplyRecurringView from '../views/ApplyRecurringView.vue';
 import HrViewSchedule from '@/views/hr/HrViewSchedule.vue';
+import StaffApprovedRequestWithdrawal from '../views/staff/ApprovedRequestWithdrawalView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -58,14 +59,9 @@ const router = createRouter({
       component: ManagerViewSchedule,
     },
     {
-      path: '/staff-approved-requests-withdrawal',
+      path: '/staff-approved-requests-withdrawal/:requestID/:WFH_Date/:Request_Period/',
       name: 'staff-approved-requests-withdrawal',
-      component: () => import('../views/staff/ApprovedRequestWithdrawal.vue'),
-    },
-    {
-      path: '/staff-requeststatus/:requestID/:WFH_Date/:Request_Period',
-      name: 'WithdrawRequestForm',
-      component: () => import('../views/staff/ApprovedRequestWithdrawal.vue'),
+      component: StaffApprovedRequestWithdrawal,
       props: true,
     },
   ],

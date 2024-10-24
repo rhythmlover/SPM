@@ -2,11 +2,6 @@ name: Continuous Integration
 run-name: CI checks for ${{ github.actor }} ${{ github.event_name }} on ${{ github.ref }} 🚀
 
 on:
-  push:
-    branches:
-      - feature/**
-      - fix/**
-      - hotfix/**
   pull_request:
     branches:
       - master

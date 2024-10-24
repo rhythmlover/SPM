@@ -151,9 +151,12 @@ describe('RequestTable.vue', () => {
         components: { StatusButton },
       });
       await wrapper.find('.withdraw-btn').trigger('click');
+      await wrapper.find('textarea').setValue(request_approved.Request_Reason);
+      await wrapper.find('.withdraw-submit-btn').trigger('click');
       expect(wrapper.emitted().updateRequestStatus[0]).toEqual([
         1,
         'Withdrawn',
+        `${request_approved.Request_Reason}`,
       ]);
       await updateSheet(testId, 'Passed');
     } catch (error) {

@@ -1,30 +1,36 @@
+<!-- StaffTeamSchedule.vue -->
 <template>
   <div>
-    <b-row class="mb-4 align-items-center">
-      <b-col cols="auto">
-        <b-form-checkbox v-model="isMonthView" switch size="lg">
-          {{ isMonthView ? 'Month' : 'Week' }}
-        </b-form-checkbox>
-      </b-col>
-    </b-row>
-
-    <b-row class="mb-4">
-      <b-col md="6" offset-md="3">
-        <b-form-group
-          label="Enter Staff ID:"
-          label-for="staffID"
-          label-class="font-weight-bold"
-        >
-          <b-form-input
-            id="staffID"
-            v-model="staffID"
-            type="number"
-            placeholder="Enter Staff ID"
-            @input="fetchSchedule"
-          ></b-form-input>
-        </b-form-group>
-      </b-col>
-    </b-row>
+    <BRow class="my-2">
+      <!-- Day / Week Filter -->
+      <BCol class="col-4 col-md-2">
+        <BFormSelect
+          v-model="isMonthView"
+          :options="dayWeekFilterDropdownSelectOptions"
+        />
+      </BCol>
+      <!-- Teammate Filter -->
+      <BCol class="col-8 col-md-10">
+        <BDropdown text="Filter by Teammate" class="float-end">
+          <BDropdownForm>
+            <BFormCheckbox
+              v-model="selectAllTeammates"
+              @change="toggleAllTeammates"
+            >
+              Select All
+            </BFormCheckbox>
+            <BFormCheckbox
+              v-for="teammate in teammates"
+              :key="teammate.Staff_ID"
+              v-model="selectedTeammates"
+              :value="teammate.Staff_ID"
+            >
+              {{ teammate.Staff_FName }} {{ teammate.Staff_LName }}
+            </BFormCheckbox>
+          </BDropdownForm>
+        </BDropdown>
+      </BCol>
+    </BRow>
 
     <b-row class="mb-4 align-items-center">
       <b-col cols="auto">
@@ -49,7 +55,11 @@
     </b-row>
 
     <template v-else>
-      <b-row v-for="(dayInfo, date) in datesInPeriod" :key="date" class="mb-4">
+      <b-row
+        v-for="(dayInfo, date) in filteredDatesInPeriod"
+        :key="date"
+        class="mb-4"
+      >
         <b-col>
           <b-card>
             <template #header>
@@ -107,22 +117,29 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, inject } from 'vue';
 import axios from 'axios';
 
 export default {
   name: 'StaffTeamSchedule',
   setup() {
-    const staffID = ref('');
+    const staffID = inject('staffID');
     const viewingDate = ref(new Date());
     const datesInPeriod = ref({});
     const error = ref(null);
     const isMonthView = ref(true);
 
-    // Define API_ROUTE
-    const API_ROUTE = import.meta.env.DEV
-      ? 'http://localhost:3000'
-      : import.meta.env.VITE_DEPLOYED_API_ENDPOINT;
+    const dayWeekFilterDropdownSelectOptions = [
+      { value: true, text: 'Month' },
+      { value: false, text: 'Week' },
+    ];
+
+    const API_ROUTE = inject('API_ROUTE');
+
+    // New refs for teammate filtering
+    const teammates = ref([]);
+    const selectedTeammates = ref([]);
+    const selectAllTeammates = ref(true);
 
     const currentPeriod = computed(() => {
       if (isMonthView.value) {
@@ -137,12 +154,12 @@ export default {
       }
     });
 
-    const getWFHRequests = async (staffID) => {
+    const getWFHRequests = async () => {
       try {
         const res = await axios.get(
           `${API_ROUTE}/teamlist/byReportingManager`,
           {
-            params: { Staff_ID: staffID },
+            params: { Staff_ID: staffID.value },
           },
         );
 
@@ -156,7 +173,7 @@ export default {
         }
 
         if (Array.isArray(res.data.employeeRequests)) {
-          return res.data.employeeRequests.flatMap((employeeObj) =>
+          const requests = res.data.employeeRequests.flatMap((employeeObj) =>
             employeeObj.wfhRequests.map((wfhRequest) => ({
               ...wfhRequest,
               Staff_FName: employeeObj.employee.Staff_FName,
@@ -167,6 +184,24 @@ export default {
               ).toLocaleDateString('en-CA'),
             })),
           );
+
+          // Populate teammates list
+          teammates.value = [
+            ...new Set(
+              requests.map((request) => ({
+                Staff_ID: request.Staff_ID,
+                Staff_FName: request.Staff_FName,
+                Staff_LName: request.Staff_LName,
+              })),
+            ),
+          ];
+
+          // Initialize selectedTeammates with all teammate IDs
+          selectedTeammates.value = teammates.value.map(
+            (teammate) => teammate.Staff_ID,
+          );
+
+          return requests;
         } else {
           throw new Error('employeeRequests is not an array');
         }
@@ -200,18 +235,16 @@ export default {
         newMap[formattedDate] = { dateObj: new Date(d), requests: [] };
       }
 
-      if (staffID.value) {
-        try {
-          const requests = await getWFHRequests(staffID.value);
-          requests.forEach((request) => {
-            const requestDate = request.Request_Date;
-            if (newMap[requestDate]) {
-              newMap[requestDate].requests.push(request);
-            }
-          });
-        } catch (err) {
-          error.value = err.message;
-        }
+      try {
+        const requests = await getWFHRequests();
+        requests.forEach((request) => {
+          const requestDate = request.Request_Date;
+          if (newMap[requestDate]) {
+            newMap[requestDate].requests.push(request);
+          }
+        });
+      } catch (err) {
+        error.value = err.message;
       }
 
       datesInPeriod.value = newMap;
@@ -219,9 +252,7 @@ export default {
 
     const fetchSchedule = async () => {
       error.value = null;
-      if (staffID.value) {
-        await getDatesInPeriod();
-      }
+      await getDatesInPeriod();
     };
 
     const formatDate = (dateString) => {
@@ -285,8 +316,35 @@ export default {
       }
     };
 
+    // New functions for teammate filtering
+    const toggleAllTeammates = () => {
+      if (selectAllTeammates.value) {
+        selectedTeammates.value = teammates.value.map(
+          (teammate) => teammate.Staff_ID,
+        );
+      } else {
+        selectedTeammates.value = [];
+      }
+    };
+
+    const filteredDatesInPeriod = computed(() => {
+      const filtered = {};
+      Object.entries(datesInPeriod.value).forEach(([date, dayInfo]) => {
+        const filteredRequests = dayInfo.requests.filter((request) =>
+          selectedTeammates.value.includes(request.Staff_ID),
+        );
+        filtered[date] = { ...dayInfo, requests: filteredRequests };
+      });
+      return filtered;
+    });
+
     watch([viewingDate, isMonthView], () => {
       fetchSchedule();
+    });
+
+    watch(selectedTeammates, () => {
+      selectAllTeammates.value =
+        selectedTeammates.value.length === teammates.value.length;
     });
 
     onMounted(async () => {
@@ -294,9 +352,9 @@ export default {
     });
 
     return {
-      staffID,
       viewingDate,
       datesInPeriod,
+      filteredDatesInPeriod,
       error,
       isMonthView,
       currentPeriod,
@@ -305,8 +363,13 @@ export default {
       getStatusVariant,
       isUserRequest,
       getUserRequestStyle,
+      dayWeekFilterDropdownSelectOptions,
       previousPeriod,
       nextPeriod,
+      teammates,
+      selectedTeammates,
+      selectAllTeammates,
+      toggleAllTeammates,
     };
   },
 };
@@ -315,8 +378,5 @@ export default {
 <style scoped>
 .user-request {
   transition: all 0.3s ease;
-}
-.user-request:hover {
-  transform: scale(1.02);
 }
 </style>

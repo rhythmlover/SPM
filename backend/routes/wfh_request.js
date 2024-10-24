@@ -411,6 +411,20 @@ router.put('/withdrawal/updateComments', async (req, res, next) => {
   }
 });
 
+router.get('/withdrawal/get-request-reason-of-request-id', async (req, res, next) => {
+  const requestID = req.query.requestID;
+
+  try {
+    let [results] = await executeQuery(
+      `SELECT Request_Reason FROM WFH_Withdrawal WHERE Request_ID = ${requestID}`,
+    );
+    let request_reason = results[0]['Request_Reason'];
+    res.json({ request_reason });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/my-subordinate-and-me-requests', async (req, res, next) => {
   const staffID = req.query.staffID;
 
@@ -517,7 +531,6 @@ router.post('/withdraw/post/id', async (req, res, next) => {
 router.put('/removeExpiredRequests', async (req, res, next) => {
   try {
     const { staffID } = req.body;
-    console.log('Received staffID:', staffID);
 
     if (!staffID) {
       return res.status(400).json({ error: 'staffID is required' });
@@ -536,6 +549,19 @@ router.put('/removeExpiredRequests', async (req, res, next) => {
     });
   } catch (error) {
     console.error('Error occurred:', error); // Log any errors that occur
+    next(error);
+  }
+});
+
+router.get('/ds-recurring', async (req, res, next) => {
+  const staffID = req.query.staffID;
+
+  try {
+    let [results] = await executeQuery(
+      `SELECT * FROM WFH_Request_Recurring WHERE Approver_ID = ${staffID}`,
+    );
+    res.json({ results });
+  } catch (error) {
     next(error);
   }
 });

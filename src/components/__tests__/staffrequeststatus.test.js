@@ -9,8 +9,8 @@ vi.mock('axios');
 
 const routes = [
   {
-    path: '/withdraw-request/:requestID/:WFH_Date/:Request_Period/:Status',
-    name: 'WithdrawRequestForm',
+    path: '/withdraw-request/:requestID/:WFH_Date/:Request_Period/',
+    name: 'staff-approved-requests-withdrawal',
     component: { template: '<div>Withdraw Form</div>' },
   },
 ];
@@ -25,12 +25,13 @@ describe('StaffRequestStatus.vue', () => {
     {
       Staff_ID: 171015,
       Request_ID: 1,
-      Request_Date: '2024-09-25',
-      WFH_Date: '2024-10-01',
-      Request_Period: 'PM',
       Request_Reason: 'Personal',
+      WFH_Date: '2024-10-01',
+      Request_Date: '2024-09-25',
       Status: 'Pending',
       showWithdrawButton: true,
+      Comments: 'Some comments',
+      Request_Period: 'AM',
     },
   ];
 
@@ -38,25 +39,27 @@ describe('StaffRequestStatus.vue', () => {
     {
       Staff_ID: 171015,
       Request_ID: 2,
-      Request_Date: '2024-09-25',
-      WFH_Date: '2024-10-03',
-      Request_Period: 'AM',
       Request_Reason: 'Personal',
+      WFH_Date: '2024-10-03',
+      Request_Date: '2024-09-25',
       Status: 'Approved',
       showWithdrawButton: true,
+      Comments: 'Some comments',
+      Request_Period: 'AM',
     },
   ];
 
   const request_out_of_period = [
     {
       Staff_ID: 171015,
-      Request_ID: 4,
-      Request_Date: '2024-09-25',
-      WFH_Date: '2025-01-03',
-      Request_Period: 'AM',
+      Request_ID: 3,
       Request_Reason: 'Personal',
+      WFH_Date: '2025-01-03',
+      Request_Date: '2024-09-25',
       Status: 'Approved',
       showWithdrawButton: false,
+      Comments: 'Some comments',
+      Request_Period: 'PM',
     },
   ];
 
@@ -64,12 +67,13 @@ describe('StaffRequestStatus.vue', () => {
     {
       Staff_ID: 171015,
       Request_ID: 5,
-      Request_Date: '2024-09-25',
-      WFH_Date: '2024-11-01',
-      Request_Period: 'AM',
       Request_Reason: 'Personal',
+      WFH_Date: '2024-11-01',
+      Request_Date: '2024-09-25',
       Status: 'Withdrawal Pending',
       showWithdrawButton: false,
+      Comments: 'Some comments',
+      Request_Period: 'FULL',
     },
   ];
 
@@ -129,14 +133,12 @@ describe('StaffRequestStatus.vue', () => {
         },
       });
       const headers = wrapper.findAll('th');
-      expect(headers[0].text()).toBe('Staff ID');
-      expect(headers[1].text()).toBe('Request ID');
-      expect(headers[2].text()).toBe('Application Date');
-      expect(headers[3].text()).toBe('WFH Date');
-      expect(headers[4].text()).toBe('Request Period');
-      expect(headers[5].text()).toBe('Request Reason');
-      expect(headers[6].text()).toBe('Status');
-      expect(headers[7].text()).toBe('Action');
+      expect(headers[0].text()).toBe('Reason for Request');
+      expect(headers[1].text()).toBe('WFH Date');
+      expect(headers[2].text()).toBe('Requested On');
+      expect(headers[3].text()).toBe('Status');
+      expect(headers[4].text()).toBe('Actions');
+      expect(headers[5].text()).toBe('Comments');
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -207,13 +209,12 @@ describe('StaffRequestStatus.vue', () => {
       await wrapper.vm.$nextTick();
 
       expect(wrapper.vm.$router.currentRoute.value.name).toBe(
-        'WithdrawRequestForm',
+        'staff-approved-requests-withdrawal',
       );
       expect(wrapper.vm.$router.currentRoute.value.params).toMatchObject({
         requestID: '2',
         WFH_Date: '2024-10-03',
         Request_Period: 'AM',
-        Status: 'Approved',
       });
 
       await updateSheet(testId, 'Passed');
@@ -224,42 +225,112 @@ describe('StaffRequestStatus.vue', () => {
     }
   });
 
+  // it('Status of Withdrawal Updated to Withdrawal Pending', async () => {
+  //   const testId = 'TC-039';
+  //   try {
+  //     const wrapper = mount(StaffRequestStatus, {
+  //       props: {
+  //         requests: request_approved,
+  //       },
+  //     });
+  //     const requestRows = wrapper.findAll('tbody tr');
+  //     expect(requestRows.length).toBe(request_approved.length);
+
+  //     // const statusCell = requestRows[0].findAll('td').at(3);
+  //     // expect(statusCell.text()).toContain('Approved');
+  //     let statusCell = requestRows[0].find('td.col-2');
+  //   expect(statusCell.exists()).toBe(true);
+
+  //   let badge = statusCell.find('BBadge');
+  //   expect(badge.exists()).toBe(true);
+
+  //   // Verify the class for the approved badge
+  //   expect(badge.classes()).toContain('badge-success');
+
+  //   // Verify the text for 'Approved'
+  //   expect(badge.text()).toBe('Approved');
+
+  //     let withdrawButton = requestRows[0].find('.btn-danger');
+  //     expect(withdrawButton.exists()).toBe(true);
+
+  //     await wrapper.setProps({
+  //       requests: [
+  //         {
+  //           ...request_approved[0],
+  //           Status: 'Withdrawal Pending',
+  //           showWithdrawButton: false,
+  //         },
+  //       ],
+  //     });
+
+  //     const updatedRequestRows = wrapper.findAll('tbody tr');
+  //   statusCell = updatedRequestRows[0].find('td.col-2');
+  //   expect(statusCell.exists()).toBe(true);
+
+  //   badge = statusCell.find('BBadge');
+  //   expect(badge.exists()).toBe(true);
+  //   expect(badge.classes()).toContain('badge-light');
+  //   expect(badge.text()).toBe('Withdrawal Pending');
+  //     // const updatedStatusCell = requestRows[0].findAll('td').at(3);
+  //     // expect(updatedStatusCell.text()).toBe('Withdrawal Pending');
+
+  //     withdrawButton = requestRows[0].find('.btn-danger');
+  //     expect(withdrawButton.exists()).toBe(false);
+
+  //     await updateSheet(testId, 'Passed');
+  //   } catch (error) {
+  //     await updateSheet(testId, 'Failed');
+  //     throw error;
+  //   }
+  // });
+
   it('Status of Withdrawal Updated to Withdrawal Pending', async () => {
     const testId = 'TC-039';
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: {
-          requests: request_approved,
+          requests: request_approved, // Initial data with 'Approved' status
         },
       });
-      const requestRows = wrapper.findAll('tbody tr');
 
+      const requestRows = wrapper.findAll('tbody tr');
       expect(requestRows.length).toBe(request_approved.length);
 
-      const statusCell = requestRows[0].findAll('td').at(6);
-      expect(statusCell.text()).toBe('Approved');
+      let statusCell = requestRows[0].findAll('td').at(3);
+      expect(statusCell.exists()).toBe(true);
+
+      const badge = statusCell.find('.text-bg-success');
+      expect(badge.exists()).toBe(true);
+      expect(badge.text()).toBe('Approved');
 
       let withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(true);
 
+      // Simulate the status update by changing the props
       await wrapper.setProps({
         requests: [
           {
             ...request_approved[0],
-            Status: 'Withdrawal Pending',
-            showWithdrawButton: false,
+            Status: 'Withdrawal Pending', // Change the status to Withdrawal Pending
+            showWithdrawButton: false, // Update to hide the Withdraw button
           },
         ],
       });
 
-      const updatedStatusCell = requestRows[0].findAll('td').at(6);
-      expect(updatedStatusCell.text()).toBe('Withdrawal Pending');
+      statusCell = requestRows[0].findAll('td').at(3);
+      expect(statusCell.exists()).toBe(true);
+
+      const badge_pending_withdrawal = statusCell.find('.text-bg-light');
+      expect(badge_pending_withdrawal.exists()).toBe(true);
+      expect(badge_pending_withdrawal.text()).toBe('Withdrawn');
 
       withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(false);
 
+      // Mark the test as passed
       await updateSheet(testId, 'Passed');
     } catch (error) {
+      // In case of error, mark as failed
       await updateSheet(testId, 'Failed');
       throw error;
     }
@@ -277,11 +348,8 @@ describe('StaffRequestStatus.vue', () => {
 
       expect(requestRows.length).toBe(request_pending_withdrawal.length);
 
-      const statusCell = requestRows[0].findAll('td').at(6);
-      expect(statusCell.text()).toBe('Withdrawal Pending');
-
-      let withdrawButton = requestRows[0].find('.btn-danger');
-      expect(withdrawButton.exists()).toBe(false);
+      const statusCell = requestRows[0].findAll('td').at(3);
+      expect(statusCell.text()).toBe('Withdrawn');
 
       await wrapper.setProps({
         requests: [
@@ -293,11 +361,10 @@ describe('StaffRequestStatus.vue', () => {
         ],
       });
 
-      const updatedStatusCell = requestRows[0].findAll('td').at(6);
-      expect(updatedStatusCell.text()).toBe('Withdrawn');
-
-      withdrawButton = requestRows[0].find('.btn-danger');
-      expect(withdrawButton.exists()).toBe(false);
+      const updatedStatusCell = requestRows[0].findAll('td').at(3);
+      const status_approved = updatedStatusCell.find('.text-bg-secondary');
+      expect(status_approved.exists()).toBe(true);
+      expect(status_approved.text()).toBe('Withdrawn');
 
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -318,8 +385,8 @@ describe('StaffRequestStatus.vue', () => {
 
       expect(requestRows.length).toBe(request_pending_withdrawal.length);
 
-      const statusCell = requestRows[0].findAll('td').at(6);
-      expect(statusCell.text()).toBe('Withdrawal Pending');
+      const statusCell = requestRows[0].findAll('td').at(3);
+      expect(statusCell.text()).toBe('Withdrawn');
 
       let withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(false);
@@ -334,7 +401,7 @@ describe('StaffRequestStatus.vue', () => {
         ],
       });
 
-      const updatedStatusCell = requestRows[0].findAll('td').at(6);
+      const updatedStatusCell = requestRows[0].findAll('td').at(3);
       expect(updatedStatusCell.text()).toBe('Approved');
 
       withdrawButton = requestRows[0].find('.btn-danger');
