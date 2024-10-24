@@ -22,6 +22,17 @@ describe('RequestHistory', () => {
 
   const emptyRequest = [];
 
+  const invalidRequest = [
+    {
+      Approver: null,
+      Request_Reason: '',
+      WFH_Date: null,
+      Request_Date: null,
+      Status: null,
+      Comments: '',
+    },
+  ];
+
   it('Render correct table headings', async () => {
     const testId = 'TC-084';
     try {
@@ -116,16 +127,6 @@ describe('RequestHistory', () => {
 
   it('Handles invalid request data gracefully', async () => {
     const testId = 'TC-089';
-    const invalidRequest = [
-      {
-        Approver: null,
-        Request_Reason: '',
-        WFH_Date: null,
-        Request_Date: null,
-        Status: null,
-        Comments: '',
-      },
-    ];
     try {
       const wrapper = mount(RequestHistory, {
         props: {

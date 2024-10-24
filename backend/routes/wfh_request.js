@@ -539,9 +539,11 @@ router.put('/removeExpiredRequests', async (req, res, next) => {
     await executeQuery(
       `UPDATE WFH_Request 
       SET Status = 'Rejected',
+          Comments = 'Expired pending request',
           Decision_Date = CURDATE()
       WHERE WFH_Date < DATE_SUB(CURDATE(), INTERVAL 2 MONTH) 
-      AND (Staff_ID = ${staffID} OR Approver_ID = ${staffID})`,
+      AND (Staff_ID = ${staffID} OR Approver_ID = ${staffID})
+      AND (Status = 'Pending' OR Status = 'Pending Withdrawal')`,
     );
     res.json({
       message: `Expired requests for staffID ${staffID} rejected successfully and comments updated.`,

@@ -29,7 +29,12 @@ function getCurrentDateTimeGMT8() {
   return formattedDate;
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function updateSheet(testId, status) {
+  await sleep(5000);
   // Fetch existing data from the sheet (assuming the ID starts in column A, status in K, and date in P)
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
