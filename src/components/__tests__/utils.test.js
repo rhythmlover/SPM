@@ -5,7 +5,7 @@ import {
 } from '@/utils/utils';
 import { describe, it, expect, vi } from 'vitest';
 import { useRoute } from 'vue-router';
-import { updateSheet } from '../../../updateGoogleSheet';
+// import { updateSheet } from '../../../updateGoogleSheet';
 
 // Mocking vue-router's useRoute
 vi.mock('vue-router', () => ({

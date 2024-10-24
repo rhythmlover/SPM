@@ -3,7 +3,7 @@ import { onMounted } from 'vue';
 import { formatDateFromStr, getRequestStatusPillColor } from '@/utils/utils';
 
 // Define props
-const props = defineProps({
+defineProps({
   wfhRequests: {
     type: Object,
     default() {
