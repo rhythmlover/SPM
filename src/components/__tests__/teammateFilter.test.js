@@ -38,7 +38,7 @@ describe('TeammateFilter', () => {
   });
 
   it('should initialize with all teammates and statuses selected', async () => {
-    const testId = 'TC-046';
+    const testId = 'TC-054';
     try {
       await nextTick();
       expect(wrapper.vm.localSelectedTeammates.size).toBe(3);
@@ -53,7 +53,7 @@ describe('TeammateFilter', () => {
   });
 
   it('should deselect all teammates when "Select All" is unchecked', async () => {
-    const testId = 'TC-047';
+    const testId = 'TC-055';
     try {
       await wrapper.setProps({ selectedTeammates: ['1', '2', '3'] });
       await nextTick();
@@ -71,7 +71,7 @@ describe('TeammateFilter', () => {
   });
 
   it('should toggle individual teammate selection', async () => {
-    const testId = 'TC-048';
+    const testId = 'TC-056';
     try {
       await wrapper.setProps({ selectedTeammates: ['1', '2', '3'] });
       await nextTick();
@@ -90,7 +90,7 @@ describe('TeammateFilter', () => {
   });
 
   it('should update when selectedTeammates prop changes', async () => {
-    const testId = 'TC-049';
+    const testId = 'TC-057';
     try {
       await wrapper.setProps({ selectedTeammates: ['1', '2'] });
       await nextTick();
@@ -104,7 +104,7 @@ describe('TeammateFilter', () => {
   });
 
   it('should select all teammates when "Select All" is checked', async () => {
-    const testId = 'TC-050';
+    const testId = 'TC-058';
     try {
       await wrapper.setProps({ selectedTeammates: ['1'] });
       await nextTick();
@@ -122,7 +122,7 @@ describe('TeammateFilter', () => {
   });
 
   it('should toggle status selection', async () => {
-    const testId = 'TC-051';
+    const testId = 'TC-059';
     try {
       wrapper.vm.toggleStatus('Approved');
       await nextTick();
