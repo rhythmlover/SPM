@@ -83,21 +83,21 @@ const getWFHRequests = async (staffID) => {
 
     if (res.data && Array.isArray(res.data.results)) {
       localRequests.value = res.data.results
-      .filter((requestObj) => notMoreThanTwoMonthsAgo(requestObj['WFH_Date']))
-      .map((request) => ({
-        Staff_ID: request.Staff_ID,
-        Request_ID: request.Request_ID,
-        Request_Date: formatRequestDate(request.Request_Date),
-        WFH_Date: formatRequestDate(request.WFH_Date),
-        Request_Period: request.Request_Period,
-        Reason: request.Request_Reason,
-        Status: request.Status,
-        Comments: request.Comments,
-        showWithdrawButton: isWithinTwoWeeks(
-          new Date(request.WFH_Date),
-          request.Status,
-        ),
-      }));
+        .filter((requestObj) => notMoreThanTwoMonthsAgo(requestObj['WFH_Date']))
+        .map((request) => ({
+          Staff_ID: request.Staff_ID,
+          Request_ID: request.Request_ID,
+          Request_Date: formatRequestDate(request.Request_Date),
+          WFH_Date: formatRequestDate(request.WFH_Date),
+          Request_Period: request.Request_Period,
+          Reason: request.Request_Reason,
+          Status: request.Status,
+          Comments: request.Comments,
+          showWithdrawButton: isWithinTwoWeeks(
+            new Date(request.WFH_Date),
+            request.Status,
+          ),
+        }));
     } else {
       console.warn('No valid results found in the response.');
     }

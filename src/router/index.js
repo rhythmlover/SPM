@@ -69,7 +69,7 @@ const router = createRouter({
       path: '/staff-request-history',
       name: 'staff-request-history',
       component: StaffRequestHistory,
-    }
+    },
   ],
 });
 

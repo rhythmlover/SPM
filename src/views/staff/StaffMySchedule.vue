@@ -131,9 +131,7 @@ onMounted(async () => {
               />
             </BCol>
             <BCol class="col-4 col-md-2 ms-auto">
-              <BButton
-                variant="primary"
-                @click="viewMyRequestHistory"
+              <BButton variant="primary" @click="viewMyRequestHistory"
                 >Request History</BButton
               >
             </BCol>
