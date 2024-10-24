@@ -68,8 +68,8 @@ const getWFHRequests = async (staffID) => {
                     Approver_Name: request.Approver.Staff_FName + ' ' + request.Approver.Staff_LName,
                     Staff_ID: request.Staff_ID,
                     Request_ID: request.Request_ID,
-                    Request_Date: formatRequestDate(request.Request_Date),
-                    WFH_Date: formatRequestDate(request.WFH_Date),
+                    Request_Date: request.Request_Date,
+                    WFH_Date: request.WFH_Date,
                     Request_Period: request.Request_Period,
                     Reason: request.Request_Reason,
                     Status: request.Status,
@@ -101,7 +101,10 @@ onMounted(async () => {
         </BRow>
         <BRow>
             <BCol>
-                <table class="table">
+                <div v-if="localRequests.length === 0" class="text-center">
+                    <p>No WFH requests available</p>
+                </div>
+                <table v-else class="table">
                     <thead>
                         <tr>
                             <th>Approver</th>
@@ -118,12 +121,12 @@ onMounted(async () => {
                             <td class="col-2">{{ request.Reason }}</td>
                             <td class="col-3">
                                 {{
-                                    request.WFH_Date +
+                                    formatRequestDate(request.WFH_Date) +
                                     ', ' +
                                     get_WFH_period(request.Request_Period)
                                 }}
                             </td>
-                            <td class="col-2">{{ request.Request_Date }}</td>
+                            <td class="col-2">{{ formatRequestDate(request.Request_Date) }}</td>
                             <td class="col-1" v-if="request.Status == 'Pending'">
                                 <BBadge pill variant="info">Pending</BBadge>
                             </td>
@@ -151,21 +154,21 @@ onMounted(async () => {
 <style scoped>
 th,
 td {
-  padding: 12px 15px;
-  text-align: left;
-  vertical-align: middle;
-  border: 1px solid #ddd;
+    padding: 12px 15px;
+    text-align: left;
+    vertical-align: middle;
+    border: 1px solid #ddd;
 }
 
 table th {
-  background-color: #f4f4f4;
-  font-weight: bold;
+    background-color: #f4f4f4;
+    font-weight: bold;
 }
 
 .status {
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: white;
-  font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
 }
 </style>
