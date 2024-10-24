@@ -62,7 +62,9 @@ onMounted(() => {
                     <BTd>{{ requestObj.Request_Period }}</BTd>
                     <BTd>
                       <BBadge
-                        :variant="getRequestStatusPillColor(requestObj['Status'])"
+                        :variant="
+                          getRequestStatusPillColor(requestObj['Status'])
+                        "
                         pill
                       >
                         {{ requestObj.Status }}

@@ -38,7 +38,6 @@ declare module 'vue' {
     BTr: typeof import('bootstrap-vue-next/components/BTable')['BTr']
     HrNavbar: typeof import('./src/components/hr/HrNavbar.vue')['default']
     HrScheduleList: typeof import('./src/components/hr/HrScheduleList.vue')['default']
-    HierarchicalManagerFilter: typeof import('./src/components/HierarchicalManagerFilter.vue')['default']
     ManagerNavbar: typeof import('./src/components/ManagerNavbar.vue')['default']
     RequestLinks: typeof import('./src/components/RequestLinks.vue')['default']
     RequestTable: typeof import('./src/components/RequestTable.vue')['default']
