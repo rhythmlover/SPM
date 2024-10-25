@@ -189,7 +189,7 @@ onMounted(async () => {
                 <BBadge pill variant="secondary">Withdrawn</BBadge>
               </td>
               <td class="col-2" v-if="request.Status == 'Withdrawal Pending'">
-                <BBadge pill variant="light">Withdrawn</BBadge>
+                <BBadge pill variant="light">Withdrawal Pending</BBadge>
               </td>
               <td class="col-2" v-if="request.Status == 'Approved'">
                 <BBadge pill variant="success">Approved</BBadge>
