@@ -20,6 +20,7 @@ export default {
       successMessage: '',
       existingWFHDates: [],
       validDates: [],
+      validDatesPeriod: [],
       isLoading: false,
     };
   },
@@ -156,15 +157,34 @@ export default {
         return false;
       }
 
-      const clashingDates = this.validDates.filter((date) =>
-        this.existingWFHDates.map((d) => d.trim()).includes(date.trim()),
+      this.validDatesPeriod = this.validDates.map((date) => [
+        date,
+        this.Request_Period,
+      ]);
+
+      const clashingDates = this.validDatesPeriod.filter((validDatePeriod) =>
+        this.existingWFHDates.some((existingDatePeriod) => {
+          const dateMatches =
+            existingDatePeriod[0].trim() === validDatePeriod[0].trim();
+
+          const periodMatches =
+            existingDatePeriod[1] === 'FULL' ||
+            validDatePeriod[1] === 'FULL' ||
+            existingDatePeriod[1] === validDatePeriod[1];
+
+          return dateMatches && periodMatches;
+        }),
       );
-      console.log('Valid Dates:', this.validDates);
+
+      console.log('Valid Dates Period:', this.validDatesPeriod);
       console.log('Clashing Dates:', clashingDates);
       console.log('Existing WFH Dates:', this.existingWFHDates);
 
       if (clashingDates.length > 0) {
-        this.errorMessage = `You already have a request for the following dates: ${clashingDates.join(', ')}`;
+        this.errorMessage = `You clashing request for the following dates: `;
+        for (const clashingDate of clashingDates) {
+          this.errorMessage += `${clashingDate[0]}`;
+        }
         return false;
       }
 
