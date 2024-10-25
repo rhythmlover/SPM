@@ -8,7 +8,7 @@ const credentials = JSON.parse(
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const sheetId = '1YHx3x8-xQE2dihE6RT3oPCIn3P9qOGMILa6kkGjNsnM';
-
+const runningTestOrCoverage = process.env.TESTCOVERAGE === 'true';
 const auth = new google.auth.JWT(
   credentials.client_email,
   null,
@@ -34,6 +34,7 @@ function sleep(ms) {
 }
 
 export async function updateSheet(testId, status) {
+  if (runningTestOrCoverage) return;
   await sleep(5000);
   // Fetch existing data from the sheet (assuming the ID starts in column A, status in K, and date in P)
   const response = await sheets.spreadsheets.values.get({
