@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted } from 'vue';
+import { formatDateFromStr, getRequestStatusPillColor } from '@/utils/utils';
 
 const props = defineProps({
   wfhRequests: {
@@ -10,28 +11,8 @@ const props = defineProps({
   },
 });
 
-const formatDateFromStr = (dateString) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-};
-
-const getStatusPillColor = (status) => {
-  switch (status.toLowerCase()) {
-    case 'approved':
-      return 'success';
-    case 'pending':
-    case 'withdrawal pending':
-      return 'warning';
-    case 'rejected':
-      return 'danger';
-    default:
-      return 'secondary';
-  }
-};
+// const isLoading = ref(true);
+// const scheduleListError = ref(null);
 
 onMounted(() => {
   console.log(props.wfhRequests);
@@ -81,7 +62,9 @@ onMounted(() => {
                     <BTd>{{ requestObj.Request_Period }}</BTd>
                     <BTd>
                       <BBadge
-                        :variant="getStatusPillColor(requestObj.Status)"
+                        :variant="
+                          getRequestStatusPillColor(requestObj['Status'])
+                        "
                         pill
                       >
                         {{ requestObj.Status }}

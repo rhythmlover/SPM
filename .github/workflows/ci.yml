@@ -33,7 +33,7 @@ jobs:
         run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" | base64 --decode > service-account.json
 
       - name: Run tests
-        run: npm run test
+        run: npm run test:ci
 
       - name: Clean up
         if: always()

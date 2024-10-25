@@ -11,7 +11,7 @@ import {
 } from 'bootstrap-vue-next';
 import { inject } from 'vue';
 import router from '@/router';
-import { highlightedNavItemStyle } from '@/utils/highlightedNavItemStyle';
+import { highlightedNavItemStyle } from '@/utils/utils';
 
 const staffFName = inject('staffFName');
 const roleID = inject('roleID');
