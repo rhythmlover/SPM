@@ -182,9 +182,13 @@ export default {
 
       if (clashingDates.length > 0) {
         this.errorMessage = `You clashing request for the following dates: `;
-        for (const clashingDate of clashingDates) {
-          this.errorMessage += `${clashingDate[0]}`;
-        }
+        // for (const clashingDate of clashingDates) {
+        //   this.errorMessage += `${clashingDate[0]}`;
+        // }
+        // add formatting after each date
+        this.errorMessage += clashingDates
+          .map((date) => `${date[0]}`)
+          .join(', ');
         return false;
       }
 
