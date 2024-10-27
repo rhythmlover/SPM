@@ -261,7 +261,7 @@ const updateRecurringRequestStatus = async (
     if (commentsAdded !== null && commentsAdded !== '') {
       await axios.put(
         `${API_ROUTE}/wfh-request/recurring-request/update-comments`,
-        { Comments: commentsAdded },
+        { comments: commentsAdded },
         { params: { requestID } },
       );
     }

@@ -430,11 +430,11 @@ router.put('/request/updateComments', async (req, res, next) => {
 
 router.put('/recurring-request/update-comments', async (req, res, next) => {
   const requestID = req.query.requestID;
-  const Comments = req.body.Comments;
+  const comments = req.body.comments;
 
   try {
     let [result] = await executeQuery(
-      `UPDATE WFH_Request_Recurring SET Comments = '${Comments}' WHERE Request_ID = ${requestID}`,
+      `UPDATE WFH_Request_Recurring SET Comments = '${comments}' WHERE Request_ID = ${requestID}`,
     );
 
     if (result.affectedRows > 0) {
