@@ -1,8 +1,8 @@
 <script setup>
-import { inject, ref, computed, onMounted, watch } from 'vue';
+import { inject, ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { usePeriodChange } from '@/components/usePeriodChange';
-import ScheduleList from '@/components/staff/ScheduleList.vue';
+import ScheduleList from '@/components/staff/ScheduleListManager.vue';
 import ScheduleFilters from '@/components/ScheduleFilters.vue';
 
 const API_ROUTE = inject('API_ROUTE');
@@ -12,6 +12,10 @@ const allRequests = ref([]);
 const isLoading = ref(true);
 const isMonthView = ref(true);
 const todayDate = ref(new Date());
+
+// Add total team count
+const totalTeamCount = ref(0);
+
 const {
   datesInPeriod,
   currentPeriodString,
@@ -42,6 +46,30 @@ const selectedManager = ref('');
 // Flattened hierarchy map
 const flattenedHierarchy = ref(new Map());
 
+// Function to calculate WFH personnel counts
+const calculateWFHCount = (requests, totalCount) => {
+  const wfhCounts = {
+    AM: new Set(),
+    PM: new Set(),
+    FULL: new Set(),
+  };
+
+  // Count unique employees WFH for each period
+  requests.forEach(request => {
+    // Include both Approved and Pending statuses
+    if (request.Status === 'Approved' || request.Status === 'Pending') {
+      wfhCounts[request.Request_Period].add(request.Staff.Staff_ID);
+    }
+  });
+
+  // Return the WFH counts
+  return {
+    AM: wfhCounts.AM.size,
+    PM: wfhCounts.PM.size,
+    FULL: wfhCounts.FULL.size,
+  };
+};
+
 const updateAllSubordinateWFH = async () => {
   isLoading.value = true;
   let Staff_ID = localStorage.getItem('staffID');
@@ -58,6 +86,9 @@ const updateAllSubordinateWFH = async () => {
       params: { Staff_ID },
     });
     managerSubordinates.value = resManagerSubordinates.data;
+
+    // Calculate total team count from subordinates
+    totalTeamCount.value = countAllSubordinates(managerSubordinates.value) + 1; // +1 for the manager themselves
 
     // Populate allRequests
     allRequests.value = subordinateHierarchy.value.subordinates.flatMap(
@@ -81,6 +112,15 @@ const updateAllSubordinateWFH = async () => {
   } finally {
     isLoading.value = false;
   }
+};
+
+// Function to count all subordinates recursively
+const countAllSubordinates = (manager) => {
+  if (!manager || !manager.subordinates) return 0;
+  
+  return manager.subordinates.reduce((count, sub) => {
+    return count + 1 + countAllSubordinates(sub);
+  }, 0);
 };
 
 // Function to create flattened hierarchy
@@ -107,14 +147,7 @@ const createFlattenedHierarchy = (manager) => {
 };
 
 const filteredDates = computed(() => {
-  console.log('Computing filteredDates');
-  console.log('Total requests:', allRequests.value.length);
-  console.log('Selected statuses:', selectedStatuses.value);
-  console.log('Selected WFH times:', selectedWfhTimes.value);
-  console.log('Selected manager:', selectedManager.value);
-
   const filtered = {};
-  let totalFilteredRequests = 0;
 
   Object.entries(datesInPeriod.value).forEach(([date, dayInfo]) => {
     const filteredRequests = allRequests.value.filter((request) => {
@@ -125,21 +158,27 @@ const filteredDates = computed(() => {
         selectedManager.value === request.Staff.Staff_ID ||
         (flattenedHierarchy.value.get(selectedManager.value) && 
          flattenedHierarchy.value.get(selectedManager.value).has(request.Staff.Staff_ID));
-      
-      if (dateMatch && statusMatch && timeMatch && managerMatch) {
-        console.log('Matched request:', request);
-      } else {
-        console.log('Unmatched request:', request, {dateMatch, statusMatch, timeMatch, managerMatch});
-      }
 
       return dateMatch && statusMatch && timeMatch && managerMatch;
     });
 
-    filtered[date] = { ...dayInfo, requests: filteredRequests };
-    totalFilteredRequests += filteredRequests.length;
+    // Calculate WFH counts for the day
+    const wfhCounts = calculateWFHCount(filteredRequests, totalTeamCount.value);
+
+    filtered[date] = { 
+      ...dayInfo,
+      requests: filteredRequests,
+      office_count_table: {
+        headers: ['AM', 'PM', 'FULL'],
+        counts: [
+          `${wfhCounts.AM}/${totalTeamCount.value}`,
+          `${wfhCounts.PM}/${totalTeamCount.value}`,
+          `${wfhCounts.FULL}/${totalTeamCount.value}`
+        ]
+      }
+    };
   });
   
-  console.log('Total filtered requests:', totalFilteredRequests);
   return filtered;
 });
 
@@ -171,18 +210,6 @@ const managerOptions = computed(() => {
   ];
 });
 
-// Debug: Watch for changes in selectedManager
-watch(selectedManager, (newValue) => {
-  if (newValue) {
-    console.log('Selected Manager:', newValue);
-    const subordinates = flattenedHierarchy.value.get(newValue);
-    console.log('Subordinate IDs:', Array.from(subordinates || []));
-    console.log('Total subordinates:', subordinates ? subordinates.size : 0);
-  } else {
-    console.log('No manager selected (showing all)');
-  }
-});
-
 onMounted(async () => {
   await updateAllSubordinateWFH();
 });
@@ -204,6 +231,7 @@ onMounted(async () => {
             </BCol>
             <BCol class="text-center">
               <h2>{{ currentPeriodString }}</h2>
+              <div class="text-muted">Total Team Size: {{ totalTeamCount }}</div>
             </BCol>
             <BCol class="d-flex justify-content-center">
               <BButton
@@ -235,4 +263,17 @@ onMounted(async () => {
   </BContainer>
 </template>
 
-<style scoped></style>
+<style scoped>
+.custom-bg-dropdown {
+  background-color: #e0e0e0 !important;
+  border: 1px solid #d3d3d3 !important;
+}
+
+.custom-bg-dropdown .dropdown-item {
+  background-color: #e0e0e0 !important;
+}
+
+.custom-bg-dropdown .dropdown-item:hover {
+  background-color: #d3d3d3 !important;
+}
+</style>

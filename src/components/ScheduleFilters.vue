@@ -1,59 +1,59 @@
 <template>
-    <BRow class="my-2">
-      <BCol class="col-4 col-md-2">
-        <BFormSelect
-          :modelValue="isMonthView"
-          :options="dayWeekFilterDropdownSelectOptions"
-          @update:modelValue="$emit('update:isMonthView', $event)"
-        />
-      </BCol>
-      <BCol>
-        <BDropdown text="Filter by Status">
-          <BDropdownForm>
-            <BFormCheckbox
-              v-for="option in statusOptions"
-              :key="option.value"
-              v-model="localSelectedStatuses"
-              :value="option.value"
-            >
-              {{ option.text }}
-            </BFormCheckbox>
-          </BDropdownForm>
-        </BDropdown>
-      </BCol>
-      <BCol>
-        <BDropdown text="Filter by WFH Time">
-          <BDropdownForm>
-            <BFormCheckbox
-              v-model="selectAllWfhTimes"
-              @change="toggleAllWfhTimes"
-            >
-              Select All
-            </BFormCheckbox>
-            <BFormCheckbox
-              v-for="option in wfhTimeOptions"
-              :key="option.value"
-              v-model="localSelectedWfhTimes"
-              :value="option.value"
-            >
-              {{ option.text }}
-            </BFormCheckbox>
-          </BDropdownForm>
-        </BDropdown>
-      </BCol>
-      <BCol>
-        <BFormSelect
-          :modelValue="selectedManager"
-          :options="indentedManagerOptions"
-          @update:modelValue="$emit('update:selectedManager', $event)"
-        >
-          <template #first>
-            <option value="">All Managers</option>
-          </template>
-        </BFormSelect>
-      </BCol>
-    </BRow>
-  </template>
+  <BRow class="my-2">
+    <BCol class="col-4 col-md-2">
+      <BFormSelect
+        :modelValue="isMonthView"
+        :options="dayWeekFilterDropdownSelectOptions"
+        @update:modelValue="$emit('update:isMonthView', $event)"
+      />
+    </BCol>
+    <BCol>
+      <BDropdown text="Filter by Status" variant="light" >
+        <BDropdownForm>
+          <BFormCheckbox
+            v-for="option in statusOptions"
+            :key="option.value"
+            v-model="localSelectedStatuses"
+            :value="option.value"
+          >
+            {{ option.text }}
+          </BFormCheckbox>
+        </BDropdownForm>
+      </BDropdown>
+    </BCol>
+    <BCol>
+      <BDropdown text="Filter by WFH Time" variant="light">
+        <BDropdownForm>
+          <BFormCheckbox
+            v-model="selectAllWfhTimes"
+            @change="toggleAllWfhTimes"
+          >
+            Select All
+          </BFormCheckbox>
+          <BFormCheckbox
+            v-for="option in wfhTimeOptions"
+            :key="option.value"
+            v-model="localSelectedWfhTimes"
+            :value="option.value"
+          >
+            {{ option.text }}
+          </BFormCheckbox>
+        </BDropdownForm>
+      </BDropdown>
+    </BCol>
+    <BCol>
+      <BFormSelect
+        :modelValue="selectedManager"
+        :options="indentedManagerOptions"
+        @update:modelValue="$emit('update:selectedManager', $event)"
+      >
+        <template #first>
+          <option value="">All Managers</option>
+        </template>
+      </BFormSelect>
+    </BCol>
+  </BRow>
+</template>
   
   <script setup>
   import { ref, watch, computed } from 'vue';
