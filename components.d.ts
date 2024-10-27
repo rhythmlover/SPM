@@ -42,6 +42,7 @@ declare module 'vue' {
     RequestTable: typeof import('./src/components/RequestTable.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ScheduleFilters: typeof import('./src/components/ScheduleFilters.vue')['default']
     ScheduleList: typeof import('./src/components/staff/ScheduleList.vue')['default']
     StaffNavbar: typeof import('./src/components/staff/StaffNavbar.vue')['default']
     StaffTeamSchedule: typeof import('./src/components/staff/StaffTeamSchedule.vue')['default']

@@ -1,18 +1,15 @@
-<!-- ManagerViewSchedule.vue -->
 <script setup>
 import { inject, ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { usePeriodChange } from '@/components/usePeriodChange';
 import ScheduleList from '@/components/staff/ScheduleList.vue';
+import ScheduleFilters from '@/components/ScheduleFilters.vue';
 
 const API_ROUTE = inject('API_ROUTE');
 const subordinateHierarchy = ref(null);
+const managerSubordinates = ref(null);
 const allRequests = ref([]);
 const isLoading = ref(true);
-const dayWeekFilterDropdownSelectOptions = [
-  { value: true, text: 'Month' },
-  { value: false, text: 'Week' },
-];
 const isMonthView = ref(true);
 const todayDate = ref(new Date());
 const {
@@ -40,19 +37,27 @@ const wfhTimeOptions = ref([
   { value: 'PM', text: 'PM' },
 ]);
 const selectedWfhTimes = ref([]);
-const selectAllWfhTimes = ref(true);
+const selectedManager = ref('');
 
-//Calls subordinateHierarchy API, gets all the WFH requests and then updates the calender list view
+// Flattened hierarchy map
+const flattenedHierarchy = ref(new Map());
+
 const updateAllSubordinateWFH = async () => {
   isLoading.value = true;
   let Staff_ID = localStorage.getItem('staffID');
 
   try {
-    let res = await axios.get(API_ROUTE + '/teamlist/subordinateHierarchy', {
+    // Fetch subordinateHierarchy
+    let resHierarchy = await axios.get(API_ROUTE + '/teamlist/subordinateHierarchy', {
       params: { Staff_ID },
     });
-    subordinateHierarchy.value = res.data;
-    console.log('Subordinate Hierarchy:', subordinateHierarchy.value);
+    subordinateHierarchy.value = resHierarchy.data;
+
+    // Fetch managerSubordinates
+    let resManagerSubordinates = await axios.get(API_ROUTE + '/teamlist/managerSubordinates', {
+      params: { Staff_ID },
+    });
+    managerSubordinates.value = resManagerSubordinates.data;
 
     // Populate allRequests
     allRequests.value = subordinateHierarchy.value.subordinates.flatMap(
@@ -68,43 +73,118 @@ const updateAllSubordinateWFH = async () => {
           },
         })),
     );
+
+    // Create flattened hierarchy
+    createFlattenedHierarchy(managerSubordinates.value);
   } catch (error) {
-    console.error('Error fetching subordinate hierarchy:', error);
+    console.error('Error fetching data:', error);
   } finally {
     isLoading.value = false;
   }
 };
 
+// Function to create flattened hierarchy
+const createFlattenedHierarchy = (manager) => {
+  const subordinates = new Set();
+  
+  const addSubordinates = (subs) => {
+    for (const sub of subs) {
+      subordinates.add(sub.Staff_ID);
+      if (sub.subordinates) {
+        addSubordinates(sub.subordinates);
+      }
+    }
+  };
+  
+  addSubordinates(manager.subordinates);
+  flattenedHierarchy.value.set(manager.Staff_ID, subordinates);
+  
+  for (const sub of manager.subordinates) {
+    if (sub.subordinates) {
+      createFlattenedHierarchy(sub);
+    }
+  }
+};
+
 const filteredDates = computed(() => {
+  console.log('Computing filteredDates');
+  console.log('Total requests:', allRequests.value.length);
+  console.log('Selected statuses:', selectedStatuses.value);
+  console.log('Selected WFH times:', selectedWfhTimes.value);
+  console.log('Selected manager:', selectedManager.value);
+
   const filtered = {};
+  let totalFilteredRequests = 0;
+
   Object.entries(datesInPeriod.value).forEach(([date, dayInfo]) => {
-    const filteredRequests = allRequests.value.filter(
-      (request) =>
-        new Date(request.WFH_Date).toLocaleDateString('en-CA') === date &&
-        selectedStatuses.value.includes(request.Status) &&
-        selectedWfhTimes.value.includes(request.Request_Period),
-    );
+    const filteredRequests = allRequests.value.filter((request) => {
+      const dateMatch = new Date(request.WFH_Date).toLocaleDateString('en-CA') === date;
+      const statusMatch = selectedStatuses.value.includes(request.Status);
+      const timeMatch = selectedWfhTimes.value.includes(request.Request_Period);
+      const managerMatch = !selectedManager.value || 
+        selectedManager.value === request.Staff.Staff_ID ||
+        (flattenedHierarchy.value.get(selectedManager.value) && 
+         flattenedHierarchy.value.get(selectedManager.value).has(request.Staff.Staff_ID));
+      
+      if (dateMatch && statusMatch && timeMatch && managerMatch) {
+        console.log('Matched request:', request);
+      } else {
+        console.log('Unmatched request:', request, {dateMatch, statusMatch, timeMatch, managerMatch});
+      }
+
+      return dateMatch && statusMatch && timeMatch && managerMatch;
+    });
+
     filtered[date] = { ...dayInfo, requests: filteredRequests };
+    totalFilteredRequests += filteredRequests.length;
   });
+  
+  console.log('Total filtered requests:', totalFilteredRequests);
   return filtered;
+});
+
+const managerOptions = computed(() => {
+  if (!managerSubordinates.value) return [];
+  
+  const extractManagers = (subordinates, depth = 0) => {
+    let managers = [];
+    for (let sub of subordinates) {
+      managers.push({ 
+        value: sub.Staff_ID, 
+        text: `${sub.Staff_FName} ${sub.Staff_LName}`,
+        depth: depth
+      });
+      if (sub.subordinates) {
+        managers = managers.concat(extractManagers(sub.subordinates, depth + 1));
+      }
+    }
+    return managers;
+  };
+
+  return [
+    { 
+      value: managerSubordinates.value.Staff_ID, 
+      text: `${managerSubordinates.value.Staff_FName} ${managerSubordinates.value.Staff_LName}`,
+      depth: 0 
+    },
+    ...extractManagers(managerSubordinates.value.subordinates, 1)
+  ];
+});
+
+// Debug: Watch for changes in selectedManager
+watch(selectedManager, (newValue) => {
+  if (newValue) {
+    console.log('Selected Manager:', newValue);
+    const subordinates = flattenedHierarchy.value.get(newValue);
+    console.log('Subordinate IDs:', Array.from(subordinates || []));
+    console.log('Total subordinates:', subordinates ? subordinates.size : 0);
+  } else {
+    console.log('No manager selected (showing all)');
+  }
 });
 
 onMounted(async () => {
   await updateAllSubordinateWFH();
-  selectedStatuses.value = statusOptions.value.map((status) => status.value);
-  selectedWfhTimes.value = wfhTimeOptions.value.map((option) => option.value);
-});
-
-const toggleAllWfhTimes = () => {
-  if (selectAllWfhTimes.value) {
-    selectedWfhTimes.value = wfhTimeOptions.value.map((option) => option.value);
-  } else {
-    selectedWfhTimes.value = [];
-  }
-};
-
-watch(selectedWfhTimes, (newValue) => {
-  selectAllWfhTimes.value = newValue.length === wfhTimeOptions.value.length;
 });
 </script>
 
@@ -136,48 +216,15 @@ watch(selectedWfhTimes, (newValue) => {
           </BRow>
 
           <!-- Filters -->
-          <BRow class="my-2">
-            <BCol class="col-4 col-md-2">
-              <BFormSelect
-                v-model="isMonthView"
-                :options="dayWeekFilterDropdownSelectOptions"
-              />
-            </BCol>
-            <BCol>
-              <BDropdown text="Filter by Status">
-                <BDropdownForm>
-                  <BFormCheckbox
-                    v-for="option in statusOptions"
-                    :key="option.value"
-                    v-model="selectedStatuses"
-                    :value="option.value"
-                  >
-                    {{ option.text }}
-                  </BFormCheckbox>
-                </BDropdownForm>
-              </BDropdown>
-            </BCol>
-            <BCol>
-              <BDropdown text="Filter by WFH Time">
-                <BDropdownForm>
-                  <BFormCheckbox
-                    v-model="selectAllWfhTimes"
-                    @change="toggleAllWfhTimes"
-                  >
-                    Select All
-                  </BFormCheckbox>
-                  <BFormCheckbox
-                    v-for="option in wfhTimeOptions"
-                    :key="option.value"
-                    v-model="selectedWfhTimes"
-                    :value="option.value"
-                  >
-                    {{ option.text }}
-                  </BFormCheckbox>
-                </BDropdownForm>
-              </BDropdown>
-            </BCol>
-          </BRow>
+          <ScheduleFilters
+            v-model:isMonthView="isMonthView"
+            v-model:selectedStatuses="selectedStatuses"
+            v-model:selectedWfhTimes="selectedWfhTimes"
+            v-model:selectedManager="selectedManager"
+            :statusOptions="statusOptions"
+            :wfhTimeOptions="wfhTimeOptions"
+            :managerOptions="managerOptions"
+          />
         </BContainer>
 
         <BOverlay :show="isLoading" rounded="sm">
