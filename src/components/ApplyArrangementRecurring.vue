@@ -181,7 +181,7 @@ export default {
       console.log('Existing WFH Dates:', this.existingWFHDates);
 
       if (clashingDates.length > 0) {
-        this.errorMessage = `You clashing request for the following dates: `;
+        this.errorMessage = `You have a clashing request for the following dates: `;
         this.errorMessage += clashingDates
           .map((date) => `${date[0]}`)
           .join(', ');
