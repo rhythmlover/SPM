@@ -22,7 +22,9 @@ router.get('/login', async (req, res, next) => {
   const staffID = req.query.staffID;
   try {
     // Fetch employee information
-    let [results] = await executeQuery(`SELECT * FROM Employee WHERE Staff_ID = ${staffID}`);
+    let [results] = await executeQuery(
+      `SELECT * FROM Employee WHERE Staff_ID = ${staffID}`,
+    );
     let employee = results[0];
     // console.log('results', results, 'employee:', employee);
 
@@ -47,6 +49,37 @@ router.get('/all', async (req, res, next) => {
   try {
     let [results] = await executeQuery('SELECT * FROM `Employee`');
     res.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/department-count', async (req, res, next) => {
+  const departmentName = req.query.departmentName;
+  try {
+    // Retrieve employees
+    let [employeeresults] = await executeQuery('SELECT * FROM `Employee`');
+    // Getting all or just 1 department ?
+    if (departmentName == 'All') {
+      res.json({ total: employeeresults.length });
+      return;
+    }
+    // Retrieve department info
+    let [departmentresults] = await executeQuery(
+      `SELECT * FROM Department WHERE Dept_Name = '${departmentName}'`,
+    );
+    departmentresults = departmentresults[0];
+
+    // Filter to only provided department
+    let results = [];
+    for (let r of employeeresults) {
+      if (r['Dept_ID'] != departmentresults['Dept_ID']) continue;
+      r['Department'] = departmentresults;
+      results.push(r);
+    }
+
+    // return results
+    res.json({ total: results.length });
   } catch (error) {
     next(error);
   }
@@ -101,6 +134,5 @@ router.get('/getStaffPositionByID', async (req, res, next) => {
     next(error);
   }
 });
-
 
 export default router;

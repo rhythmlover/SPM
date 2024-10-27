@@ -66,6 +66,14 @@ const get_WFH_period = (request_period) => {
   }
 };
 
+const notMoreThanTwoMonthsAgo = (WFH_Date) => {
+  const twoMonthsBefore = new Date();
+  twoMonthsBefore.setMonth(twoMonthsBefore.getMonth() - 2);
+  const wfhDateObj = new Date(WFH_Date);
+
+  return wfhDateObj >= twoMonthsBefore;
+};
+
 // Fetch WFH requests for the correct staff
 const getWFHRequests = async (staffID) => {
   try {
@@ -74,20 +82,22 @@ const getWFHRequests = async (staffID) => {
     });
 
     if (res.data && Array.isArray(res.data.results)) {
-      localRequests.value = res.data.results.map((request) => ({
-        Staff_ID: request.Staff_ID,
-        Request_ID: request.Request_ID,
-        Request_Date: formatRequestDate(request.Request_Date),
-        WFH_Date: formatRequestDate(request.WFH_Date),
-        Request_Period: request.Request_Period,
-        Reason: request.Request_Reason,
-        Status: request.Status,
-        Comments: request.Comments,
-        showWithdrawButton: isWithinTwoWeeks(
-          new Date(request.WFH_Date),
-          request.Status,
-        ),
-      }));
+      localRequests.value = res.data.results
+        .filter((requestObj) => notMoreThanTwoMonthsAgo(requestObj['WFH_Date']))
+        .map((request) => ({
+          Staff_ID: request.Staff_ID,
+          Request_ID: request.Request_ID,
+          Request_Date: formatRequestDate(request.Request_Date),
+          WFH_Date: formatRequestDate(request.WFH_Date),
+          Request_Period: request.Request_Period,
+          Reason: request.Request_Reason,
+          Status: request.Status,
+          Comments: request.Comments,
+          showWithdrawButton: isWithinTwoWeeks(
+            new Date(request.WFH_Date),
+            request.Status,
+          ),
+        }));
     } else {
       console.warn('No valid results found in the response.');
     }
@@ -179,7 +189,7 @@ onMounted(async () => {
                 <BBadge pill variant="secondary">Withdrawn</BBadge>
               </td>
               <td class="col-2" v-if="request.Status == 'Withdrawal Pending'">
-                <BBadge pill variant="light">Withdrawn</BBadge>
+                <BBadge pill variant="light">Withdrawal Pending</BBadge>
               </td>
               <td class="col-2" v-if="request.Status == 'Approved'">
                 <BBadge pill variant="success">Approved</BBadge>

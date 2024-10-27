@@ -16,6 +16,7 @@ export default {
   },
   data() {
     return {
+      API_ROUTE: inject('API_ROUTE'),
       Staff_Name: localStorage.staffFName,
       Staff_ID: localStorage.staffID,
       Staff_Position: localStorage.staffPosition,
@@ -46,10 +47,9 @@ export default {
   },
   methods: {
     async fetchReportingManagerID() {
-      const API_ROUTE = inject('API_ROUTE');
       try {
         const response = await axios.get(
-          API_ROUTE + '/employee/get-staff-reporting-manager',
+          this.API_ROUTE + '/employee/get-staff-reporting-manager',
           {
             params: { staffID: this.Staff_ID },
           },
@@ -58,7 +58,7 @@ export default {
         this.Approver_ID = reportingManagerID;
 
         const reportingManagerName = await axios.get(
-          API_ROUTE + '/employee/get-staff-name-by-id',
+          this.API_ROUTE + '/employee/get-staff-name-by-id',
           {
             params: { staffID: reportingManagerID },
           },
@@ -68,55 +68,9 @@ export default {
         console.log(error);
       }
     },
-    // async fetchStaffName() {
-    //   const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
-    //   try {
-    //     const response = await axios.get(
-    //       API_ROUTE + '/employee/get-staff-name-by-id',
-    //       {
-    //         params: { staffID: this.Staff_ID },
-    //       },
-    //     );
-
-    //     // Extract the name from the response
-    //     const { name } = response.data;
-    //     this.Staff_Name = name; // Set the name in the component data
-    //   } catch (error) {
-    //     console.log(error);
-    //     if (error.response && error.response.status === 404) {
-    //       this.errorMessage = 'Staff not found';
-    //     } else {
-    //       this.errorMessage = 'Failed to fetch staff name';
-    //     }
-    //   }
-    // },
-    // async fetchStaffPosition() {
-    //   const API_ROUTE = inject('API_ROUTE');
-    //   try {
-    //     const response = await axios.get(
-    //       API_ROUTE + '/employee/getStaffPositionByID',
-    //       {
-    //         params: { staffID: this.Staff_ID },
-    //       },
-    //     );
-
-    //     // Extract the position from the response
-    //     const { position } = response.data;
-    //     this.Staff_Position = position; // Set the position in the component data
-    //   } catch (error) {
-    //     console.log(error);
-    //     if (error.response && error.response.status === 404) {
-    //       this.errorMessage = 'Position not found';
-    //     } else {
-    //       this.errorMessage = 'Failed to fetch staff position';
-    //     }
-    //   }
-    // },
     async withdrawRequest() {
-      const API_ROUTE = import.meta.env.VITE_LOCAL_API_ENDPOINT;
       try {
-        // Step 1: Send the withdrawal request to the backend
-        await axios.post(`${API_ROUTE}/wfh-request/withdraw/post/id`, {
+        await axios.post(`${this.API_ROUTE}/wfh-request/withdraw/post/id`, {
           Staff_Name: this.Staff_Name,
           Staff_Position: this.Staff_Position,
           Request_ID: this.Request_ID,
@@ -141,7 +95,7 @@ export default {
         } else {
           this.errorMessage = 'Withdrawal Application Submission Failed';
         }
-        this.successMessage('');
+        this.successMessage = '';
       }
     },
     cancel() {
@@ -153,8 +107,6 @@ export default {
   },
   mounted() {
     this.fetchReportingManagerID();
-    // this.fetchStaffName();
-    // this.fetchStaffPosition();
   },
 };
 </script>

@@ -4,6 +4,7 @@ import { inject, ref, onMounted } from 'vue';
 
 const employees = ref([]);
 const wfhRequests = ref([]);
+const wfhRecurringRequests = ref([]);
 const pendingRequests = ref([]);
 const acceptedRequests = ref([]);
 const rejectedRequests = ref([]);
@@ -31,37 +32,56 @@ const fetchWFHRequests = async () => {
 
     const staffIds = employees.value.map((employee) => employee.Staff_ID);
 
+    // Fetch non-recurring WFH requests
     const res = await axios.get(`${API_ROUTE}/wfh-request/all`);
-
     wfhRequests.value = res.data.results.filter((request) =>
       staffIds.includes(request.Staff_ID),
     );
 
+    // Fetch recurring WFH requests
+    const recurringRes = await axios.get(
+      `${API_ROUTE}/wfh-request/ds-recurring`,
+      {
+        params: { staffID: staffID.value },
+      },
+    );
+
+    wfhRecurringRequests.value = recurringRes.data.results.filter((request) =>
+      staffIds.includes(request.Staff_ID),
+    );
+
+    // Now join both requests to employees
     joinEmployeesToWFHRequests();
+    joinEmployeesToWFHRecurringRequests();
+
+    // Output combined pending requests
+    console.log('OUTPUTS: ', pendingRequests);
   } catch (error) {
     console.error('Error fetching WFH requests:', error);
   }
 };
 
-const checkExpiredRequests = async () => {
+const fetchWithdrawalReason = async (request_ID) => {
   try {
-    if (pendingRequests.value.length !== 0) {
-      await axios.put(`${API_ROUTE}/wfh-request/removeExpiredRequests`);
-      console.log('Successfully updated status');
-    }
+    const res = await axios.get(
+      `${API_ROUTE}/wfh-request/withdrawal/get-request-reason-of-request-id`,
+      { params: { requestID: request_ID } },
+    );
+    return res.data.request_reason || null;
   } catch (error) {
     console.error(
-      'Error updating expired pending requests to rejected:',
+      `Error fetching withdrawal reason for request ID ${request_ID}:`,
       error,
     );
+    return null;
   }
 };
 
-const joinEmployeesToWFHRequests = () => {
+const joinEmployeesToWFHRequests = async () => {
   pendingRequests.value = [];
   acceptedRequests.value = [];
   rejectedRequests.value = [];
-  wfhRequests.value.forEach((request) => {
+  for (const request of wfhRequests.value) {
     const employee = employees.value.find(
       (emp) => emp.Staff_ID === request.Staff_ID,
     );
@@ -73,6 +93,11 @@ const joinEmployeesToWFHRequests = () => {
       Decision_Date: formatRequestDate(request.Decision_Date),
       WFH_Date: formatRequestDate(request.WFH_Date),
     };
+
+    if (combinedRequest.Status === 'Withdrawal Pending') {
+      const withdrawalReason = await fetchWithdrawalReason(request.Request_ID);
+      combinedRequest.Request_Reason = withdrawalReason;
+    }
 
     switch (combinedRequest.Status) {
       case 'Pending':
@@ -87,11 +112,31 @@ const joinEmployeesToWFHRequests = () => {
         rejectedRequests.value.push(combinedRequest);
         break;
       default:
-        // Handle any other cases if necessary
         break;
     }
+  }
+};
+
+const joinEmployeesToWFHRecurringRequests = () => {
+  wfhRecurringRequests.value.forEach((recurringRequest) => {
+    const employee = employees.value.find(
+      (emp) => emp.Staff_ID === recurringRequest.Staff_ID,
+    );
+
+    const combinedRequest = {
+      ...recurringRequest,
+      ...employee,
+      Request_Date: formatRequestDate(recurringRequest.Request_Date),
+      Decision_Date: formatRequestDate(recurringRequest.Decision_Date),
+      WFH_Date_Start: formatRequestDate(recurringRequest.WFH_Date_Start),
+      WFH_Date_End: formatRequestDate(recurringRequest.WFH_Date_End),
+    };
+
+    if (combinedRequest.Status === 'Pending') {
+      pendingRequests.value.push(combinedRequest);
+    }
   });
-  checkExpiredRequests();
+  console.log('PENDING REQUESTS: ', pendingRequests);
 };
 
 const formatRequestDate = (isoDate) => {

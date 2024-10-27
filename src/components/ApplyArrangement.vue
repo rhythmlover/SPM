@@ -18,6 +18,7 @@ export default {
       successMessage: '',
       existingWFHDates: [],
       isLoading: false,
+      validDatePeriod: [],
     };
   },
   computed: {
@@ -108,6 +109,31 @@ export default {
 
       if (this.isDateDisabled(this.WFH_Date)) {
         this.errorMessage = 'This date already has a request or is a weekend';
+        return false;
+      }
+
+      this.validDatesPeriod = [[this.WFH_Date, this.Request_Period]];
+
+      const clashingDates = this.validDatesPeriod.filter((validDatePeriod) =>
+        this.existingWFHDates.some((existingDatePeriod) => {
+          const dateMatches =
+            existingDatePeriod[0].trim() === validDatePeriod[0].trim();
+
+          const periodMatches =
+            existingDatePeriod[1] === 'FULL' ||
+            validDatePeriod[1] === 'FULL' ||
+            existingDatePeriod[1] === validDatePeriod[1];
+
+          return dateMatches && periodMatches;
+        }),
+      );
+
+      console.log('Valid Dates Period:', this.validDatesPeriod);
+      console.log('Clashing Dates:', clashingDates);
+      console.log('Existing WFH Dates:', this.existingWFHDates);
+
+      if (clashingDates.length > 0) {
+        this.errorMessage = `You have a clashing request for the chosen date and period`;
         return false;
       }
 

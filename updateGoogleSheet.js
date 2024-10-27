@@ -3,34 +3,43 @@ import fs from 'fs';
 import path from 'path';
 
 const credentials = JSON.parse(
-  fs.readFileSync(path.resolve(__dirname, 'service-account.json'), 'utf8')
+  fs.readFileSync(path.resolve(__dirname, 'service-account.json'), 'utf8'),
 );
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const sheetId = '1YHx3x8-xQE2dihE6RT3oPCIn3P9qOGMILa6kkGjNsnM';
-
+const runningTestOrCoverage = process.env.TESTCOVERAGE === 'true';
 const auth = new google.auth.JWT(
   credentials.client_email,
   null,
   credentials.private_key,
-  SCOPES
+  SCOPES,
 );
 
 const sheets = google.sheets({ version: 'v4', auth });
 
 function getCurrentDateTimeGMT8() {
   const date = new Date();
-  const gmt8Time = new Date(date.getTime() + (8 * 60 * 60 * 1000));
-  const formattedDate = gmt8Time.toISOString().replace('T', ' ').substring(0, 19);
+  const gmt8Time = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+  const formattedDate = gmt8Time
+    .toISOString()
+    .replace('T', ' ')
+    .substring(0, 19);
 
   return formattedDate;
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function updateSheet(testId, status) {
+  if (runningTestOrCoverage) return;
+  await sleep(5000);
   // Fetch existing data from the sheet (assuming the ID starts in column A, status in K, and date in P)
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: 'TESTCASES!A3:P', // Adjust range if needed, starting from A3
+    range: 'UNITTESTS!A3:P', // Adjust range if needed, starting from A3
   });
 
   const rows = response.data.values;
@@ -38,12 +47,12 @@ export async function updateSheet(testId, status) {
 
   if (rows && rows.length) {
     // Find the row with the matching testId (in column A)
-    const rowIndex = rows.findIndex(row => row[0] === testId);
+    const rowIndex = rows.findIndex((row) => row[0] === testId);
 
     if (rowIndex !== -1) {
       const rowNumber = rowIndex + 3;
-      const statusRange = `TESTCASES!K${rowNumber}`;
-      const dateRange = `TESTCASES!P${rowNumber}`;  
+      const statusRange = `UNITTESTS!K${rowNumber}`;
+      const dateRange = `UNITTESTS!P${rowNumber}`;
 
       sheets.spreadsheets.values.batchUpdate({
         spreadsheetId: sheetId,
@@ -56,21 +65,40 @@ export async function updateSheet(testId, status) {
             {
               range: dateRange,
               values: [[dateTimeGMT8]],
-            }
+            },
           ],
           valueInputOption: 'USER_ENTERED',
-        }
+        },
       });
       console.log(`Test case ${testId} updated successfully.`);
     } else {
       // If test case ID does not exist, append it to the next available row
       sheets.spreadsheets.values.append({
         spreadsheetId: sheetId,
-        range: 'TESTCASES!A:P',
+        range: 'UNITTESTS!A:P',
         valueInputOption: 'USER_ENTERED',
         resource: {
-          values: [[testId, , , , , , , , , , status, , , dateTimeGMT8, , dateTimeGMT8]]
-        }
+          values: [
+            [
+              testId,
+              ,
+              ,
+              ,
+              ,
+              ,
+              ,
+              ,
+              ,
+              ,
+              status,
+              ,
+              ,
+              dateTimeGMT8,
+              ,
+              dateTimeGMT8,
+            ],
+          ],
+        },
       });
       console.log(`Test case ${testId} added successfully.`);
     }
@@ -78,11 +106,13 @@ export async function updateSheet(testId, status) {
     // If no data exists in the sheet, append the first row
     sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: 'TESTCASES!A:P',
+      range: 'UNITTESTS!A:P',
       valueInputOption: 'USER_ENTERED',
       resource: {
-        values: [[testId, , , , , , , , , , status, , , dateTimeGMT8, , dateTimeGMT8]]
-      }
+        values: [
+          [testId, , , , , , , , , , status, , , dateTimeGMT8, , dateTimeGMT8],
+        ],
+      },
     });
     console.log(`Test case ${testId} added as the first entry.`);
   }
@@ -101,23 +131,23 @@ async function sprintSheetInit() {
               startRowIndex: 2,
               endRowIndex: 100,
               startColumnIndex: 10,
-              endColumnIndex: 11
+              endColumnIndex: 11,
             },
             rule: {
               condition: {
                 type: 'ONE_OF_LIST',
                 values: [
                   { userEnteredValue: 'Passed' },
-                  { userEnteredValue: 'Failed' }
-                ]
+                  { userEnteredValue: 'Failed' },
+                ],
               },
               strict: true,
-              showCustomUi: true
-            }
-          }
-        }
-      ]
-    }
+              showCustomUi: true,
+            },
+          },
+        },
+      ],
+    },
   };
 
   try {

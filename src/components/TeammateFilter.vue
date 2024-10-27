@@ -108,9 +108,11 @@ onMounted(() => {
 
 <template>
   <div class="d-flex">
-    <BDropdown text="Filter by Teammate" class="me-2">
+    <BDropdown text="Filter by Teammate" class="me-2" auto-close="outside">
       <BDropdownForm>
-        <BFormCheckbox v-model="selectAllTeammates"> Select All </BFormCheckbox>
+        <BFormCheckbox v-model="selectAllTeammates" @click.stop>
+          Select All
+        </BFormCheckbox>
         <BFormCheckbox
           v-for="teammate in teammates"
           :key="teammate.Staff_ID"
@@ -121,7 +123,7 @@ onMounted(() => {
         </BFormCheckbox>
       </BDropdownForm>
     </BDropdown>
-    <BDropdown text="Filter by Status">
+    <BDropdown text="Filter by Status" auto-close="outside">
       <BDropdownForm>
         <BFormCheckbox v-model="selectAllStatuses"> Select All </BFormCheckbox>
         <BFormCheckbox

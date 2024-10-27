@@ -3,7 +3,9 @@ import axios from 'axios';
 import { inject, ref, onMounted, watch } from 'vue';
 import ScheduleList from '@/components/staff/ScheduleList.vue';
 import { usePeriodChange } from '@/components/usePeriodChange';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const API_ROUTE = inject('API_ROUTE');
 const myWFHRequests = ref({});
 const myDates = ref({});
@@ -79,6 +81,10 @@ const mapRequestsToDates = () => {
   myDates.value = dateMap;
 };
 
+const viewMyRequestHistory = () => {
+  router.push('/staff-request-history');
+};
+
 watch([currentPeriodString, isMonthView], async () => {
   mapRequestsToDates();
 });
@@ -123,6 +129,11 @@ onMounted(async () => {
                 v-model="isMonthView"
                 :options="dayWeekFilterDropdownSelectOptions"
               />
+            </BCol>
+            <BCol class="col-4 col-md-2 ms-auto">
+              <BButton variant="primary" @click="viewMyRequestHistory"
+                >Request History</BButton
+              >
             </BCol>
           </BRow>
         </BContainer>
