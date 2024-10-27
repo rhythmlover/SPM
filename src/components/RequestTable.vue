@@ -36,9 +36,9 @@
             <td class="col-2">{{ request.Request_Reason }}</td>
             <td class="col-2" v-if="request.WFH_Date_Start">
               {{
-                request.WFH_Date_Start +
+                formatDateTimezone(request.WFH_Date_Start) +
                 ' to ' +
-                request.WFH_Date_End +
+                formatDateTimezone(request.WFH_Date_End) +
                 ' | ' +
                 'Every ' +
                 getDay(request.WFH_Day) +
@@ -48,7 +48,9 @@
             </td>
             <td class="col-2" v-else>
               {{
-                request.WFH_Date + ', ' + get_WFH_period(request.Request_Period)
+                formatDateTimezone(request.WFH_Date) +
+                ', ' +
+                get_WFH_period(request.Request_Period)
               }}
             </td>
             <td class="col-2">{{ request.Request_Date }}</td>
@@ -72,7 +74,19 @@
             <td class="col-2">
               <template v-if="!isRejecting[request.Request_ID]">
                 <StatusButton
-                  v-if="request.Status == 'Pending'"
+                  v-if="request.Status == 'Pending' && request.WFH_Date_Start"
+                  @click="
+                    updateRecurringStatus(
+                      request.Request_ID,
+                      'Pending',
+                      'Approved',
+                    )
+                  "
+                  label="Accept"
+                  class="accept-btn"
+                />
+                <StatusButton
+                  v-if="request.Status == 'Pending' && !request.WFH_Date_Start"
                   @click="
                     updateStatus(request.Request_ID, 'Pending', 'Approved')
                   "
@@ -105,6 +119,18 @@
                 ></textarea>
                 <div class="reject-buttons">
                   <StatusButton
+                    v-if="request.WFH_Date_Start"
+                    @click="
+                      submitRecurringRejection(
+                        request.Request_ID,
+                        request.Status,
+                      )
+                    "
+                    label="Submit"
+                    class="reject-submit-btn"
+                  />
+                  <StatusButton
+                    v-else
                     @click="submitRejection(request.Request_ID, request.Status)"
                     label="Submit"
                     class="reject-submit-btn"
@@ -206,7 +232,11 @@ export default {
       withdrawalReason: {},
     };
   },
-  emits: ['updateRequestStatus', 'updateWithdrawalStatus'],
+  emits: [
+    'updateRequestStatus',
+    'updateRecurringRequestStatus',
+    'updateWithdrawalStatus',
+  ],
   methods: {
     startRejection(requestID) {
       this.isRejecting[requestID] = true;
@@ -252,6 +282,21 @@ export default {
 
       this.cancelRejection(requestID);
     },
+    submitRecurringRejection(requestID, status) {
+      if (!this.rejectionReason[requestID]?.trim()) {
+        alert('Rejection reason is required');
+        return;
+      }
+      if (status == 'Pending') {
+        this.$emit(
+          'updateRecurringRequestStatus',
+          requestID,
+          'Rejected',
+          this.rejectionReason[requestID],
+        );
+      }
+      this.cancelRejection(requestID);
+    },
     submitWithdrawal(requestID) {
       if (!this.withdrawalReason[requestID]?.trim()) {
         alert('Withdrawal reason is required');
@@ -278,6 +323,14 @@ export default {
         console.error(`Invalid status: ${newStatus}`);
       }
     },
+    updateRecurringStatus(requestID, requestType, newStatus) {
+      const validStatuses = ['Approved', 'Rejected', 'Withdrawn'];
+      if (validStatuses.includes(newStatus)) {
+        this.$emit('updateRecurringRequestStatus', requestID, newStatus);
+      } else {
+        console.error(`Invalid status: ${newStatus}`);
+      }
+    },
     get_WFH_period(request_period) {
       if (request_period == 'FULL') {
         return 'Full Day';
@@ -288,6 +341,15 @@ export default {
       if (request_period == 'PM') {
         return '2pm - 6pm';
       }
+    },
+    formatDateTimezone(date) {
+      const dateObj = new Date(date);
+      dateObj.setDate(dateObj.getDate() + 1);
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
     },
     getDay(dayOfWeek) {
       const days = {
