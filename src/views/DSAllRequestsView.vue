@@ -239,6 +239,9 @@ const updateRecurringRequestStatus = async (
       const requestStaffID = requestDetails.data.Staff_ID;
 
       for (const date of wfhDates) {
+        let dateObj = new Date(date);
+        dateObj.setDate(dateObj.getDate() + 1);
+        const dateInsert = dateObj.toISOString().split('T')[0];
         await checkWFHPolicy(staffID, date, requestPeriod);
         const results = await axios.post(
           `${API_ROUTE}/wfh-request/recurring-request/insert-approved-recurring-dates`,
@@ -250,7 +253,7 @@ const updateRecurringRequestStatus = async (
             Approver_ID: staffID.value,
             Comments: commentsAdded ? commentsAdded : '',
             Decision_Date: new Date().toISOString().split('T')[0],
-            WFH_Date: date,
+            WFH_Date: dateInsert,
             Recurring_Request_ID: requestID,
           },
         );
