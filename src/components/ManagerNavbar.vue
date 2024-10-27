@@ -41,6 +41,11 @@ const logout = () => {
           to="/pending-requests"
           >View Requests</BNavItem
         >
+        <BNavItem
+          :class="highlightedNavItemStyle('apply-arrangement')"
+          to="/apply-arrangement"
+          >Apply</BNavItem
+        >
       </BNavbarNav>
 
       <BNavbarNav class="ms-auto">

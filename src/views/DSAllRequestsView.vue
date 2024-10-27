@@ -162,8 +162,21 @@ const updateRequestStatus = async (
   commentsAdded = null,
 ) => {
   try {
+    const wfhDatePeriod = await axios.get(
+      `${API_ROUTE}/wfh-request/request/get-wfh-date-period-by-request-id`,
+      { params: { requestID } },
+    );
+
+    console.log('WFH DATE PERIOD 1: ', wfhDatePeriod);
+
+    const wfhDate = wfhDatePeriod.data.data.WFH_Date.split('T')[0];
+    const requestPeriod = wfhDatePeriod.data.data.Request_Period;
+
+    console.log('WFH DATE: ', wfhDate);
+    console.log('REQUEST PERIOD: ', requestPeriod);
+
     if (newStatus === 'Approved') {
-      await checkWFHPolicy(staffID.value);
+      await checkWFHPolicy(staffID.value, wfhDate, requestPeriod);
     }
     if (commentsAdded !== null && commentsAdded !== '') {
       await axios.put(
@@ -183,15 +196,111 @@ const updateRequestStatus = async (
   }
 };
 
+const updateRecurringRequestStatus = async (
+  requestID,
+  newStatus,
+  commentsAdded = null,
+) => {
+  try {
+    if (newStatus === 'Approved') {
+      console.log(requestID);
+      const result = await axios.get(
+        `${API_ROUTE}/wfh-request/recurring-request/dates`,
+        {
+          params: { requestID },
+        },
+      );
+      console.log('RESULT: ', result);
+      const wfhDateStart = result.data.WFH_Date_Start;
+      const wfhDateEnd = result.data.WFH_Date_End;
+      const wfhDay = result.data.WFH_Day;
+      const requestPeriod = result.data.Request_Period;
+
+      const wfhDates = [];
+      let currentDate = new Date(wfhDateStart);
+
+      while (currentDate <= new Date(wfhDateEnd)) {
+        if (currentDate.getDay() === parseInt(wfhDay)) {
+          wfhDates.push(currentDate.toISOString().split('T')[0]);
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const requestDetails = await axios.get(
+        `${API_ROUTE}/wfh-request/recurring-request/get-request-details`,
+        { params: { requestID } },
+      );
+
+      let requestDate = requestDetails.data.Request_Date.split('T')[0];
+      let requestDateObj = new Date(requestDate);
+      requestDateObj.setDate(requestDateObj.getDate() + 1);
+      requestDate = requestDateObj.toISOString().split('T')[0];
+      const requestReason = requestDetails.data.Request_Reason;
+      const requestStaffID = requestDetails.data.Staff_ID;
+
+      for (const date of wfhDates) {
+        await checkWFHPolicy(staffID, date, requestPeriod);
+        const results = await axios.post(
+          `${API_ROUTE}/wfh-request/recurring-request/insert-approved-recurring-dates`,
+          {
+            Staff_ID: requestStaffID,
+            Request_Date: requestDate,
+            Request_Period: requestPeriod,
+            Request_Reason: requestReason,
+            Approver_ID: staffID.value,
+            Comments: commentsAdded ? commentsAdded : '',
+            Decision_Date: new Date().toISOString().split('T')[0],
+            WFH_Date: date,
+            Recurring_Request_ID: requestID,
+          },
+        );
+        console.log('RESULTS: ', results);
+      }
+    }
+
+    if (commentsAdded !== null && commentsAdded !== '') {
+      await axios.put(
+        `${API_ROUTE}/wfh-request/recurring-request/update-comments`,
+        { Comments: commentsAdded },
+        { params: { requestID } },
+      );
+    }
+
+    await axios.put(
+      `${API_ROUTE}/wfh-request/recurring-request/update-decision-date`,
+      { Decision_Date: new Date().toISOString().split('T')[0] },
+      { params: { requestID } },
+    );
+
+    await axios.put(
+      `${API_ROUTE}/wfh-request/recurring-request/status`,
+      { status: newStatus },
+      { params: { requestID } },
+    );
+
+    await fetchWFHRequests();
+  } catch (error) {
+    console.error('Error updating request status:', error);
+  }
+};
+
 const updateWithdrawalStatus = async (
   requestID,
   newStatus,
   commentsAdded = null,
 ) => {
   try {
+    const wfhDatePeriod = await axios.get(
+      `${API_ROUTE}/wfh-request/request/get-wfh-date-period-by-request-id`,
+      { params: { requestID } },
+    );
+    console.log('WFH DATE PERIOD 2: ', wfhDatePeriod);
+    const wfhDate = wfhDatePeriod.data.data.WFH_Date;
+    const requestPeriod = wfhDatePeriod.data.data.Request_Period;
+
     // if withdrawal is rejected, check if policy allows
     if (newStatus === 'Approved') {
-      await checkWFHPolicy(staffID.value);
+      await checkWFHPolicy(staffID.value, wfhDate, requestPeriod);
     }
     if (commentsAdded !== null && commentsAdded !== '') {
       await axios.put(
@@ -211,25 +320,85 @@ const updateWithdrawalStatus = async (
   }
 };
 
-const checkWFHPolicy = async (reportingManagerID) => {
+const checkWFHPolicy = async (reportingManagerID, wfhDate, requestPeriod) => {
   try {
     const staffIDs = await axios.get(
       `${API_ROUTE}/employee/get-staff-under-reporting-manager`,
       {
-        params: { reportingManagerID: reportingManagerID },
+        params: { reportingManagerID },
       },
     );
-    const approvedRequests = await axios.get(
-      `${API_ROUTE}/wfh_request/get-approved-requests-by-approver-id`,
-      {
-        params: { approverID: reportingManagerID },
-      },
-    );
-    if (staffIDs.data.length * 0.5 < approvedRequests.data.length + 1) {
-      alert('Accepting this request will violate the 50% WFH policy.');
+
+    if (requestPeriod === 'AM' || requestPeriod === 'PM') {
+      const approvedRequests = await axios.get(
+        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
+        {
+          params: {
+            Approver_ID: reportingManagerID,
+            WFH_Date: wfhDate,
+            Request_Period: requestPeriod,
+          },
+        },
+      );
+      const approvedRequestsFull = await axios.get(
+        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
+        {
+          params: {
+            Approver_ID: reportingManagerID,
+            WFH_Date: wfhDate,
+            Request_Period: 'FULL',
+          },
+        },
+      );
+      const approvedRequestsTotal =
+        approvedRequests.data.length + approvedRequestsFull.data.length + 1;
+      if (staffIDs.data.length * 0.5 < approvedRequestsTotal) {
+        alert('Accepting this request will violate the 50% WFH policy.');
+      }
+    } else {
+      const approvedRequestsFull = await axios.get(
+        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
+        {
+          params: {
+            Approver_ID: reportingManagerID,
+            WFH_Date: wfhDate,
+            Request_Period: 'FULL',
+          },
+        },
+      );
+      const approvedRequestsAM = await axios.get(
+        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
+        {
+          params: {
+            Approver_ID: reportingManagerID,
+            WFH_Date: wfhDate,
+            Request_Period: 'AM',
+          },
+        },
+      );
+      const approvedRequestsPM = await axios.get(
+        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
+        {
+          params: {
+            Approver_ID: reportingManagerID,
+            WFH_Date: wfhDate,
+            Request_Period: 'PM',
+          },
+        },
+      );
+      const approvedRequestsTotalAM =
+        approvedRequestsAM.data.length + approvedRequestsFull.data.length + 1;
+      const approvedRequestsTotalPM =
+        approvedRequestsPM.data.length + approvedRequestsFull.data.length + 1;
+      if (
+        staffIDs.data.length * 0.5 < approvedRequestsTotalAM ||
+        staffIDs.data.length * 0.5 < approvedRequestsTotalPM
+      ) {
+        alert('Accepting this request will violate the 50% WFH policy.');
+      }
     }
   } catch (error) {
-    console.error('Error fetching staff under reporting manager:', error);
+    console.error('Error fetching dates:', error);
   }
 };
 
@@ -250,6 +419,7 @@ onMounted(async () => {
       :requests="pendingRequests"
       status="pending"
       @updateRequestStatus="updateRequestStatus"
+      @updateRecurringRequestStatus="updateRecurringRequestStatus"
       @updateWithdrawalStatus="updateWithdrawalStatus"
     />
     <RequestTable
