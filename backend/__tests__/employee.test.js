@@ -156,13 +156,18 @@ describe('Employee Endpoint', () => {
       Role_ID: 1,
     };
     await insertEmployee(mysqlClient, newEmployee);
-    await insertDepartment(mysqlClient, { Dept_ID: 2, Dept_Name: 'Test Dept Name' });
+    await insertDepartment(mysqlClient, {
+      Dept_ID: 2,
+      Dept_Name: 'Test Dept Name',
+    });
     await insertRole(mysqlClient, { Role_ID: 1, Role_Name: 'Test Role Name' });
 
     const response = await request(app).get('/employee/all');
 
     expect(response.status).toBe(200);
-    expect(response.body.results).toEqual(expect.arrayContaining([newEmployee]));
+    expect(response.body.results).toEqual(
+      expect.arrayContaining([newEmployee]),
+    );
   });
 
   it('Login Valid User', async () => {
@@ -178,7 +183,10 @@ describe('Employee Endpoint', () => {
       Role_ID: 1,
     };
     await insertEmployee(mysqlClient, newEmployee);
-    await insertDepartment(mysqlClient, { Dept_ID: 2, Dept_Name: 'Test Dept Name' });
+    await insertDepartment(mysqlClient, {
+      Dept_ID: 2,
+      Dept_Name: 'Test Dept Name',
+    });
     await insertRole(mysqlClient, { Role_ID: 1, Role_Name: 'Test Role Name' });
 
     // let selres = await queryMySQL(mysqlClient, 'Select * from Employee');
@@ -197,7 +205,192 @@ describe('Employee Endpoint', () => {
   });
 
   it('Login Invalid User', async () => {
-    const response = await request(app).get('/employee/login').query({ staffID: 1 });
+    const response = await request(app)
+      .get('/employee/login')
+      .query({ staffID: 1 });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual(expect.objectContaining({ error: true }));
+  });
+
+  it('Get Department Count for All Departments', async () => {
+    const department = { Dept_ID: 1, Dept_Name: 'Engineering' };
+    await insertDepartment(mysqlClient, department);
+
+    const employee1 = {
+      Staff_ID: 1,
+      Staff_FName: 'John',
+      Staff_LName: 'Doe',
+      Dept_ID: 1,
+      Position: 'Engineer',
+      Country: 'US',
+      Email: 'john.doe@example.com',
+      Reporting_Manager: null,
+      Role_ID: 1,
+    };
+    const employee2 = {
+      Staff_ID: 2,
+      Staff_FName: 'Jane',
+      Staff_LName: 'Smith',
+      Dept_ID: 1,
+      Position: 'Developer',
+      Country: 'US',
+      Email: 'jane.smith@example.com',
+      Reporting_Manager: null,
+      Role_ID: 1,
+    };
+
+    await insertEmployee(mysqlClient, employee1);
+    await insertEmployee(mysqlClient, employee2);
+
+    const response = await request(app)
+      .get('/employee/department-count')
+      .query({ departmentName: 'All' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.total).toBe(2);
+  });
+
+  it('Get Department Count for Specific Department', async () => {
+    const department = { Dept_ID: 1, Dept_Name: 'Engineering' };
+    await insertDepartment(mysqlClient, department);
+
+    const employee1 = {
+      Staff_ID: 1,
+      Staff_FName: 'John',
+      Staff_LName: 'Doe',
+      Dept_ID: 1,
+      Position: 'Engineer',
+      Country: 'US',
+      Email: 'john.doe@example.com',
+      Reporting_Manager: null,
+      Role_ID: 1,
+    };
+    const employee2 = {
+      Staff_ID: 2,
+      Staff_FName: 'Jane',
+      Staff_LName: 'Smith',
+      Dept_ID: 2,
+      Position: 'Developer',
+      Country: 'US',
+      Email: 'jane.smith@example.com',
+      Reporting_Manager: null,
+      Role_ID: 1,
+    };
+
+    await insertEmployee(mysqlClient, employee1);
+    await insertEmployee(mysqlClient, employee2);
+
+    const response = await request(app)
+      .get('/employee/department-count')
+      .query({ departmentName: 'Engineering' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.total).toBe(1);
+  });
+
+  it('Get Staff Reporting Manager', async () => {
+    const employee = {
+      Staff_ID: 1,
+      Staff_FName: 'John',
+      Staff_LName: 'Doe',
+      Dept_ID: 1,
+      Position: 'Engineer',
+      Country: 'US',
+      Email: 'john.doe@example.com',
+      Reporting_Manager: 2,
+      Role_ID: 1,
+    };
+    await insertEmployee(mysqlClient, employee);
+
+    const response = await request(app)
+      .get('/employee/get-staff-reporting-manager')
+      .query({ staffID: 1 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.results[0].Reporting_Manager).toBe(2);
+  });
+
+  it('Get Staff Under Reporting Manager', async () => {
+    const manager = {
+      Staff_ID: 2,
+      Staff_FName: 'Alice',
+      Staff_LName: 'Johnson',
+      Dept_ID: 1,
+      Position: 'Manager',
+      Country: 'US',
+      Email: 'alice.johnson@example.com',
+      Role_ID: 1,
+    };
+    const employee = {
+      Staff_ID: 1,
+      Staff_FName: 'John',
+      Staff_LName: 'Doe',
+      Dept_ID: 1,
+      Position: 'Engineer',
+      Country: 'US',
+      Email: 'john.doe@example.com',
+      Reporting_Manager: 2,
+      Role_ID: 1,
+    };
+
+    await insertEmployee(mysqlClient, manager);
+    await insertEmployee(mysqlClient, employee);
+
+    const response = await request(app)
+      .get('/employee/get-staff-under-reporting-manager')
+      .query({ reportingManagerID: 2 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.results[0].Staff_ID).toBe(1);
+  });
+
+  it('Get Staff Name by ID', async () => {
+    const employee = {
+      Staff_ID: 1,
+      Staff_FName: 'John',
+      Staff_LName: 'Doe',
+      Dept_ID: 1,
+      Position: 'Engineer',
+      Country: 'US',
+      Email: 'john.doe@example.com',
+      Reporting_Manager: null,
+      Role_ID: 1,
+    };
+    await insertEmployee(mysqlClient, employee);
+
+    const response = await request(app)
+      .get('/employee/get-staff-name-by-id')
+      .query({ staffID: 1 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.name).toBe('John Doe');
+  });
+
+  it('Get Staff Position by ID', async () => {
+    const employee = {
+      Staff_ID: 1,
+      Staff_FName: 'John',
+      Staff_LName: 'Doe',
+      Dept_ID: 1,
+      Position: 'Engineer',
+      Country: 'US',
+      Email: 'john.doe@example.com',
+      Reporting_Manager: null,
+      Role_ID: 1,
+    };
+    await insertEmployee(mysqlClient, employee);
+
+    const response = await request(app)
+      .get('/employee/getStaffPositionByID')
+      .query({ staffID: 1 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.position).toBe('Engineer');
+  });
+
+  it('Handles Error in /error Endpoint', async () => {
+    const response = await request(app).get('/employee/error');
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual(expect.objectContaining({ error: true }));
