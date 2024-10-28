@@ -167,13 +167,8 @@ const updateRequestStatus = async (
       { params: { requestID } },
     );
 
-    console.log('WFH DATE PERIOD 1: ', wfhDatePeriod);
-
     const wfhDate = wfhDatePeriod.data.data.WFH_Date.split('T')[0];
     const requestPeriod = wfhDatePeriod.data.data.Request_Period;
-
-    console.log('WFH DATE: ', wfhDate);
-    console.log('REQUEST PERIOD: ', requestPeriod);
 
     if (newStatus === 'Approved') {
       await checkWFHPolicy(staffID.value, wfhDate, requestPeriod);
