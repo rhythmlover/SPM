@@ -79,4 +79,62 @@ describe('RequestLinks.vue', () => {
       throw error;
     }
   });
+
+  it('renders all links with correct text', async () => {
+    const testId = 'TC-096';
+    try {
+      const wrapper = mount(RequestLinks);
+      const links = wrapper.findAll('.link');
+      expect(links).toHaveLength(3);
+      expect(links.at(0).text()).toBe('Incoming Requests');
+      expect(links.at(1).text()).toBe('Previously Accepted');
+      expect(links.at(2).text()).toBe('Previously Rejected');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('applies active class only to the selected link on click', async () => {
+    const testId = 'TC-097';
+    try {
+      const wrapper = mount(RequestLinks);
+      await wrapper.findAll('.link').at(1).trigger('click');
+      expect(wrapper.vm.activeLink).toBe('/previously-accepted');
+      const activeLink = wrapper.find('.link.active');
+      expect(activeLink.text()).toBe('Previously Accepted');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('emits the correct linkChange event on each link click', async () => {
+    const testId = 'TC-098';
+    try {
+      const wrapper = mount(RequestLinks);
+      await wrapper.findAll('.link').at(2).trigger('click');
+      expect(wrapper.emitted().linkChange).toBeTruthy();
+      expect(wrapper.emitted().linkChange[0]).toEqual(['/previously-rejected']);
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('applies active class to the active link for styling', async () => {
+    const testId = 'TC-099';
+    try {
+      const wrapper = mount(RequestLinks);
+      const link = wrapper.find('.link.active');
+      expect(link.classes()).toContain('active'); // Check for active class
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
 });
