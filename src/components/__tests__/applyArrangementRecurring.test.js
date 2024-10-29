@@ -246,5 +246,4 @@ describe('ApplyArrangementRecurring.vue', () => {
     );
     await updateSheet(testId, 'Passed');
   });
-
 });
