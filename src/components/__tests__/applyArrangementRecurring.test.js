@@ -34,12 +34,18 @@ vi.mock('axios', () => {
         }
         if (url.includes('/wfh-request/user/non-recurring-dates')) {
           return Promise.resolve({
-            data: { results: ['2024-09-03'] },
+            data: {
+              results: [
+                ['2024-09-03', 'AM'],
+                ['2024-10-15', 'PM'],
+                ['2024-09-16', 'FULL'],
+              ],
+            },
           });
         }
         if (url.includes('/wfh-request/user/recurring-dates')) {
           return Promise.resolve({
-            data: { recurringDates: ['2024-09-16'] },
+            data: { recurringDates: [['2024-10-16', 'FULL']] },
           });
         }
         return Promise.reject(new Error('Unknown endpoint'));
@@ -47,6 +53,25 @@ vi.mock('axios', () => {
     },
   };
 });
+
+const ERROR_MESSAGES = {
+  MISSING_FIELDS: 'Please fill in all fields',
+  INVALID_DATES:
+    'No valid dates found for the selected range and day of the week',
+  CLASHING_REQUEST: (dates) =>
+    `You have a clashing request for the following dates: ${dates}`,
+};
+
+const createWrapper = async (data) => {
+  const wrapper = mount(ApplyArrangementRecurring, {
+    props: { API_ROUTE: 'http://localhost:3000' },
+  });
+  if (data) {
+    await wrapper.setData(data);
+    await flushPromises();
+  }
+  return wrapper;
+};
 
 describe('ApplyArrangementRecurring.vue', () => {
   beforeEach(() => {
@@ -87,23 +112,20 @@ describe('ApplyArrangementRecurring.vue', () => {
     WFH_Date_End: '2022-03-30',
   };
 
-  const existingRequest = {
+  const createRequest = (overrides) => ({
     Staff_ID: '171015',
-    WFH_Date_Start: '2024-09-16',
-    WFH_Date_End: '2024-09-30',
-    WFH_Day: '1',
-  };
+    Request_Date: '2024-10-15',
+    WFH_Date_Start: '2024-10-16',
+    WFH_Date_End: '2024-10-16',
+    WFH_Day: '3',
+    Request_Period: 'AM',
+    Request_Reason: 'Personal',
+    ...overrides,
+  });
 
   it('should apply arrangement successfully with a valid request', async () => {
     const testId = 'TC-064';
-    const wrapper = mount(ApplyArrangementRecurring, {
-      props: {
-        API_ROUTE: 'http://localhost:3000',
-      },
-    });
-
-    await wrapper.setData(validRequest);
-    await flushPromises();
+    const wrapper = await createWrapper(validRequest);
 
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
@@ -114,47 +136,30 @@ describe('ApplyArrangementRecurring.vue', () => {
 
   it('should display an error message if a field is missing', async () => {
     const testId = 'TC-065';
-    const wrapper = mount(ApplyArrangementRecurring, {
-      props: {
-        API_ROUTE: 'http://localhost:3000',
-      },
-    });
+    const wrapper = await createWrapper(invalidRequestEmptyField);
 
-    await wrapper.setData(invalidRequestEmptyField);
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.errorMessage).toBe('Please fill in all fields');
+    expect(wrapper.vm.errorMessage).toBe(ERROR_MESSAGES.MISSING_FIELDS);
     await updateSheet(testId, 'Passed');
   });
 
   it('should display an error message if the WFH date is out of valid range', async () => {
     const testId = 'TC-066';
-    const wrapper = mount(ApplyArrangementRecurring, {
-      props: {
-        API_ROUTE: 'http://localhost:3000',
-      },
-    });
+    const wrapper = await createWrapper(invalidRequestOutRange);
 
-    await wrapper.setData(invalidRequestOutRange);
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.errorMessage).toBe(
-      'No valid dates found for the selected range and day of the week',
-    );
+    expect(wrapper.vm.errorMessage).toBe(ERROR_MESSAGES.INVALID_DATES);
     await updateSheet(testId, 'Passed');
   });
 
   it('should display a success message upon successful application', async () => {
     const testId = 'TC-067';
-    const wrapper = mount(ApplyArrangementRecurring, {
-      props: {
-        API_ROUTE: 'http://localhost:3000',
-      },
-    });
+    const wrapper = await createWrapper(validRequest);
 
-    await wrapper.setData(validRequest);
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
@@ -162,31 +167,80 @@ describe('ApplyArrangementRecurring.vue', () => {
     await updateSheet(testId, 'Passed');
   });
 
-  it('should display an error message if the user tries to submit for the same day', async () => {
+  it('should correctly retrieve the applied dates in accordance to date range', async () => {
     const testId = 'TC-068';
-    const wrapper = mount(ApplyArrangementRecurring, {
-      props: {
-        API_ROUTE: 'http://localhost:3000',
-      },
-    });
+    const wrapper = await createWrapper(validRequest);
 
-    await wrapper.setData(existingRequest);
-    await wrapper.find('form').trigger('submit.prevent');
-    await flushPromises();
-
-    expect(wrapper.find('.alert-danger').exists()).toBe(true);
+    expect(wrapper.find('.alert-info').text()).toBe(
+      'Applied Dates:2024-12-022024-12-092024-12-162024-12-232024-12-30',
+    );
     await updateSheet(testId, 'Passed');
   });
 
-  it('should correctly retrieve the applied dates in accordance to date range', async () => {
+  it('should allow submitting a half-day request if a non-clashing half-day request exists', async () => {
     const testId = 'TC-069';
-    const wrapper = mount(ApplyArrangementRecurring, {
-      props: {
-        API_ROUTE: 'http://localhost:3000',
-      },
+    const wrapper = await createWrapper();
+
+    await wrapper.setData({
+      Staff_ID: '171015',
+      Request_Date: '2024-10-15',
+      WFH_Date_Start: '2024-10-15',
+      WFH_Date_End: '2024-10-15',
+      WFH_Day: '2',
+      Request_Period: 'AM',
+      Request_Reason: 'Personal',
+    });
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(wrapper.vm.successMessage).toBe('Request Submitted Successfully');
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should not allow submitting a half-day request if a full-day request exists for the same day', async () => {
+    const testId = 'TC-093';
+    const wrapper = await createWrapper();
+
+    await wrapper.setData({
+      existingWFHDates: [['2024-10-16', 'FULL']],
+    });
+    await flushPromises();
+
+    const halfDayRequest = createRequest({
+      WFH_Date_Start: '2024-10-16',
+      WFH_Date_End: '2024-10-16',
+      WFH_Day: '3',
+      Request_Period: 'AM',
     });
 
-    await wrapper.setData(validRequest);
+    await wrapper.setData(halfDayRequest);
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(wrapper.vm.errorMessage).toBe(
+      ERROR_MESSAGES.CLASHING_REQUEST('2024-10-16'),
+    );
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should display an error message if a field is missing', async () => {
+    const testId = 'TC-094';
+    const wrapper = await createWrapper({
+      ...validRequest,
+      Request_Reason: '',
+    });
+
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(wrapper.vm.errorMessage).toBe(ERROR_MESSAGES.MISSING_FIELDS);
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should correctly retrieve the applied dates in accordance with the date range', async () => {
+    const testId = 'TC-095';
+    const wrapper = await createWrapper(validRequest);
+
     expect(wrapper.find('.alert-info').text()).toBe(
       'Applied Dates:2024-12-022024-12-092024-12-162024-12-232024-12-30',
     );

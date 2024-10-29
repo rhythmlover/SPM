@@ -34,12 +34,14 @@ vi.mock('axios', () => {
         }
         if (url.includes('/wfh-request/user/non-recurring-dates')) {
           return Promise.resolve({
-            data: { results: ['2024-09-03'] },
+            data: {
+              results: [['2024-09-03', 'AM']],
+            },
           });
         }
         if (url.includes('/wfh-request/user/recurring-dates')) {
           return Promise.resolve({
-            data: { recurringDates: ['2024-09-16'] },
+            data: { recurringDates: ['2024-09-16', 'FULL'] },
           });
         }
         return Promise.reject(new Error('Unknown endpoint'));
@@ -49,7 +51,7 @@ vi.mock('axios', () => {
 });
 
 describe('ApplyArrangement.vue', () => {
-  beforeEach(() => {
+  const setupLocalStorage = () => {
     const staffID = '171015';
     localStorage.setItem('staffID', staffID);
     localStorage.setItem('roleID', '2');
@@ -57,6 +59,10 @@ describe('ApplyArrangement.vue', () => {
     localStorage.setItem('staffLName', 'Kaur');
     localStorage.setItem('deptID', '6');
     localStorage.setItem('reportingManager', '171018');
+  };
+
+  beforeEach(() => {
+    setupLocalStorage();
   });
 
   afterEach(() => {
@@ -223,6 +229,38 @@ describe('ApplyArrangement.vue', () => {
 
     await wrapper.setData(validRequest);
     expect(wrapper.vm.Request_Date).toBe(validRequest.Request_Date);
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should allow a non-clashing half-day request for the same date', async () => {
+    const testId = 'TC-091';
+    const wrapper = mount(ApplyArrangement, {
+      props: { API_ROUTE: 'http://localhost:3000' },
+    });
+
+    await wrapper.setData({
+      ...validRequest,
+      Request_Date: '2024-09-03',
+      Request_Period: 'PM',
+    });
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(wrapper.vm.successMessage).toBe('Request Submitted Successfully');
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should require all fields populated for submission', async () => {
+    const testId = 'TC-092';
+    const wrapper = mount(ApplyArrangement, {
+      props: { API_ROUTE: 'http://localhost:3000' },
+    });
+
+    await wrapper.setData({ ...validRequest, Request_Reason: '' });
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(wrapper.vm.errorMessage).toBe('Please fill in all fields');
     await updateSheet(testId, 'Passed');
   });
 });

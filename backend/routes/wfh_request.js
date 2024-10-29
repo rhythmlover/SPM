@@ -189,12 +189,39 @@ router.post('/apply', async (req, res, next) => {
       .status(200)
       .json({ message: 'Application Submitted Successfully', data: results });
   } catch (error) {
-    console.error('Error:', error);
-    res
-      .status(500)
-      .json({ message: 'Application Submission Failed', error: error.message });
+    next(error);
   }
 });
+
+router.post(
+  '/recurring-request/insert-approved-recurring-dates',
+  async (req, res, next) => {
+    try {
+      const {
+        Staff_ID,
+        Request_Date,
+        Request_Period,
+        Request_Reason,
+        Approver_ID,
+        Comments,
+        Decision_Date,
+        WFH_Date,
+        Recurring_Request_ID,
+      } = req.body;
+
+      const [results] = await executeQuery(
+        `INSERT INTO WFH_Request (Staff_ID, Request_Date, Request_Period, Request_Reason, Status, Approver_ID, Comments, Decision_Date, WFH_Date, Recurring_Request_ID) VALUES (${Staff_ID}, '${Request_Date}', '${Request_Period}', '${Request_Reason}', 'Approved', ${Approver_ID}, '${Comments}', '${Decision_Date}', '${WFH_Date}', ${Recurring_Request_ID})`,
+      );
+
+      res.status(200).json({
+        message: 'Approved Recurring Dates Inserted Successfully',
+        data: results,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 router.post('/apply-recurring', async (req, res, next) => {
   try {
@@ -277,10 +304,7 @@ router.post('/apply-recurring', async (req, res, next) => {
 
     res.status(200).json({ message: 'Application Submitted Successfully' });
   } catch (error) {
-    console.error('Error:', error);
-    res
-      .status(500)
-      .json({ message: 'Application Submission Failed', error: error.message });
+    next(error);
   }
 });
 
@@ -291,6 +315,29 @@ router.put('/request/status', async (req, res, next) => {
   try {
     let [result] = await executeQuery(
       `UPDATE WFH_Request SET Status = '${newStatus}' WHERE Request_ID = ${requestID}`,
+    );
+
+    if (result.affectedRows > 0) {
+      res.json({
+        message: 'Request status updated successfully',
+        requestID,
+        newStatus,
+      });
+    } else {
+      res.status(404).json({ message: 'Request not found' });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/recurring-request/status', async (req, res, next) => {
+  const requestID = req.query.requestID;
+  const newStatus = req.body.status;
+
+  try {
+    let [result] = await executeQuery(
+      `UPDATE WFH_Request_Recurring SET Status = '${newStatus}' WHERE Request_ID = ${requestID}`,
     );
 
     if (result.affectedRows > 0) {
@@ -342,18 +389,21 @@ router.put('/withdrawal/status', async (req, res, next) => {
   }
 });
 
-router.get('/get-approved-requests-by-approver-id', async (req, res, next) => {
-  const Approver_ID = req.query.approverID;
+router.get(
+  '/request/get-approved-requests-by-approver-id-and-wfh-date-period',
+  async (req, res, next) => {
+    const { Approver_ID, WFH_Date, Request_Period } = req.query;
 
-  try {
-    let [results] = await executeQuery(
-      `SELECT * FROM WFH_Request WHERE Approver_ID = ${Approver_ID} AND Status = 'Approved'`,
-    );
-    res.json({ results });
-  } catch (error) {
-    next(error);
-  }
-});
+    try {
+      let [results] = await executeQuery(
+        `SELECT * FROM WFH_Request WHERE Approver_ID = ${Approver_ID} AND Status = 'Approved' AND WFH_Date = '${WFH_Date}' AND Request_Period = '${Request_Period}'`,
+      );
+      res.json(results);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 router.put('/request/updateComments', async (req, res, next) => {
   const requestID = req.query.requestID;
@@ -370,6 +420,72 @@ router.put('/request/updateComments', async (req, res, next) => {
         requestID,
         comments,
       });
+    } else {
+      res.status(404).json({ message: 'Request not found' });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/recurring-request/update-comments', async (req, res, next) => {
+  const requestID = req.query.requestID;
+  const comments = req.body.comments;
+
+  try {
+    let [result] = await executeQuery(
+      `UPDATE WFH_Request_Recurring SET Comments = '${comments}' WHERE Request_ID = ${requestID}`,
+    );
+
+    if (result.affectedRows > 0) {
+      res.json({
+        message: 'Request comments updated successfully',
+        requestID,
+        comments,
+      });
+    } else {
+      res.status(404).json({ message: 'Request not found' });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put(
+  '/recurring-request/update-decision-date',
+  async (req, res, next) => {
+    const requestID = req.query.requestID;
+    const Decision_Date = req.body.Decision_Date;
+
+    try {
+      let [result] = await executeQuery(
+        `UPDATE WFH_Request_Recurring SET Decision_Date = '${Decision_Date}' WHERE Request_ID = ${requestID}`,
+      );
+
+      if (result.affectedRows > 0) {
+        res.json({
+          message: 'Request decision date updated successfully',
+          requestID,
+        });
+      } else {
+        res.status(404).json({ message: 'Request not found' });
+      }
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.get('/recurring-request/dates', async (req, res, next) => {
+  const requestID = req.query.requestID;
+
+  try {
+    let [result] = await executeQuery(
+      `SELECT WFH_Date_Start, WFH_Date_End, WFH_Day, Request_Period FROM WFH_Request_Recurring WHERE Request_ID = ${requestID}`,
+    );
+
+    if (result.length > 0) {
+      res.json(result[0]);
     } else {
       res.status(404).json({ message: 'Request not found' });
     }
@@ -568,6 +684,39 @@ router.get('/ds-recurring', async (req, res, next) => {
       `SELECT * FROM WFH_Request_Recurring WHERE Approver_ID = ${staffID}`,
     );
     res.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get(
+  '/request/get-wfh-date-period-by-request-id',
+  async (req, res, next) => {
+    const requestID = req.query.requestID;
+
+    try {
+      let [results] = await executeQuery(
+        `SELECT WFH_Date, Request_Period FROM WFH_Request WHERE Request_ID = ${requestID}`,
+      );
+      if (results && results.length > 0) {
+        res.json({ data: results[0] });
+      } else {
+        res.status(404).json({ message: 'No data found for this Request ID' });
+      }
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.get('/recurring-request/get-request-details', async (req, res, next) => {
+  const requestID = req.query.requestID;
+
+  try {
+    let [results] = await executeQuery(
+      `SELECT * FROM WFH_Request_Recurring WHERE Request_ID = ${requestID}`,
+    );
+    res.json(results[0]);
   } catch (error) {
     next(error);
   }
