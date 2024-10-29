@@ -8,7 +8,7 @@
       />
     </BCol>
     <BCol>
-      <BDropdown text="Filter by Status" variant="light">
+      <BDropdown text="Filter by Status" variant="light" auto-close="outside">
         <BDropdownForm>
           <BFormCheckbox
             v-for="option in statusOptions"
@@ -22,7 +22,7 @@
       </BDropdown>
     </BCol>
     <BCol>
-      <BDropdown text="Filter by WFH Time" variant="light">
+      <BDropdown text="Filter by WFH Time" variant="light" auto-close="outside">
         <BDropdownForm>
           <BFormCheckbox
             v-model="selectAllWfhTimes"
