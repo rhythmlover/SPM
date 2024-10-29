@@ -8,7 +8,7 @@
       />
     </BCol>
     <BCol>
-      <BDropdown text="Filter by Status" variant="light" >
+      <BDropdown text="Filter by Status" variant="light">
         <BDropdownForm>
           <BFormCheckbox
             v-for="option in statusOptions"
@@ -54,63 +54,74 @@
     </BCol>
   </BRow>
 </template>
-  
-  <script setup>
-  import { ref, watch, computed } from 'vue';
-  
-  const props = defineProps({
-    isMonthView: Boolean,
-    statusOptions: Array,
-    wfhTimeOptions: Array,
-    managerOptions: Array,
-    selectedStatuses: Array,
-    selectedWfhTimes: Array,
-    selectedManager: String,
-  });
-  
-  const emit = defineEmits(['update:isMonthView', 'update:selectedStatuses', 'update:selectedWfhTimes', 'update:selectedManager']);
-  
-  const dayWeekFilterDropdownSelectOptions = [
-    { value: true, text: 'Month' },
-    { value: false, text: 'Week' },
-  ];
-  
-  const localSelectedStatuses = computed({
-    get: () => props.selectedStatuses,
-    set: (value) => emit('update:selectedStatuses', value)
-  });
-  
-  const localSelectedWfhTimes = computed({
-    get: () => props.selectedWfhTimes,
-    set: (value) => emit('update:selectedWfhTimes', value)
-  });
-  
-  const selectAllWfhTimes = ref(true);
-  
-  const toggleAllWfhTimes = () => {
-    if (selectAllWfhTimes.value) {
-      localSelectedWfhTimes.value = props.wfhTimeOptions.map((option) => option.value);
-    } else {
-      localSelectedWfhTimes.value = [];
-    }
-  };
-  
-  const indentedManagerOptions = computed(() => {
-    return props.managerOptions.map(option => ({
-      ...option,
-      text: '\u00A0'.repeat(option.depth * 4) + option.text
-    }));
-  });
-  
-  watch(localSelectedWfhTimes, (newValue) => {
-    selectAllWfhTimes.value = newValue.length === props.wfhTimeOptions.length;
-  });
-  
-  // Initialize selected options
-  if (localSelectedStatuses.value.length === 0) {
-    localSelectedStatuses.value = props.statusOptions.map((status) => status.value);
+
+<script setup>
+import { ref, watch, computed } from 'vue';
+
+const props = defineProps({
+  isMonthView: Boolean,
+  statusOptions: Array,
+  wfhTimeOptions: Array,
+  managerOptions: Array,
+  selectedStatuses: Array,
+  selectedWfhTimes: Array,
+  selectedManager: String,
+});
+
+const emit = defineEmits([
+  'update:isMonthView',
+  'update:selectedStatuses',
+  'update:selectedWfhTimes',
+  'update:selectedManager',
+]);
+
+const dayWeekFilterDropdownSelectOptions = [
+  { value: true, text: 'Month' },
+  { value: false, text: 'Week' },
+];
+
+const localSelectedStatuses = computed({
+  get: () => props.selectedStatuses,
+  set: (value) => emit('update:selectedStatuses', value),
+});
+
+const localSelectedWfhTimes = computed({
+  get: () => props.selectedWfhTimes,
+  set: (value) => emit('update:selectedWfhTimes', value),
+});
+
+const selectAllWfhTimes = ref(true);
+
+const toggleAllWfhTimes = () => {
+  if (selectAllWfhTimes.value) {
+    localSelectedWfhTimes.value = props.wfhTimeOptions.map(
+      (option) => option.value,
+    );
+  } else {
+    localSelectedWfhTimes.value = [];
   }
-  if (localSelectedWfhTimes.value.length === 0) {
-    localSelectedWfhTimes.value = props.wfhTimeOptions.map((option) => option.value);
-  }
-  </script>
+};
+
+const indentedManagerOptions = computed(() => {
+  return props.managerOptions.map((option) => ({
+    ...option,
+    text: '\u00A0'.repeat(option.depth * 4) + option.text,
+  }));
+});
+
+watch(localSelectedWfhTimes, (newValue) => {
+  selectAllWfhTimes.value = newValue.length === props.wfhTimeOptions.length;
+});
+
+// Initialize selected options
+if (localSelectedStatuses.value.length === 0) {
+  localSelectedStatuses.value = props.statusOptions.map(
+    (status) => status.value,
+  );
+}
+if (localSelectedWfhTimes.value.length === 0) {
+  localSelectedWfhTimes.value = props.wfhTimeOptions.map(
+    (option) => option.value,
+  );
+}
+</script>

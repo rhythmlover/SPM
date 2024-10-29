@@ -34,17 +34,29 @@ onMounted(() => {
               </template>
 
               <!-- Office Count Table -->
-              <BTableSimple v-if="dateObject.office_count_table" class="mb-3 text-center" small>
+              <BTableSimple
+                v-if="dateObject.office_count_table"
+                class="mb-3 text-center"
+                small
+              >
                 <BThead>
                   <BTr>
-                    <BTh v-for="header in dateObject.office_count_table.headers" :key="header" class="text-center">
+                    <BTh
+                      v-for="header in dateObject.office_count_table.headers"
+                      :key="header"
+                      class="text-center"
+                    >
                       {{ header }}
                     </BTh>
                   </BTr>
                 </BThead>
                 <BTbody>
                   <BTr>
-                    <BTd v-for="(count, index) in dateObject.office_count_table.counts" :key="index">
+                    <BTd
+                      v-for="(count, index) in dateObject.office_count_table
+                        .counts"
+                      :key="index"
+                    >
                       {{ count }}
                     </BTd>
                   </BTr>
@@ -78,7 +90,9 @@ onMounted(() => {
                     <BTd>{{ requestObj.Request_Period }}</BTd>
                     <BTd>
                       <BBadge
-                        :variant="getRequestStatusPillColor(requestObj['Status'])"
+                        :variant="
+                          getRequestStatusPillColor(requestObj['Status'])
+                        "
                         pill
                       >
                         {{ requestObj.Status }}
