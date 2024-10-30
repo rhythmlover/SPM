@@ -143,7 +143,7 @@ describe('RequestHistory', () => {
   });
 
   it('Displays correct period for AM request', async () => {
-    const testId = 'TC-090';
+    const testId = 'TC-100';
     try {
       const amRequest = [
         {
@@ -166,7 +166,7 @@ describe('RequestHistory', () => {
   });
 
   it('Displays correct period for PM request', async () => {
-    const testId = 'TC-091';
+    const testId = 'TC-101';
     try {
       const pmRequest = [
         {
@@ -189,7 +189,7 @@ describe('RequestHistory', () => {
   });
 
   it('Displays correct period for FULL request', async () => {
-    const testId = 'TC-092';
+    const testId = 'TC-102';
     try {
       const fullRequest = [
         {
@@ -212,7 +212,7 @@ describe('RequestHistory', () => {
   });
 
   it('Displays correct badge for Pending status', async () => {
-    const testId = 'TC-093';
+    const testId = 'TC-103';
     try {
       const pendingRequest = [
         {
@@ -236,7 +236,7 @@ describe('RequestHistory', () => {
   });
 
   it('Displays correct badge for Withdrawn status', async () => {
-    const testId = 'TC-094';
+    const testId = 'TC-104';
     try {
       const withdrawnRequest = [
         {
@@ -260,7 +260,7 @@ describe('RequestHistory', () => {
   });
 
   it('Displays correct badge for Withdrawal Pending status', async () => {
-    const testId = 'TC-095';
+    const testId = 'TC-105';
     try {
       const withdrawalPendingRequest = [
         {
@@ -284,7 +284,7 @@ describe('RequestHistory', () => {
   });
 
   it('Displays correct badge for Rejected status', async () => {
-    const testId = 'TC-096';
+    const testId = 'TC-106';
     try {
       const rejectedRequest = [
         {
@@ -308,7 +308,7 @@ describe('RequestHistory', () => {
   });
 
   it('moreThanTwoMonths function works correctly', async () => {
-    const testId = 'TC-097';
+    const testId = 'TC-107';
     try {
       const twoMonthsAgo = new Date();
       twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
@@ -322,7 +322,7 @@ describe('RequestHistory', () => {
   });
 
   it('get_WFH_period function works correctly', async () => {
-    const testId = 'TC-098';
+    const testId = 'TC-108';
     try {
       expect(get_WFH_period('FULL')).toBe('Full Day');
       expect(get_WFH_period('AM')).toBe('9am - 1pm');
