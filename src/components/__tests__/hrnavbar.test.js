@@ -46,41 +46,6 @@ describe('HrNavbar.vue.', () => {
     vi.clearAllMocks(); // Clear call history and reset state
   });
 
-  //   it('renders the navbar correctly', async () => {
-  //     // const testId = 'TC-015';
-  //     try {
-  //       // Wait for the component to fully render
-  //       await wrapper.vm.$nextTick();
-  //       expect(wrapper.find('.fw-bold').text()).toBe('Manager Portal');
-  //       expect(wrapper.findAll('a.nav-link')).toHaveLength(2);
-  //       // await updateSheet(testId, 'Passed');
-  //     } catch (error) {
-  //       // await updateSheet(testId, 'Failed');
-  //       console.log('');
-  //       throw error;
-  //     }
-  //   });
-
-  //   it('renders navigation links with correct paths', () => {
-  //     // const testId = 'TC-015';
-  //     try {
-  //       const navItems = wrapper.findAll('a.nav-link');
-  //       const expectedPaths = [
-  //         '/manager-view-schedule',
-  //         '/pending-requests',
-  //       ];
-
-  //       navItems.forEach((item, index) => {
-  //         expect(item.attributes('href')).toBe(expectedPaths[index]);
-  //       });
-  //       // await updateSheet(testId, 'Passed');
-  //     } catch (error) {
-  //       // await updateSheet(testId, 'Failed');
-  //       console.log('');
-  //       throw error;
-  //     }
-  //   });
-
   it('displays welcome message with staff first name', () => {
     // const testId = 'TC-015';
     try {
