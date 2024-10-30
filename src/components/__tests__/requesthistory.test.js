@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import RequestHistory from '../RequestHistory.vue';
 import { updateSheet } from '../../../updateGoogleSheet';
+import { get_WFH_period, moreThanTwoMonths } from '../RequestHistory.vue';
 
 describe('RequestHistory', () => {
   const request = [
@@ -134,6 +135,198 @@ describe('RequestHistory', () => {
         },
       });
       expect(wrapper.find('tbody tr').exists()).toBe(true);
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('Displays correct period for AM request', async () => {
+    const testId = 'TC-090';
+    try {
+      const amRequest = [
+        {
+          ...request[0],
+          Request_Period: 'AM',
+        },
+      ];
+      const wrapper = mount(RequestHistory, {
+        props: {
+          requests: amRequest,
+        },
+      });
+      const period = wrapper.find('tbody tr td:nth-child(3)').text();
+      expect(period).toContain('9am - 1pm');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('Displays correct period for PM request', async () => {
+    const testId = 'TC-091';
+    try {
+      const pmRequest = [
+        {
+          ...request[0],
+          Request_Period: 'PM',
+        },
+      ];
+      const wrapper = mount(RequestHistory, {
+        props: {
+          requests: pmRequest,
+        },
+      });
+      const period = wrapper.find('tbody tr td:nth-child(3)').text();
+      expect(period).toContain('2pm - 6pm');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('Displays correct period for FULL request', async () => {
+    const testId = 'TC-092';
+    try {
+      const fullRequest = [
+        {
+          ...request[0],
+          Request_Period: 'FULL',
+        },
+      ];
+      const wrapper = mount(RequestHistory, {
+        props: {
+          requests: fullRequest,
+        },
+      });
+      const period = wrapper.find('tbody tr td:nth-child(3)').text();
+      expect(period).toContain('Full Day');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('Displays correct badge for Pending status', async () => {
+    const testId = 'TC-093';
+    try {
+      const pendingRequest = [
+        {
+          ...request[0],
+          Status: 'Pending',
+        },
+      ];
+      const wrapper = mount(RequestHistory, {
+        props: {
+          requests: pendingRequest,
+        },
+      });
+      const badge = wrapper.find('.badge');
+      expect(badge.text()).toBe('Pending');
+      expect(badge.classes()).toContain('text-bg-info');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('Displays correct badge for Withdrawn status', async () => {
+    const testId = 'TC-094';
+    try {
+      const withdrawnRequest = [
+        {
+          ...request[0],
+          Status: 'Withdrawn',
+        },
+      ];
+      const wrapper = mount(RequestHistory, {
+        props: {
+          requests: withdrawnRequest,
+        },
+      });
+      const badge = wrapper.find('.badge');
+      expect(badge.text()).toBe('Withdrawn');
+      expect(badge.classes()).toContain('text-bg-secondary');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('Displays correct badge for Withdrawal Pending status', async () => {
+    const testId = 'TC-095';
+    try {
+      const withdrawalPendingRequest = [
+        {
+          ...request[0],
+          Status: 'Withdrawal Pending',
+        },
+      ];
+      const wrapper = mount(RequestHistory, {
+        props: {
+          requests: withdrawalPendingRequest,
+        },
+      });
+      const badge = wrapper.find('.badge');
+      expect(badge.text()).toBe('Withdrawn');
+      expect(badge.classes()).toContain('text-bg-light');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('Displays correct badge for Rejected status', async () => {
+    const testId = 'TC-096';
+    try {
+      const rejectedRequest = [
+        {
+          ...request[0],
+          Status: 'Rejected',
+        },
+      ];
+      const wrapper = mount(RequestHistory, {
+        props: {
+          requests: rejectedRequest,
+        },
+      });
+      const badge = wrapper.find('.badge');
+      expect(badge.text()).toBe('Rejected');
+      expect(badge.classes()).toContain('text-bg-danger');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('moreThanTwoMonths function works correctly', async () => {
+    const testId = 'TC-097';
+    try {
+      const twoMonthsAgo = new Date();
+      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+      const result = moreThanTwoMonths(twoMonthsAgo.toISOString());
+      expect(result).toBe(true);
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('get_WFH_period function works correctly', async () => {
+    const testId = 'TC-098';
+    try {
+      expect(get_WFH_period('FULL')).toBe('Full Day');
+      expect(get_WFH_period('AM')).toBe('9am - 1pm');
+      expect(get_WFH_period('PM')).toBe('2pm - 6pm');
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');

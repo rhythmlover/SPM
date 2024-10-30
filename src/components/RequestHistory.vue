@@ -1,23 +1,7 @@
-<script setup>
-import axios from 'axios';
+<script>
+import { getWFHRequests } from '@/utils/utils';
 import { inject, onMounted, ref, watch } from 'vue';
-
-const API_ROUTE = inject('API_ROUTE', 'http://localhost:3000');
-const staffID = localStorage.getItem('staffID');
-const props = defineProps({
-  requests: {
-    type: Array,
-    default: () => [],
-  },
-});
-const localRequests = ref([...props.requests]);
-
-watch(
-  () => props.requests,
-  (newRequests) => {
-    localRequests.value = [...newRequests];
-  },
-);
+import axios from 'axios';
 
 const formatRequestDate = (isoDate) => {
   const date = new Date(isoDate);
@@ -54,42 +38,44 @@ const get_WFH_period = (request_period) => {
   }
 };
 
-const getWFHRequests = async (staffID) => {
-  try {
-    const res = await axios.get(`${API_ROUTE}/wfh-request/user`, {
-      params: { staffID },
+export default {
+  name: 'RequestHistory',
+  props: {
+    requests: {
+      type: Array,
+      default: () => [],
+    },
+  },
+  setup(props) {
+    const API_ROUTE = inject('API_ROUTE', 'http://localhost:3000');
+    const staffID = localStorage.getItem('staffID');
+    const localRequests = ref([...props.requests]);
+
+    watch(
+      () => props.requests,
+      (newRequests) => {
+        localRequests.value = [...newRequests];
+      },
+    );
+
+    onMounted(async () => {
+      if (staffID) {
+        localRequests.value = await getWFHRequests(axios, API_ROUTE, staffID);
+      } else {
+        console.error('Staff ID is not available.');
+      }
     });
 
-    if (res.data && Array.isArray(res.data.results)) {
-      localRequests.value = res.data.results
-        .filter((requestObj) => moreThanTwoMonths(requestObj['WFH_Date']))
-        .map((request) => ({
-          Approver_Name:
-            request.Approver.Staff_FName + ' ' + request.Approver.Staff_LName,
-          Staff_ID: request.Staff_ID,
-          Request_ID: request.Request_ID,
-          Request_Date: request.Request_Date,
-          WFH_Date: request.WFH_Date,
-          Request_Period: request.Request_Period,
-          Reason: request.Request_Reason,
-          Status: request.Status,
-          Comments: request.Comments,
-        }));
-    } else {
-      console.warn('No valid results found in the response.');
-    }
-  } catch (error) {
-    console.error('Error fetching WFH requests:', error);
-  }
+    return {
+      localRequests,
+      formatRequestDate,
+      moreThanTwoMonths,
+      get_WFH_period,
+    };
+  },
 };
 
-onMounted(async () => {
-  if (staffID) {
-    await getWFHRequests(staffID);
-  } else {
-    console.error('Staff ID is not available.');
-  }
-});
+export { get_WFH_period, moreThanTwoMonths, formatRequestDate };
 </script>
 
 <template>
