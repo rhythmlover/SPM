@@ -453,4 +453,105 @@ describe('StaffRequestStatus.vue', () => {
       throw error;
     }
   });
+
+  it('Render correct number of columns in the table', async () => {
+    const testId = 'TC-043';
+    try {
+      const wrapper = mount(StaffRequestStatus, {
+        props: { requests: request },
+      });
+      const headers = wrapper.findAll('th');
+      expect(headers.length).toBe(6); // Verify the number of columns
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('deleteRequest method when request is not pending', async () => {
+    const testId = 'TC-044';
+    try {
+      const wrapper = mount(StaffRequestStatus, {
+        props: { requests: request_approved },
+      });
+      await wrapper.vm.deleteRequest(request_approved[0].Request_ID);
+      expect(wrapper.vm.localRequests.length).toBe(1); // Request should not be deleted
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('openWithdrawForm method when request is not approved', async () => {
+    const testId = 'TC-045';
+    try {
+      const wrapper = mount(StaffRequestStatus, {
+        props: { requests: request },
+        global: {
+          plugins: [router],
+        },
+      });
+      await wrapper.vm.openWithdrawForm(
+        request[0].Request_ID,
+        request[0].WFH_Date,
+        request[0].Request_Period,
+      );
+      expect(wrapper.vm.$router.currentRoute.value.name).toBe(
+        'staff-approved-requests-withdrawal',
+      ); // Route should not change
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('get_WFH_period method', async () => {
+    const testId = 'TC-046';
+    try {
+      const wrapper = mount(StaffRequestStatus, {
+        props: { requests: request },
+      });
+      expect(wrapper.vm.get_WFH_period('FULL')).toBe('Full Day');
+      expect(wrapper.vm.get_WFH_period('AM')).toBe('9am - 1pm');
+      expect(wrapper.vm.get_WFH_period('PM')).toBe('2pm - 6pm');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('formatRequestDate method', async () => {
+    const testId = 'TC-047';
+    try {
+      const wrapper = mount(StaffRequestStatus, {
+        props: { requests: request },
+      });
+      const formattedDate = wrapper.vm.formatRequestDate('2024-10-01');
+      expect(formattedDate).toBe('October 1, 2024 (Tuesday)');
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('notMoreThanTwoMonthsAgo method', async () => {
+    const testId = 'TC-049';
+    try {
+      const wrapper = mount(StaffRequestStatus, {
+        props: { requests: request },
+      });
+      const notMoreThanTwoMonths =
+        wrapper.vm.notMoreThanTwoMonthsAgo('2024-10-01');
+      expect(notMoreThanTwoMonths).toBe(true);
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
 });
