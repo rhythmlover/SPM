@@ -455,13 +455,13 @@ describe('StaffRequestStatus.vue', () => {
   });
 
   it('Render correct number of columns in the table', async () => {
-    const testId = 'TC-043';
+    const testId = 'TC-109';
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: { requests: request },
       });
       const headers = wrapper.findAll('th');
-      expect(headers.length).toBe(6); // Verify the number of columns
+      expect(headers.length).toBe(6);
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -470,7 +470,7 @@ describe('StaffRequestStatus.vue', () => {
   });
 
   it('deleteRequest method when request is not pending', async () => {
-    const testId = 'TC-044';
+    const testId = 'TC-110';
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: { requests: request_approved },
@@ -485,7 +485,7 @@ describe('StaffRequestStatus.vue', () => {
   });
 
   it('openWithdrawForm method when request is not approved', async () => {
-    const testId = 'TC-045';
+    const testId = 'TC-111';
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: { requests: request },
@@ -509,7 +509,7 @@ describe('StaffRequestStatus.vue', () => {
   });
 
   it('get_WFH_period method', async () => {
-    const testId = 'TC-046';
+    const testId = 'TC-112';
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: { requests: request },
@@ -525,7 +525,7 @@ describe('StaffRequestStatus.vue', () => {
   });
 
   it('formatRequestDate method', async () => {
-    const testId = 'TC-047';
+    const testId = 'TC-113';
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: { requests: request },
@@ -540,7 +540,7 @@ describe('StaffRequestStatus.vue', () => {
   });
 
   it('notMoreThanTwoMonthsAgo method', async () => {
-    const testId = 'TC-049';
+    const testId = 'TC-114';
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: { requests: request },
