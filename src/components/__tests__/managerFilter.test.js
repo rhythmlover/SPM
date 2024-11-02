@@ -1,6 +1,5 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect, beforeEach } from 'vitest';
-// import { nextTick, ref } from 'vue';
 import ManagerFilter from '../ScheduleFilters.vue';
 import { updateSheet } from '../../../updateGoogleSheet';
 
@@ -36,12 +35,12 @@ describe('ManagerFilter', () => {
     const testId = 'TC-070';
     try {
       const statusDropdown = wrapper.findAllComponents({ name: 'BFormCheckbox' })
-      .filter(c => defaultProps.statusOptions.some(option => option.text === c.text()));
-    
-    expect(statusDropdown.length).toBe(defaultProps.statusOptions.length);
-    statusDropdown.forEach((checkbox, index) => {
-      expect(checkbox.text()).toBe(defaultProps.statusOptions[index].text);
-    });
+        .filter(c => defaultProps.statusOptions.some(option => option.text === c.text()));
+
+      expect(statusDropdown.length).toBe(defaultProps.statusOptions.length);
+      statusDropdown.forEach((checkbox, index) => {
+        expect(checkbox.text()).toBe(defaultProps.statusOptions[index].text);
+      });
 
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -93,129 +92,86 @@ describe('ManagerFilter', () => {
     }
   });
 
-  // it('should display the correct WFH time options in the dropdown', async () => {
-  //   const testId = 'TC-123';
-  //   try {
-  //     const wfhCheckboxes = wrapper.findAllComponents({ name: 'BFormCheckbox' });
+  it('should display the correct WFH time options in the dropdown', async () => {
+    const testId = 'TC-123';
+    try {
+      const wfhTimeDropdown = wrapper.findAllComponents({ name: 'BFormCheckbox' }).filter((checkbox) => {
+        return ['AM', 'PM'].includes(checkbox.text());
+      });
 
-  //     // First checkbox should be the "Select All" option
-  //     expect(wfhCheckboxes[5].text()).toBe('Select All');
+      expect(wfhTimeDropdown).toHaveLength(2);
+      expect(wfhTimeDropdown[0].text()).toBe('AM');
+      expect(wfhTimeDropdown[1].text()).toBe('PM');
 
-  //     // Remaining checkboxes should match the individual WFH time options
-  //     const individualWfhOptions = wfhCheckboxes.slice(1);
-  //     expect(individualWfhOptions.length).toBe(defaultProps.wfhTimeOptions.length);
-
-  //     individualWfhOptions.forEach((checkbox, index) => {
-  //       expect(checkbox.text()).toBe(defaultProps.wfhTimeOptions[index].text);
-  //     });
-
-  //     await updateSheet(testId, 'Passed');
-  //   } catch (error) {
-  //     await updateSheet(testId, 'Failed');
-  //     throw error;
-  //   }
-  // });
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
 
 
-  // it('should display the correct manager options in the dropdown', async () => {
-  //   const testId = 'TC-124';
-  //   try {
-  //     const managerSelect = wrapper.find('select');
-  //     const options = managerSelect.findAll('option');
-  
-  //     expect(options.length).toBe(defaultProps.managerOptions.length); 
-      
-  //     defaultProps.managerOptions.forEach((manager, index) => {
-  //       expect(options.at(index + 1).text().trim()).toBe(manager.text);
-  //     });
+  it('should display the correct manager options in the dropdown', async () => {
+    const testId = 'TC-124';
+    try {
+      const managerSelect = wrapper.find('[data-testid="manager-select"]');
+      const options = managerSelect.findAll('option');
 
-  //     await updateSheet(testId, 'Passed');
-  //   } catch (error) {
-  //     await updateSheet(testId, 'Failed');
-  //     throw error;
-  //   }
-  // });
-  
-  // it('should emit update:selectedStatuses when only the "approved" status is selected', async () => {
-  //   const testId = 'TC-121';
-  //   try {
-  
-  //     // Ensure the selectedStatuses prop is initially empty to prevent interference
-  //     expect(wrapper.props('selectedStatuses')).toEqual([]);
-  
-  //     // Find the first checkbox for status options
-  //     const checkbox = wrapper.findAllComponents({ name: 'BFormCheckbox' }).at(0);
-  
-  //     // Simulate a click event on the "approved" checkbox
-  //     await checkbox.trigger('click');
-  
-  //     // Check that the update:selectedStatuses event has been emitted with only 'approved'
-  //     expect(wrapper.emitted('update:selectedStatuses')).toBeTruthy();
-  //     expect(wrapper.emitted('update:selectedStatuses')[0]).toEqual([['approved']]);
-  
-  //     await updateSheet(testId, 'Passed');
-  //   } catch (error) {
-  //     await updateSheet(testId, 'Failed');
-  //     throw error;
-  //   }
-  // });
-  
+      expect(options[0].text()).toBe('All Managers');
+      expect(options[0].element.value).toBe('');
 
-  // it('should toggle all WFH times when selectAllWfhTimes is changed', async () => {
-  //   const testId = 'TC-122';
-  //   try {
+      expect(options[1].text()).toBe('Manager 1');
+      expect(options[1].element.value).toBe('manager1');
+      expect(options[2].text()).toBe('Manager 2');
+      expect(options[2].element.value).toBe('manager2');
 
-  //     expect(wrapper.vm.selectAllWfhTimes).toBe(true);
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
 
-  //     // Update localSelectedWfhTimes to only include 'AM'
-  //     wrapper.vm.localSelectedWfhTimes = ['AM'];
-  //     await wrapper.vm.$nextTick(); // Wait for reactivity
-  
-  //     // Check that selectAllWfhTimes is false
-  //     expect(wrapper.vm.selectAllWfhTimes).toBe(false);
-  
-  //     // Update localSelectedWfhTimes to include both options
-  //     wrapper.vm.localSelectedWfhTimes = ['AM', 'PM'];
-  //     await wrapper.vm.$nextTick(); // Wait for reactivity
-  
-  //     // Check that selectAllWfhTimes is true
-  //     expect(wrapper.vm.selectAllWfhTimes).toBe(true);
+  it('should emit update:selectedStatuses when status selection changes', async () => {
+    const testId = 'TC-125';
+    try {
 
-  //     await updateSheet(testId, 'Passed');
-  //   } catch (error) {
-  //     await updateSheet(testId, 'Failed');
-  //     throw error;
-  //   }
-  // });
+      const checkboxes = wrapper.findAllComponents({ name: 'BFormCheckbox' });
 
-  // it('should update selectAllWfhTimes when localSelectedWfhTimes length changes', async () => {
-  //   const testId = 'TC-123';
-  //   try {
-  //     wrapper.vm.localSelectedWfhTimes = ['AM'];
-  //     await wrapper.vm.$nextTick();
-  //     expect(wrapper.vm.selectAllWfhTimes).toBe(false);
+      const approvedCheckbox = checkboxes.find(
+        checkbox => checkbox.text() === 'Approved'
+      );
+      await approvedCheckbox.setValue(true);
 
-  //     wrapper.vm.localSelectedWfhTimes = ['AM', 'PM'];
-  //     await wrapper.vm.$nextTick();
-  //     expect(wrapper.vm.selectAllWfhTimes).toBe(true);
-  //     await updateSheet(testId, 'Passed');
-  //   } catch (error) {
-  //     await updateSheet(testId, 'Failed');
-  //     throw error;
-  //   }
-  // });
+      expect(wrapper.emitted('update:selectedStatuses')).toBeTruthy();
+      expect(wrapper.emitted('update:selectedStatuses')[0][0]).toContain('approved');
 
-  // it('should initialize selected statuses and WFH times if not provided', async () => {
-  //   const testId = 'TC-126';
-  //   try {
-  //     expect(wrapper.vm.localSelectedStatuses).toEqual(['approved', 'pending']);
-  //     expect(wrapper.vm.localSelectedWfhTimes).toEqual(['AM', 'AM']);
-  //     await updateSheet(testId, 'Passed');
-  //   } catch (error) {
-  //     await updateSheet(testId, 'Failed');
-  //     throw error;
-  //   }
-  // });
+      await approvedCheckbox.setValue(false);
+      expect(wrapper.emitted('update:selectedStatuses')[1][0]).not.toContain('approved');
+
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
+
+  it('should emit update:selectedWfhTimes when WFH timing selection changes', async () => {
+    const testId = 'TC-126';
+    try {
+      const wfhCheckboxes = wrapper.findAll('input[type="checkbox"]');
+      const amCheckbox = wfhCheckboxes.find(c => c.element.value === 'AM');
+
+      await amCheckbox.setChecked();
+      expect(wrapper.emitted('update:selectedWfhTimes')).toBeTruthy();
+      expect(wrapper.emitted('update:selectedWfhTimes')[0][0]).toContain('AM');
+
+      await updateSheet(testId, 'Passed');
+    } catch (error) {
+      await updateSheet(testId, 'Failed');
+      throw error;
+    }
+  });
 
 
 });
