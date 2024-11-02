@@ -34,8 +34,11 @@ describe('ManagerFilter', () => {
   it('should display the correct status options in the dropdown', async () => {
     const testId = 'TC-070';
     try {
-      const statusDropdown = wrapper.findAllComponents({ name: 'BFormCheckbox' })
-        .filter(c => defaultProps.statusOptions.some(option => option.text === c.text()));
+      const statusDropdown = wrapper
+        .findAllComponents({ name: 'BFormCheckbox' })
+        .filter((c) =>
+          defaultProps.statusOptions.some((option) => option.text === c.text()),
+        );
 
       expect(statusDropdown.length).toBe(defaultProps.statusOptions.length);
       statusDropdown.forEach((checkbox, index) => {
@@ -61,15 +64,18 @@ describe('ManagerFilter', () => {
     }
   });
 
-
   it('should emit update:selectedManager when manager selection changes', async () => {
     const testId = 'TC-121';
     try {
-      const managerSelect = wrapper.findAllComponents({ name: 'BFormSelect' }).at(1);
+      const managerSelect = wrapper
+        .findAllComponents({ name: 'BFormSelect' })
+        .at(1);
       await managerSelect.setValue('manager1');
 
       expect(wrapper.emitted('update:selectedManager')).toBeTruthy();
-      expect(wrapper.emitted('update:selectedManager')[0]).toEqual(['manager1']);
+      expect(wrapper.emitted('update:selectedManager')[0]).toEqual([
+        'manager1',
+      ]);
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -95,9 +101,11 @@ describe('ManagerFilter', () => {
   it('should display the correct WFH time options in the dropdown', async () => {
     const testId = 'TC-123';
     try {
-      const wfhTimeDropdown = wrapper.findAllComponents({ name: 'BFormCheckbox' }).filter((checkbox) => {
-        return ['AM', 'PM'].includes(checkbox.text());
-      });
+      const wfhTimeDropdown = wrapper
+        .findAllComponents({ name: 'BFormCheckbox' })
+        .filter((checkbox) => {
+          return ['AM', 'PM'].includes(checkbox.text());
+        });
 
       expect(wfhTimeDropdown).toHaveLength(2);
       expect(wfhTimeDropdown[0].text()).toBe('AM');
@@ -109,7 +117,6 @@ describe('ManagerFilter', () => {
       throw error;
     }
   });
-
 
   it('should display the correct manager options in the dropdown', async () => {
     const testId = 'TC-124';
@@ -135,19 +142,22 @@ describe('ManagerFilter', () => {
   it('should emit update:selectedStatuses when status selection changes', async () => {
     const testId = 'TC-125';
     try {
-
       const checkboxes = wrapper.findAllComponents({ name: 'BFormCheckbox' });
 
       const approvedCheckbox = checkboxes.find(
-        checkbox => checkbox.text() === 'Approved'
+        (checkbox) => checkbox.text() === 'Approved',
       );
       await approvedCheckbox.setValue(true);
 
       expect(wrapper.emitted('update:selectedStatuses')).toBeTruthy();
-      expect(wrapper.emitted('update:selectedStatuses')[0][0]).toContain('approved');
+      expect(wrapper.emitted('update:selectedStatuses')[0][0]).toContain(
+        'approved',
+      );
 
       await approvedCheckbox.setValue(false);
-      expect(wrapper.emitted('update:selectedStatuses')[1][0]).not.toContain('approved');
+      expect(wrapper.emitted('update:selectedStatuses')[1][0]).not.toContain(
+        'approved',
+      );
 
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -160,7 +170,7 @@ describe('ManagerFilter', () => {
     const testId = 'TC-126';
     try {
       const wfhCheckboxes = wrapper.findAll('input[type="checkbox"]');
-      const amCheckbox = wfhCheckboxes.find(c => c.element.value === 'AM');
+      const amCheckbox = wfhCheckboxes.find((c) => c.element.value === 'AM');
 
       await amCheckbox.setChecked();
       expect(wrapper.emitted('update:selectedWfhTimes')).toBeTruthy();
@@ -172,8 +182,4 @@ describe('ManagerFilter', () => {
       throw error;
     }
   });
-
-
 });
-
-

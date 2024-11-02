@@ -115,12 +115,11 @@ describe('ApprovedRequestWithdrawal.vue', () => {
       await updateSheet(testId, 'Failed');
       throw error;
     }
-  });  
+  });
 
   it('Hides buttons when operationDone is true', async () => {
     const testId = 'TC-115';
     try {
-
       const wrapper = mount(ApprovedRequestWithdrawal, {
         global: {
           mocks: {
@@ -188,7 +187,6 @@ describe('ApprovedRequestWithdrawal.vue', () => {
   it('Updates successMessage and errorMessage when initial messages change', async () => {
     const testId = 'TC-117';
     try {
-
       const wrapper = mount(ApprovedRequestWithdrawal, {
         global: {
           mocks: {
@@ -318,26 +316,31 @@ describe('ApprovedRequestWithdrawal.vue', () => {
           },
         },
       });
-  
-      await wrapper.setData({ successMessage: '', errorMessage: 'Error Message' });
-  
+
+      await wrapper.setData({
+        successMessage: '',
+        errorMessage: 'Error Message',
+      });
+
       expect(wrapper.find('.alert-danger').exists()).toBe(true);
       expect(wrapper.find('.alert-danger').text()).toContain('Error Message');
       expect(wrapper.find('.alert-success').exists()).toBe(false);
-  
-      await wrapper.setData({ successMessage: 'Success Message', errorMessage: '' });
-  
+
+      await wrapper.setData({
+        successMessage: 'Success Message',
+        errorMessage: '',
+      });
+
       expect(wrapper.find('.alert-success').exists()).toBe(true);
-      expect(wrapper.find('.alert-success').text()).toContain('Success Message');
+      expect(wrapper.find('.alert-success').text()).toContain(
+        'Success Message',
+      );
       expect(wrapper.find('.alert-danger').exists()).toBe(false);
-  
+
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
       throw error;
     }
   });
-  
-
-
 });
