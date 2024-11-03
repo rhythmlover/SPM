@@ -10,6 +10,9 @@ const roleID = inject('roleID');
 const staffID = inject('staffID');
 const staffFName = inject('staffFName');
 const staffPosition = inject('staffPosition');
+const staffDepartment = inject('staffDepartment');
+const errorMessage = ref('');
+const showErrorModal = ref(false);
 
 const redirectRoute = async () => {
   /**
@@ -38,33 +41,41 @@ const redirectRoute = async () => {
 };
 
 const login = async () => {
-  const res = await axios.get(`${API_ROUTE}/employee/login`, {
-    params: { staffID: employeeID.value },
-  });
-
-  localStorage.setItem('staffID', res.data.Staff_ID);
-  localStorage.setItem('roleID', res.data.Role_ID);
-  localStorage.setItem('staffFName', res.data.Staff_FName);
-  localStorage.setItem('staffPosition', res.data.Position);
-
-  roleID.value = res.data.Role_ID;
-  staffID.value = res.data.Staff_ID;
-  staffFName.value = res.data.Staff_FName;
-  staffPosition.value = res.data.Position;
-  // Re-route
-  redirectRoute();
-
-  // Check expired requests
   try {
-    const staffIDValue = res.data.Staff_ID;
-    await axios.put(`${API_ROUTE}/wfh-request/removeExpiredRequests`, {
-      staffID: staffIDValue,
+    const res = await axios.get(`${API_ROUTE}/employee/login`, {
+      params: { staffID: employeeID.value },
     });
+
+    localStorage.setItem('staffID', res.data.Staff_ID);
+    localStorage.setItem('roleID', res.data.Role_ID);
+    localStorage.setItem('staffFName', res.data.Staff_FName);
+    localStorage.setItem('staffPosition', res.data.Position);
+    localStorage.setItem('staffDepartment', res.data.Dept_ID);
+
+    roleID.value = res.data.Role_ID;
+    staffID.value = res.data.Staff_ID;
+    staffFName.value = res.data.Staff_FName;
+    staffPosition.value = res.data.Position;
+    staffDepartment.value = res.data.Dept_ID;
+    // Re-route
+    redirectRoute();
+
+    // Check expired requests
+    try {
+      const staffIDValue = res.data.Staff_ID;
+      await axios.put(`${API_ROUTE}/wfh-request/removeExpiredRequests`, {
+        staffID: staffIDValue,
+      });
+    } catch (error) {
+      console.error(
+        'Error updating expired pending requests to rejected:',
+        error,
+      );
+    }
   } catch (error) {
-    console.error(
-      'Error updating expired pending requests to rejected:',
-      error,
-    );
+    errorMessage.value = 'Invalid Employee ID';
+    showErrorModal.value = true;
+    console.error('Login error:', error);
   }
 };
 
@@ -97,6 +108,16 @@ onMounted(() => {
         <BCol> </BCol>
       </BRow>
     </BContainer>
+    <BModal v-model="showErrorModal" title="Error" hide-footer centered>
+      <div class="d-block">
+        {{ errorMessage }}
+      </div>
+      <template #modal-footer>
+        <BButton variant="primary" @click="showErrorModal = false"
+          >Close</BButton
+        >
+      </template>
+    </BModal>
   </div>
 </template>
 
