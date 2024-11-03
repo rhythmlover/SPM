@@ -22,6 +22,7 @@ G3 Team 4's IS212 SPM Project.
   - [Checking test coverage](#checking-test-coverage)
 - [Tech Stack](#tech-stack)
 - [Testing Stack](#testing-stack)
+- [Scrum processes video](#scrum-processes-video)
 
 | Role                                  |            Function             |                                   Description                                    |       Status       |
 | ------------------------------------- | :-----------------------------: | :------------------------------------------------------------------------------: | :----------------: |
@@ -105,3 +106,9 @@ npm run coverage
 
 - Vitest + @Vue/Test-Utils@Next + JsDom (Frontend)
 - Jest + Test Container (Backend)
+
+# Scrum processes video
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=DTk_VyDDwBc
+" target="_blank"><img src="http://img.youtube.com/vi/DTk_VyDDwBc/0.jpg" 
+alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
