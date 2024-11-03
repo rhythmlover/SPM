@@ -30,16 +30,26 @@ const logout = () => {
     <BNavbarToggle target="nav-collapse" />
 
     <BCollapse id="nav-collapse" is-nav>
-      <BNavbarNav>
+      <BNavbarNav pills>
+        <BNavItem
+          :class="highlightedNavItemStyle('staff-myschedule')"
+          to="/staff-myschedule"
+          >My Schedule</BNavItem
+        >
         <BNavItem
           :class="highlightedNavItemStyle('manager-view-schedule')"
           to="/manager-view-schedule"
-          >Team's Schedule</BNavItem
+          >My Team's Schedule</BNavItem
         >
         <BNavItem
           :class="highlightedNavItemStyle('pending-requests')"
           to="/pending-requests"
           >View Requests</BNavItem
+        >
+        <BNavItem
+          :class="highlightedNavItemStyle('staff-requeststatus')"
+          to="/staff-requeststatus"
+          >My Requests</BNavItem
         >
         <BNavItem
           :class="highlightedNavItemStyle('apply-arrangement')"
