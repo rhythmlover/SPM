@@ -105,7 +105,7 @@ npm run coverage
 # Testing Stack
 
 - Vitest + @Vue/Test-Utils@Next + JsDom (Frontend)
-- Jest + Test Container (Backend)
+- Jest + [Test Containers](https://testcontainers.com/) (Backend)
 
 # Scrum processes video
 
