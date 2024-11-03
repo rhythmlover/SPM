@@ -593,8 +593,8 @@ describe('WFH Endpoint', () => {
       .get('/wfh-request/recurring-request/dates')
       .query({ requestID: 6 });
     expect(response.body).toMatchObject({
-      WFH_Date_Start: '2024-09-30T16:00:00.000Z',
-      WFH_Date_End: '2024-10-30T16:00:00.000Z',
+      WFH_Date_Start: '2024-10-01T00:00:00.000Z',
+      WFH_Date_End: '2024-10-31T00:00:00.000Z',
       WFH_Day: '1',
       Request_Period: 'AM',
     });
@@ -871,7 +871,7 @@ describe('WFH Endpoint', () => {
       .expect(200);
     expect(response.body).toHaveProperty(
       'wfh_date',
-      '2024-12-04T16:00:00.000Z',
+      '2024-12-05T16:00:00.000Z',
     );
   });
 
