@@ -45,6 +45,7 @@
       <BFormSelect
         :modelValue="selectedManager"
         :options="indentedManagerOptions"
+        data-testid="manager-select"
         @update:modelValue="$emit('update:selectedManager', $event)"
       >
         <template #first>
