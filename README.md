@@ -4,6 +4,34 @@
 [![Dev Branch CI (Backend) status](https://github.com/rhythmlover/SPM/actions/workflows/ci_backend.yml/badge.svg?branch=dev)](https://github.com/rhythmlover/SPM/actions/workflows/ci_backend.yml)
 [![Dev Branch CD status](https://github.com/rhythmlover/SPM/actions/workflows/cd_preview.yml/badge.svg)](https://github.com/rhythmlover/SPM/actions/workflows/cd_preview.yml)
 [![Master Branch CD Status](https://github.com/rhythmlover/SPM/actions/workflows/cd_prod.yml/badge.svg)](https://github.com/rhythmlover/SPM/actions/workflows/cd_prod.yml)
+G3 Team 4's IS212 SPM Project.
+
+## Table of Contents
+
+- [SPM G3T4](#spm-g3t4)
+  - [Table of Contents](#table-of-contents)
+- [Project Setup](#project-setup)
+  - [Install Dependencies](#install-dependencies)
+  - [Compile and Hot-Reload for Development](#compile-and-hot-reload-for-development)
+  - [Compile and Minify for Production](#compile-and-minify-for-production)
+- [For Dev Checks](#for-dev-checks)
+  - [Run Unit Tests](#run-unit-tests)
+  - [Run ESLint](#run-eslint)
+  - [To fix linting issues](#to-fix-linting-issues)
+  - [Formatting with Prettier](#formatting-with-prettier)
+  - [Checking test coverage](#checking-test-coverage)
+- [Tech Stack](#tech-stack)
+- [Testing Stack](#testing-stack)
+
+| Role                                  |            Function             |                                   Description                                    |       Status       |
+| ------------------------------------- | :-----------------------------: | :------------------------------------------------------------------------------: | :----------------: |
+| Human Resources and Senior Management | View overall and team schedule  | Able to see the list and number of staff in the office and at home by department | :white_check_mark: |
+| Managers and Directors                |       View team schedule        |          Able to see who is in the office and at home in own department          | :white_check_mark: |
+| Managers and Directors                | Approve and reject arrangements |       Approve and reject arrangements. To have a list of pending requests        | :white_check_mark: |
+| Staff                                 |       View team schedule        |          Able to see who is in the office and at home in own department          | :white_check_mark: |
+| Staff                                 |        View own schedule        |                             Able to see own schedule                             | :white_check_mark: |
+| Staff                                 |      Apply for arrangement      |                              Apply for arrangement                               | :white_check_mark: |
+| Staff                                 |      Withdraw arrangement       |           Withdraw an approved arrangement or cancel a pending request           | :white_check_mark: |
 
 # Project Setup
 
@@ -57,13 +85,23 @@ npm run fix
 npm run format
 ```
 
+### Checking test coverage
+
+```sh
+npm run coverage
+```
+
 # Tech Stack
 
 - Vue (Composition API)
 - [Bootstrap-vue-next](https://bootstrap-vue-next.github.io/bootstrap-vue-next/)
 - Express.js
+- Vercel
+- Render
+- Avien
+- GitHub Actions
 
 # Testing Stack
 
 - Vitest + @Vue/Test-Utils@Next + JsDom (Frontend)
-- Jest (Backend)
+- Jest + Test Container (Backend)
