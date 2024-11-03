@@ -4,11 +4,13 @@
 [![Dev Branch CI (Backend) status](https://github.com/rhythmlover/SPM/actions/workflows/ci_backend.yml/badge.svg?branch=dev)](https://github.com/rhythmlover/SPM/actions/workflows/ci_backend.yml)
 [![Dev Branch CD status](https://github.com/rhythmlover/SPM/actions/workflows/cd_preview.yml/badge.svg)](https://github.com/rhythmlover/SPM/actions/workflows/cd_preview.yml)
 [![Master Branch CD Status](https://github.com/rhythmlover/SPM/actions/workflows/cd_prod.yml/badge.svg)](https://github.com/rhythmlover/SPM/actions/workflows/cd_prod.yml)
+--
 G3 Team 4's IS212 SPM Project.
 
 ## Table of Contents
 
 - [SPM G3T4](#spm-g3t4)
+  - [](#)
   - [Table of Contents](#table-of-contents)
 - [Project Setup](#project-setup)
   - [Install Dependencies](#install-dependencies)
