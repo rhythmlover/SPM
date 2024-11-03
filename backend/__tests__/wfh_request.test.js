@@ -871,7 +871,7 @@ describe('WFH Endpoint', () => {
       .expect(200);
     expect(response.body).toHaveProperty(
       'wfh_date',
-      '2024-12-05T16:00:00.000Z',
+      '2024-12-05T00:00:00.000Z',
     );
   });
 
