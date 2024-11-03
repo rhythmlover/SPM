@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { nextTick } from 'vue';
 import { updateSheet } from '../../../updateGoogleSheet';
+import axios from 'axios';
 
 const flushPromises = () => new Promise(nextTick);
 
@@ -36,9 +37,9 @@ vi.mock('axios', () => {
           return Promise.resolve({
             data: {
               results: [
-                ['2024-09-03', 'AM'],
+                ['2024-10-03', 'AM'],
                 ['2024-10-15', 'PM'],
-                ['2024-09-16', 'FULL'],
+                ['2024-11-16', 'FULL'],
               ],
             },
           });
@@ -54,34 +55,15 @@ vi.mock('axios', () => {
   };
 });
 
-const ERROR_MESSAGES = {
-  MISSING_FIELDS: 'Please fill in all fields',
-  INVALID_DATES:
-    'No valid dates found for the selected range and day of the week',
-  CLASHING_REQUEST: (dates) =>
-    `You have a clashing request for the following dates: ${dates}`,
-};
-
-const createWrapper = async (data) => {
-  const wrapper = mount(ApplyArrangementRecurring, {
-    props: { API_ROUTE: 'http://localhost:3000' },
-  });
-  if (data) {
-    await wrapper.setData(data);
-    await flushPromises();
-  }
-  return wrapper;
-};
-
 describe('ApplyArrangementRecurring.vue', () => {
   beforeEach(() => {
-    const staffID = '171015';
-    localStorage.setItem('staffID', staffID);
+    localStorage.setItem('staffID', '171015');
     localStorage.setItem('roleID', '2');
     localStorage.setItem('staffFName', 'Narong');
     localStorage.setItem('staffLName', 'Kaur');
     localStorage.setItem('deptID', '6');
     localStorage.setItem('reportingManager', '171018');
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -110,6 +92,7 @@ describe('ApplyArrangementRecurring.vue', () => {
     ...validRequest,
     WFH_Date_Start: '2022-03-01',
     WFH_Date_End: '2022-03-30',
+    WFH_Day: '2',
   };
 
   const createRequest = (overrides) => ({
@@ -123,6 +106,26 @@ describe('ApplyArrangementRecurring.vue', () => {
     ...overrides,
   });
 
+  const createWrapper = async (data) => {
+    const pushMock = vi.fn();
+    const wrapper = mount(ApplyArrangementRecurring, {
+      global: {
+        provide: {
+          API_ROUTE: 'http://localhost:3000',
+        },
+        mocks: {
+          $router: {
+            push: pushMock,
+          },
+        },
+      },
+    });
+    if (data) {
+      await wrapper.setData(data);
+    }
+    return wrapper;
+  };
+
   it('should apply arrangement successfully with a valid request', async () => {
     const testId = 'TC-064';
     const wrapper = await createWrapper(validRequest);
@@ -131,6 +134,7 @@ describe('ApplyArrangementRecurring.vue', () => {
     await flushPromises();
 
     expect(wrapper.vm.successMessage).toBe('Request Submitted Successfully');
+    expect(wrapper.vm.errorMessage).toBe('');
     await updateSheet(testId, 'Passed');
   });
 
@@ -141,7 +145,8 @@ describe('ApplyArrangementRecurring.vue', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.errorMessage).toBe(ERROR_MESSAGES.MISSING_FIELDS);
+    expect(wrapper.vm.errorMessage).toBe('Please fill in all fields');
+    expect(wrapper.vm.successMessage).toBe('');
     await updateSheet(testId, 'Passed');
   });
 
@@ -152,7 +157,10 @@ describe('ApplyArrangementRecurring.vue', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.errorMessage).toBe(ERROR_MESSAGES.INVALID_DATES);
+    expect(wrapper.vm.errorMessage).toBe(
+      'No valid dates found for the selected range and day of the week',
+    );
+    expect(wrapper.vm.successMessage).toBe('');
     await updateSheet(testId, 'Passed');
   });
 
@@ -163,7 +171,8 @@ describe('ApplyArrangementRecurring.vue', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.find('.alert-success').exists()).toBe(true);
+    expect(wrapper.vm.successMessage).toBe('Request Submitted Successfully');
+    expect(wrapper.vm.errorMessage).toBe('');
     await updateSheet(testId, 'Passed');
   });
 
@@ -218,8 +227,9 @@ describe('ApplyArrangementRecurring.vue', () => {
     await flushPromises();
 
     expect(wrapper.vm.errorMessage).toBe(
-      ERROR_MESSAGES.CLASHING_REQUEST('2024-10-16'),
+      'You have a clashing request for the following dates: 2024-10-16',
     );
+    expect(wrapper.vm.successMessage).toBe('');
     await updateSheet(testId, 'Passed');
   });
 
@@ -233,7 +243,9 @@ describe('ApplyArrangementRecurring.vue', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.errorMessage).toBe(ERROR_MESSAGES.MISSING_FIELDS);
+    expect(wrapper.vm.errorMessage).toBe('Please fill in all fields');
+    expect(wrapper.vm.successMessage).toBe('');
+    expect(axios.post).not.toHaveBeenCalled();
     await updateSheet(testId, 'Passed');
   });
 
@@ -244,6 +256,176 @@ describe('ApplyArrangementRecurring.vue', () => {
     expect(wrapper.find('.alert-info').text()).toBe(
       'Applied Dates:2024-12-022024-12-092024-12-162024-12-232024-12-30',
     );
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should reset form fields after successful application', async () => {
+    const testId = 'TC-139';
+    const wrapper = await createWrapper(validRequest);
+
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(wrapper.vm.WFH_Date_Start).toBe('');
+    expect(wrapper.vm.WFH_Date_End).toBe('');
+    expect(wrapper.vm.WFH_Day).toBe('');
+    expect(wrapper.vm.Request_Period).toBe('');
+    expect(wrapper.vm.Request_Reason).toBe('');
+    expect(wrapper.vm.errorMessage).toBe('');
+    expect(wrapper.vm.successMessage).toBe('Request Submitted Successfully');
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should correctly set the date of request', async () => {
+    const testId = 'TC-140';
+    const wrapper = await createWrapper(validRequest);
+
+    expect(wrapper.vm.Request_Date).toBe('2024-10-15');
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should handle API failure in fetchReportingManagerID', async () => {
+    const testId = 'TC-141';
+    axios.get.mockImplementationOnce(() =>
+      Promise.reject(new Error('API Error')),
+    );
+    const wrapper = mount(ApplyArrangementRecurring, {
+      global: {
+        provide: {
+          API_ROUTE: 'http://localhost:3000',
+        },
+      },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.vm.errorMessage).toBe(
+      'Failed to fetch reporting manager information',
+    );
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should handle API failure in fetchExistingWFHDates', async () => {
+    const testId = 'TC-142';
+    axios.get.mockImplementationOnce(() =>
+      Promise.reject(new Error('API Error')),
+    );
+    axios.get.mockImplementationOnce(() =>
+      Promise.reject(new Error('API Error')),
+    );
+    const wrapper = mount(ApplyArrangementRecurring, {
+      global: {
+        provide: {
+          API_ROUTE: 'http://localhost:3000',
+        },
+      },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.vm.errorMessage).toBe('Failed to fetch existing WFH dates');
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should call resetForm when cancel is invoked', async () => {
+    const testId = 'TC-143';
+    const wrapper = await createWrapper(validRequest);
+
+    // Assuming resetForm is refactored to reset fields directly
+    await wrapper.vm.cancel();
+
+    expect(wrapper.vm.WFH_Date_Start).toBe('');
+    expect(wrapper.vm.WFH_Date_End).toBe('');
+    expect(wrapper.vm.WFH_Day).toBe('');
+    expect(wrapper.vm.Request_Period).toBe('');
+    expect(wrapper.vm.Request_Reason).toBe('');
+    expect(wrapper.vm.errorMessage).toBe('');
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should handle API error during apply request', async () => {
+    const testId = 'TC-144';
+    axios.post.mockRejectedValueOnce(new Error('API Error'));
+
+    const wrapper = await createWrapper(validRequest);
+
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(wrapper.vm.errorMessage).toBe('Application Submission Failed');
+    expect(wrapper.vm.successMessage).toBe('');
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should set Approver_Name after fetching reporting manager', async () => {
+    const testId = 'TC-145';
+    const wrapper = await createWrapper(validRequest);
+
+    expect(wrapper.vm.Approver_Name).toBe('Ji Truong');
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should navigate to staff-myschedule when cancel is invoked', async () => {
+    const testId = 'TC-146';
+    const pushMock = vi.fn();
+    const wrapper = mount(ApplyArrangementRecurring, {
+      global: {
+        provide: {
+          API_ROUTE: 'http://localhost:3000',
+        },
+        mocks: {
+          $router: {
+            push: pushMock,
+          },
+        },
+      },
+    });
+
+    await flushPromises();
+    await wrapper.vm.cancel();
+
+    expect(pushMock).toHaveBeenCalledWith('/staff-myschedule');
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should call fetchReportingManagerID and fetchExistingWFHDates on mounted', async () => {
+    const testId = 'TC-147';
+    const fetchReportingManagerIDSpy = vi.spyOn(
+      ApplyArrangementRecurring.methods,
+      'fetchReportingManagerID',
+    );
+    const fetchExistingWFHDatesSpy = vi.spyOn(
+      ApplyArrangementRecurring.methods,
+      'fetchExistingWFHDates',
+    );
+
+    mount(ApplyArrangementRecurring, {
+      global: {
+        provide: {
+          API_ROUTE: 'http://localhost:3000',
+        },
+      },
+    });
+    await flushPromises();
+
+    expect(fetchReportingManagerIDSpy).toHaveBeenCalled();
+    expect(fetchExistingWFHDatesSpy).toHaveBeenCalled();
+    await updateSheet(testId, 'Passed');
+  });
+
+  it('should validate isWeekend computed property correctly', async () => {
+    const testId = 'TC-148';
+    const wrapper = mount(ApplyArrangementRecurring, {
+      global: {
+        provide: {
+          API_ROUTE: 'http://localhost:3000',
+        },
+      },
+    });
+
+    expect(wrapper.vm.isWeekend('2024-12-07')).toBe(true);
+    expect(wrapper.vm.isWeekend('2024-12-08')).toBe(true);
+    expect(wrapper.vm.isWeekend('2024-12-09')).toBe(false);
     await updateSheet(testId, 'Passed');
   });
 });
