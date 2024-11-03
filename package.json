@@ -1,6 +1,6 @@
 {
   "name": "spm",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,6 +10,7 @@
     "test": "cross-env TESTCOVERAGE=true vitest --run",
     "test:ci": "vitest --run",
     "coverage": "cross-env TESTCOVERAGE=true vitest run --coverage",
+    "coverage:ci": "vitest run --coverage",
     "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore --max-warnings 0",
     "fix": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs --fix",
     "check": "prettier --check src/**/*.{vue,js}",
