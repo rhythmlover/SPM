@@ -35,7 +35,7 @@ function sleep(ms) {
 
 export async function updateSheet(testId, status) {
   if (runningTestOrCoverage) return;
-  await sleep(5000);
+  await sleep(3000);
   // Fetch existing data from the sheet (assuming the ID starts in column A, status in K, and date in P)
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
