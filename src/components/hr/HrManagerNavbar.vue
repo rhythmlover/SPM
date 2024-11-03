@@ -36,7 +36,7 @@ const logout = () => {
     variant="primary"
     class="py-2"
   >
-    <BNavbarBrand class="fw-bold">HR Portal</BNavbarBrand>
+    <BNavbarBrand class="fw-bold">HR Manager Portal</BNavbarBrand>
 
     <BNavbarToggle target="nav-collapse" />
 
@@ -53,9 +53,14 @@ const logout = () => {
           >My Schedule</BNavItem
         >
         <BNavItem
-          :class="highlightedNavItemStyle('staff-teamschedule')"
-          to="/staff-teamschedule"
+          :class="highlightedNavItemStyle('manager-view-schedule')"
+          to="/manager-view-schedule"
           >My Team's Schedule</BNavItem
+        >
+        <BNavItem
+          :class="highlightedNavItemStyle('pending-requests')"
+          to="/pending-requests"
+          >View Requests</BNavItem
         >
         <BNavItem
           :class="highlightedNavItemStyle('staff-requeststatus')"

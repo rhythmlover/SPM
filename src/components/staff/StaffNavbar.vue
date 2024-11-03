@@ -50,12 +50,12 @@ const logout = () => {
         <BNavItem
           :class="highlightedNavItemStyle('staff-teamschedule')"
           to="/staff-teamschedule"
-          >Team Schedule</BNavItem
+          >My Team's Schedule</BNavItem
         >
         <BNavItem
           :class="highlightedNavItemStyle('staff-requeststatus')"
           to="/staff-requeststatus"
-          >All Requests</BNavItem
+          >My Requests</BNavItem
         >
         <BNavItem
           :class="highlightedNavItemStyle('apply-arrangement')"
