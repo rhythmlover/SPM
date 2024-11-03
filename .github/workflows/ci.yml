@@ -29,6 +29,9 @@ jobs:
       - name: Formatter
         run: npm run check
 
+      - name: Coverage
+        run: npm run coverage
+
       - name: Decode Service Account JSON
         run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" | base64 --decode > service-account.json
 
