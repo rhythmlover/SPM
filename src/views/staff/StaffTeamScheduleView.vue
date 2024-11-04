@@ -36,10 +36,12 @@ const selectedTeammates = ref([]);
 
 // New status filter options
 const statusOptions = ref([
-  { value: 'Pending', text: 'Pending' },
-  { value: 'Withdrawal Pending', text: 'Withdrawal Pending' },
   { value: 'Approved', text: 'Approved' },
+  { value: 'Pending', text: 'Pending' },
   { value: 'Rejected', text: 'Rejected' },
+  { value: 'Withdrawn', text: 'Withdrawn' },
+  { value: 'Withdrawal Pending', text: 'Withdrawal Pending' },
+  { value: 'Cancelled', text: 'Cancelled' },
 ]);
 const selectedStatuses = ref([]);
 

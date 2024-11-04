@@ -13,6 +13,7 @@ const isLoading = ref(true);
 const isMonthView = ref(true);
 const todayDate = ref(new Date());
 const totalTeamCount = ref(0);
+const originalTotalTeamCount = ref(0);
 
 // Filter-related refs
 const statusOptions = ref([
@@ -21,6 +22,7 @@ const statusOptions = ref([
   { value: 'Rejected', text: 'Rejected' },
   { value: 'Withdrawn', text: 'Withdrawn' },
   { value: 'Withdrawal Pending', text: 'Withdrawal Pending' },
+  { value: 'Cancelled', text: 'Cancelled' },
 ]);
 const selectedStatuses = ref([]);
 const wfhTimeOptions = ref([
@@ -41,23 +43,59 @@ const {
   isMonthView: isMonthView,
 });
 
-const calculateWFHCount = (requests) => {
+// Ref to store all approved requests for counting
+const allApprovedRequests = ref([]);
+
+// Calculate WFH counts based on all approved requests for a specific date
+const calculateWFHCount = (date) => {
   const wfhCounts = {
     AM: new Set(),
     PM: new Set(),
     FULL: new Set(),
   };
 
-  requests.forEach((request) => {
-    if (request.Status === 'Approved' || request.Status === 'Pending') {
-      wfhCounts[request.Request_Period].add(request.Staff.Staff_ID);
+  const staffAm = new Set();
+  const staffPm = new Set();
+
+  allApprovedRequests.value
+    .filter((request) => {
+      const requestDate = new Date(request.WFH_Date).toLocaleDateString(
+        'en-CA',
+      );
+      return requestDate === date;
+    })
+    .forEach((request) => {
+      if (
+        request.Status === 'Approved' ||
+        request.Status === 'Withdrawal Pending'
+      ) {
+        if (request.Request_Period === 'FULL') {
+          wfhCounts.AM.add(request.Staff.Staff_ID);
+          wfhCounts.PM.add(request.Staff.Staff_ID);
+          wfhCounts.FULL.add(request.Staff.Staff_ID);
+        } else if (request.Request_Period === 'AM') {
+          staffAm.add(request.Staff.Staff_ID);
+          wfhCounts.AM.add(request.Staff.Staff_ID);
+        } else if (request.Request_Period === 'PM') {
+          staffPm.add(request.Staff.Staff_ID);
+          wfhCounts.PM.add(request.Staff.Staff_ID);
+        }
+      }
+    });
+
+  staffAm.forEach((staffId) => {
+    if (staffPm.has(staffId)) {
+      wfhCounts.FULL.add(staffId);
     }
   });
 
+  console.log(`WFH Counts for ${date}:`, wfhCounts);
+  console.log('Original Team Count:', originalTotalTeamCount.value);
+
   return {
-    AM: `${wfhCounts.AM.size}/${totalTeamCount.value}`,
-    PM: `${wfhCounts.PM.size}/${totalTeamCount.value}`,
-    FULL: `${wfhCounts.FULL.size}/${totalTeamCount.value}`,
+    AM: `${wfhCounts.AM.size}/${originalTotalTeamCount.value}`,
+    PM: `${wfhCounts.PM.size}/${originalTotalTeamCount.value}`,
+    FULL: `${wfhCounts.FULL.size}/${originalTotalTeamCount.value}`,
   };
 };
 
@@ -68,17 +106,17 @@ const updateAllSubordinateWFH = async (managerId = null) => {
   try {
     // Fetch subordinateHierarchy for the selected manager
     let resHierarchy = await axios.get(
-      API_ROUTE + '/teamlist/subordinateHierarchy',
+      `${API_ROUTE}/teamlist/subordinateHierarchy`,
       {
         params: { Staff_ID },
       },
     );
     subordinateHierarchy.value = resHierarchy.data;
 
-    // Only fetch managerSubordinates if we're loading initially or changing the root manager
+    // Only fetch managerSubordinates if loading initially or changing the root manager
     if (!managerId) {
       let resManagerSubordinates = await axios.get(
-        API_ROUTE + '/teamlist/managerSubordinates',
+        `${API_ROUTE}/teamlist/managerSubordinates`,
         {
           params: { Staff_ID },
         },
@@ -86,16 +124,18 @@ const updateAllSubordinateWFH = async (managerId = null) => {
       managerSubordinates.value = resManagerSubordinates.data;
     }
 
-    // Calculate total team count
+    // Calculate total team count and store original count
     totalTeamCount.value = countAllSubordinates(subordinateHierarchy.value) + 1;
+    originalTotalTeamCount.value = totalTeamCount.value; // Set original count
 
     // Reset and collect all requests
     allRequests.value = [];
+    allApprovedRequests.value = []; // Reset approved requests
 
-    // Add manager's own requests
+    // 1. Add manager's own requests
     if (subordinateHierarchy.value.wfhRequests) {
-      allRequests.value.push(
-        ...subordinateHierarchy.value.wfhRequests.map((request) => ({
+      subordinateHierarchy.value.wfhRequests.forEach((request) => {
+        allRequests.value.push({
           ...request,
           Staff: {
             Staff_ID: subordinateHierarchy.value.Staff_ID,
@@ -104,15 +144,32 @@ const updateAllSubordinateWFH = async (managerId = null) => {
             Position: subordinateHierarchy.value.position,
             Reporting_Manager: subordinateHierarchy.value.Reporting_Manager,
           },
-        })),
-      );
+        });
+
+        // Populate allApprovedRequests for counting
+        if (
+          request.Status === 'Approved' ||
+          request.Status === 'Withdrawal Pending'
+        ) {
+          allApprovedRequests.value.push({
+            ...request,
+            Staff: {
+              Staff_ID: subordinateHierarchy.value.Staff_ID,
+              Staff_FName: subordinateHierarchy.value.Staff_FName,
+              Staff_LName: subordinateHierarchy.value.Staff_LName,
+              Position: subordinateHierarchy.value.position,
+              Reporting_Manager: subordinateHierarchy.value.Reporting_Manager,
+            },
+          });
+        }
+      });
     }
 
-    // Collect all subordinate requests
+    // 2. Collect all subordinate requests
     const collectSubordinateRequests = (subordinate) => {
       if (subordinate.wfhRequests) {
-        allRequests.value.push(
-          ...subordinate.wfhRequests.map((request) => ({
+        subordinate.wfhRequests.forEach((request) => {
+          allRequests.value.push({
             ...request,
             Staff: {
               Staff_ID: subordinate.Staff_ID,
@@ -121,8 +178,25 @@ const updateAllSubordinateWFH = async (managerId = null) => {
               Position: subordinate.position,
               Reporting_Manager: subordinate.Reporting_Manager,
             },
-          })),
-        );
+          });
+
+          // Populate allApprovedRequests for counting
+          if (
+            request.Status === 'Approved' ||
+            request.Status === 'Withdrawal Pending'
+          ) {
+            allApprovedRequests.value.push({
+              ...request,
+              Staff: {
+                Staff_ID: subordinate.Staff_ID,
+                Staff_FName: subordinate.Staff_FName,
+                Staff_LName: subordinate.Staff_LName,
+                Position: subordinate.position,
+                Reporting_Manager: subordinate.Reporting_Manager,
+              },
+            });
+          }
+        });
       }
 
       if (subordinate.subordinates) {
@@ -137,6 +211,10 @@ const updateAllSubordinateWFH = async (managerId = null) => {
         collectSubordinateRequests(sub),
       );
     }
+
+    console.log('All Approved Requests:', allApprovedRequests.value);
+
+    // After collecting all approved requests, counts are handled in filteredDates
   } catch (error) {
     console.error('Error fetching data:', error);
   } finally {
@@ -173,7 +251,7 @@ const filteredDates = computed(() => {
       requests: filteredRequests,
       office_count_table: {
         headers: ['AM', 'PM', 'FULL'],
-        counts: calculateWFHCount(filteredRequests),
+        counts: calculateWFHCount(date), // Pass the specific date
       },
     };
   });
