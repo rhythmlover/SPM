@@ -368,9 +368,12 @@ export default {
       }
     },
     formatDateTimezone(date) {
-      const dateObj = new Date(date);
-      dateObj.setDate(dateObj.getDate() + 1);
-      return dateObj.toLocaleDateString('en-US', {
+      const formattedDate = new Date(date);
+      // Adjust for timezone offset
+      formattedDate.setMinutes(
+        formattedDate.getMinutes() - formattedDate.getTimezoneOffset(),
+      );
+      return formattedDate.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
