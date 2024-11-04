@@ -74,6 +74,13 @@ const notMoreThanTwoMonthsAgo = (WFH_Date) => {
   return wfhDateObj >= twoMonthsBefore;
 };
 
+// Modal state
+const showModal = ref(false);
+const modalTitle = ref('');
+const modalMessage = ref('');
+const modalType = ref(''); // 'alert' or 'confirm'
+let modalResolve;
+
 // Fetch WFH requests for the correct staff
 const getWFHRequests = async (staffID) => {
   try {
@@ -106,34 +113,71 @@ const getWFHRequests = async (staffID) => {
   }
 };
 
-// Delete a specific request
-const deleteRequest = async (requestID) => {
-  try {
-    const confirmDelete = window.confirm(
-      'Confirm deletion of this pending request?',
-    );
-    if (!confirmDelete) return;
+// Modal handling functions
+const showAlert = (title, message) => {
+  modalTitle.value = title;
+  modalMessage.value = message;
+  modalType.value = 'alert';
+  showModal.value = true;
+};
 
-    await axios.delete(`${API_ROUTE}/wfh-request/request/delete/id`, {
-      params: { requestID },
-    });
+const showConfirm = (title, message) => {
+  modalTitle.value = title;
+  modalMessage.value = message;
+  modalType.value = 'confirm';
+  showModal.value = true;
+  return new Promise((resolve) => {
+    modalResolve = resolve;
+  });
+};
+
+const handleModalConfirm = () => {
+  showModal.value = false;
+  if (modalType.value === 'confirm' && modalResolve) {
+    modalResolve(true);
+  }
+};
+
+const handleModalCancel = () => {
+  showModal.value = false;
+  if (modalType.value === 'confirm' && modalResolve) {
+    modalResolve(false);
+  }
+};
+
+const cancelRequest = async (requestID) => {
+  try {
+    const confirmed = await showConfirm(
+      'Confirm Cancellation',
+      'Confirm cancellation of this pending request?',
+    );
+    if (!confirmed) return;
+
+    await axios.put(
+      `${API_ROUTE}/wfh-request/request/status`,
+      { status: 'Cancelled' },
+      { params: { requestID } },
+    );
 
     localRequests.value = localRequests.value.filter(
       (request) => request.Request_ID !== requestID,
     );
-    window.alert(`Request with ID ${requestID} has been successfully deleted.`);
+
+    showAlert('Success', `${requestID} has been successfully cancelled.`);
   } catch (error) {
-    console.error('Error deleting WFH request:', error);
+    console.error('Error cancelling WFH request:', error);
+    showAlert('Error', 'Failed to cancel the request.');
   }
 };
 
 // Handle withdrawing an approved request
 const router = useRouter();
-const openWithdrawForm = (Request_ID, WFH_Date, Request_Period) => {
-  const confirmWithdraw = window.confirm(
+const openWithdrawForm = async (Request_ID, WFH_Date, Request_Period) => {
+  const confirmed = await showConfirm(
+    'Confirm Withdrawal',
     'Send request to manager to approve withdrawal of this request?',
   );
-  if (!confirmWithdraw) return;
+  if (!confirmed) return;
 
   router.push({
     name: 'staff-approved-requests-withdrawal',
@@ -182,26 +226,28 @@ onMounted(async () => {
                 }}
               </td>
               <td class="col-2">{{ request.Request_Date }}</td>
-              <td class="col-2" v-if="request.Status == 'Pending'">
-                <BBadge pill variant="info">Pending</BBadge>
-              </td>
-              <td class="col-2" v-if="request.Status == 'Withdrawn'">
-                <BBadge pill variant="secondary">Withdrawn</BBadge>
-              </td>
-              <td class="col-2" v-if="request.Status == 'Withdrawal Pending'">
-                <BBadge pill variant="light">Withdrawal Pending</BBadge>
-              </td>
-              <td class="col-2" v-if="request.Status == 'Approved'">
-                <BBadge pill variant="success">Approved</BBadge>
-              </td>
-              <td class="col-2" v-if="request.Status == 'Rejected'">
-                <BBadge pill variant="danger">Rejected</BBadge>
-              </td>
+
               <td class="col-2">
-                <!-- Conditionally show Delete button if status is 'Pending' or 'pending' -->
+                <BBadge
+                  :variant="
+                    {
+                      Pending: 'info',
+                      Withdrawn: 'secondary',
+                      'Withdrawal Pending': 'light',
+                      Approved: 'success',
+                      Rejected: 'danger',
+                    }[request.Status]
+                  "
+                  pill
+                >
+                  {{ request.Status }}
+                </BBadge>
+              </td>
+
+              <td class="col-2">
                 <button
                   v-if="request.Status.toLowerCase() === 'pending'"
-                  @click="deleteRequest(request.Request_ID)"
+                  @click="cancelRequest(request.Request_ID)"
                   class="btn btn-warning"
                 >
                   Cancel
@@ -232,6 +278,53 @@ onMounted(async () => {
       </BCol>
     </BRow>
   </BContainer>
+
+  <!-- Modal -->
+  <div v-if="showModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div
+          class="modal-header"
+          :class="{
+            'bg-success text-white': modalTitle === 'Success',
+            'bg-danger text-white': modalTitle === 'Error',
+            'bg-primary text-white': modalTitle.startsWith('Confirm'),
+          }"
+        >
+          <h5 class="modal-title">{{ modalTitle }}</h5>
+        </div>
+        <div class="modal-body">
+          <p>{{ modalMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button
+            v-if="modalType === 'confirm'"
+            type="button"
+            class="btn btn-secondary"
+            @click="handleModalCancel"
+          >
+            Cancel
+          </button>
+          <button
+            v-if="modalType === 'confirm'"
+            type="button"
+            class="btn btn-primary"
+            @click="handleModalConfirm"
+          >
+            Confirm
+          </button>
+          <button
+            v-else
+            type="button"
+            class="btn btn-secondary"
+            @click="showModal = false"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -298,5 +391,36 @@ button {
 
 button:hover {
   opacity: 0.8;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-dialog {
+  background-color: white;
+  border-radius: 5px;
+  max-width: 500px;
+  width: 100%;
+}
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.modal-body {
+  padding: 1rem;
+}
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  text-align: right;
 }
 </style>
