@@ -3,7 +3,7 @@ import mysql from 'mysql2/promise';
 let connection = null;
 
 async function initializeConnection() {
-  if (!connection) {
+  if (!connection || connection.connection.state === 'disconnected') {
     try {
       connection = await mysql.createConnection({
         host: process.env.MYSQL_HOST,
@@ -12,8 +12,20 @@ async function initializeConnection() {
         password: process.env.MYSQL_PASSWORD,
         port: process.env.MYSQL_PORT,
       });
+
+      // Handle connection errors and reconnection
+      connection.on('error', async (err) => {
+        console.error('MySQL Connection Error:', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+          connection = null;
+          await initializeConnection();
+        } else {
+          throw err;
+        }
+      });
     } catch (err) {
       console.error('Database connection error:', err);
+      throw err; // Propagate error
     }
   }
   return connection;
@@ -22,16 +34,16 @@ async function initializeConnection() {
 const executeQuery = async (query) => {
   const conn = await initializeConnection();
   if (!conn) {
-    console.log('Connection is null! Aborting executeQuery().');
+    console.error('Connection is null! Aborting executeQuery().');
     return [];
   }
   try {
     const [results, fields] = await conn.query(query);
     return [results, fields];
   } catch (err) {
-    console.error(err);
+    console.error('Query Error:', err);
+    throw err; // Propagate error
   }
-  return [];
 };
 
 // Close the connection gracefully
