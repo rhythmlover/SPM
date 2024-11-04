@@ -23,7 +23,7 @@ watch(
   },
 );
 
-const API_ROUTE = inject('API_ROUTE', 'http://localhost:3000');
+const API_ROUTE = inject('API_ROUTE');
 
 const formatRequestDate = (isoDate) => {
   const date = new Date(isoDate);
@@ -42,19 +42,37 @@ const formatRequestDate = (isoDate) => {
   return `${month} ${day}, ${year} (${weekday})`;
 };
 
-const isWithinTwoWeeks = (WFH_Date, Status) => {
+const canWithdraw = (WFH_Date) => {
   const currentDate = new Date();
-  const twoWeeksBefore = new Date(WFH_Date);
-  twoWeeksBefore.setDate(twoWeeksBefore.getDate() - 14);
-  const twoWeeksAfter = new Date(WFH_Date);
-  twoWeeksAfter.setDate(twoWeeksAfter.getDate() + 14);
+  const targetDate = new Date(WFH_Date);
+  const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
 
-  return (
-    currentDate >= twoWeeksBefore &&
-    currentDate <= twoWeeksAfter &&
-    Status.toLowerCase() === 'approved'
-  );
+  const diff = targetDate - currentDate;
+  return Math.abs(diff) > twoWeeksInMs;
 };
+
+const canCancel = (WFH_Date) => {
+  const currentDate = new Date();
+  const targetDate = new Date(WFH_Date);
+  const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
+
+  const diff = targetDate - currentDate;
+  return Math.abs(diff) > twoWeeksInMs;
+};
+
+// const isWithinTwoWeeks = (WFH_Date, Status) => {
+//   const currentDate = new Date();
+//   const twoWeeksBefore = new Date(WFH_Date);
+//   twoWeeksBefore.setDate(twoWeeksBefore.getDate() - 14);
+//   const twoWeeksAfter = new Date(WFH_Date);
+//   twoWeeksAfter.setDate(twoWeeksAfter.getDate() + 14);
+
+//   return (
+//     currentDate >= twoWeeksBefore &&
+//     currentDate <= twoWeeksAfter &&
+//     Status.toLowerCase() === 'approved'
+//   );
+// };
 
 const get_WFH_period = (request_period) => {
   if (request_period == 'FULL') {
@@ -102,10 +120,12 @@ const getWFHRequests = async (staffID) => {
           Reason: request.Request_Reason,
           Status: request.Status,
           Comments: request.Comments,
-          showWithdrawButton: isWithinTwoWeeks(
-            new Date(request.WFH_Date),
-            request.Status,
-          ),
+          showWithdrawButton:
+            request.Status.toLowerCase() === 'approved' &&
+            canWithdraw(request.WFH_Date),
+          showCancelButton:
+            request.Status.toLowerCase() === 'pending' &&
+            canCancel(request.WFH_Date),
         }));
     } else {
       console.warn('No valid results found in the response.');
@@ -206,82 +226,112 @@ defineExpose({
 </script>
 
 <template>
-  <BContainer>
-    <BRow>
-      <BCol>
-        <h1>All Requests</h1>
+  <BContainer fluid class="py-4">
+    <BRow class="justify-content-center">
+      <BCol lg="10" xl="8">
+        <h1 class="mb-4 text-center">All Work From Home Requests</h1>
 
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Reason for Request</th>
-              <th>WFH Date</th>
-              <th>Requested On</th>
-              <th>Status</th>
-              <th>Actions</th>
-              <th>Comments</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(request, index) in localRequests" :key="index">
-              <td class="col-2">{{ request.Reason }}</td>
-              <td class="col-2">
-                {{
-                  request.WFH_Date +
-                  ', ' +
-                  get_WFH_period(request.Request_Period)
-                }}
-              </td>
-              <td class="col-2">{{ request.Request_Date }}</td>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="thead-dark">
+              <tr>
+                <th>Reason for Request</th>
+                <th>WFH Date</th>
+                <th>Requested On</th>
+                <th>Status</th>
+                <th>Actions</th>
+                <th>Comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(request, index) in localRequests" :key="index">
+                <td>{{ request.Reason }}</td>
+                <td>
+                  {{ request.WFH_Date }},
+                  {{ get_WFH_period(request.Request_Period) }}
+                </td>
+                <td>{{ request.Request_Date }}</td>
 
-              <td class="col-2">
-                <BBadge
-                  :variant="
-                    {
-                      Pending: 'info',
-                      Withdrawn: 'secondary',
-                      'Withdrawal Pending': 'light',
-                      Approved: 'success',
-                      Rejected: 'danger',
-                    }[request.Status]
-                  "
-                  pill
-                >
-                  {{ request.Status }}
-                </BBadge>
-              </td>
+                <td>
+                  <BBadge
+                    :variant="
+                      {
+                        Pending: 'info',
+                        Withdrawn: 'secondary',
+                        'Withdrawal Pending': 'warning',
+                        Approved: 'success',
+                        Rejected: 'danger',
+                      }[request.Status]
+                    "
+                    pill
+                  >
+                    {{ request.Status }}
+                  </BBadge>
+                </td>
 
-              <td class="col-2">
-                <button
-                  v-if="request.Status.toLowerCase() === 'pending'"
-                  @click="cancelRequest(request.Request_ID)"
-                  class="btn btn-warning"
-                >
-                  Cancel
-                </button>
-                <button
-                  v-if="request.showWithdrawButton"
-                  @click="
-                    openWithdrawForm(
-                      request.Request_ID,
-                      request.WFH_Date,
-                      request.Request_Period,
-                    )
-                  "
-                  class="btn btn-danger"
-                >
-                  Withdraw
-                </button>
-                <span
-                  v-if="request.Status.toLowerCase() === 'withdrawal pending'"
-                  class="text-muted"
-                  >Withdrawal Pending</span
-                >
-              </td>
-              <td class="col-2">{{ request.Comments }}</td>
-            </tr>
-          </tbody>
-        </table>
+                <td>
+                  <!-- Cancel Button -->
+                  <button
+                    v-if="
+                      request.Status.toLowerCase() === 'pending' &&
+                      canCancel(request.WFH_Date)
+                    "
+                    @click="cancelRequest(request.Request_ID)"
+                    class="btn btn-warning btn-sm mb-2"
+                    :disabled="!canCancel(request.WFH_Date)"
+                  >
+                    Cancel
+                  </button>
+                  <span
+                    v-if="
+                      request.Status.toLowerCase() === 'pending' &&
+                      !canCancel(request.WFH_Date)
+                    "
+                    class="text-danger small"
+                  >
+                    Cannot Cancel Request Due to Cancellation Policy (Can only
+                    cancel requests when you are more than 2 weeks before or
+                    after requested date)
+                  </span>
+
+                  <!-- Withdraw Button -->
+                  <button
+                    v-if="request.showWithdrawButton"
+                    @click="
+                      openWithdrawForm(
+                        request.Request_ID,
+                        request.WFH_Date,
+                        request.Request_Period,
+                      )
+                    "
+                    class="btn btn-danger btn-sm"
+                    :disabled="!canWithdraw(request.WFH_Date)"
+                  >
+                    Withdraw
+                  </button>
+                  <span
+                    v-if="
+                      request.Status.toLowerCase() === 'approved' &&
+                      !canWithdraw(request.WFH_Date)
+                    "
+                    class="text-danger small mt-2 d-block"
+                  >
+                    Cannot Withdraw Request Due to Withdrawal Policy (Can only
+                    withdraw requests when you are more than 2 weeks before or
+                    after requested date)
+                  </span>
+                  <span
+                    v-if="request.Status.toLowerCase() === 'withdrawal pending'"
+                    class="text-muted small d-block mt-1"
+                  >
+                    Withdrawal Pending
+                  </span>
+                </td>
+                <td>{{ request.Comments }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </BCol>
     </BRow>
   </BContainer>
@@ -299,6 +349,9 @@ defineExpose({
           }"
         >
           <h5 class="modal-title">{{ modalTitle }}</h5>
+          <button type="button" class="close" @click="showModal = false">
+            <span>&times;</span>
+          </button>
         </div>
         <div class="modal-body">
           <p>{{ modalMessage }}</p>
@@ -429,5 +482,9 @@ button:hover {
   padding: 1rem;
   border-top: 1px solid #dee2e6;
   text-align: right;
+}
+
+.text-danger {
+  margin-top: 0.5rem;
 }
 </style>
