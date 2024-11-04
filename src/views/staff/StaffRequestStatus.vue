@@ -27,6 +27,8 @@ const API_ROUTE = inject('API_ROUTE', 'http://localhost:3000');
 
 const formatRequestDate = (isoDate) => {
   const date = new Date(isoDate);
+  // Adjust for timezone offset
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
   const day = date.getUTCDate();
   const month = date.toLocaleString('en-US', {
     month: 'long',
