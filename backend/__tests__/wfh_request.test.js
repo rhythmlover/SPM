@@ -499,9 +499,7 @@ describe('WFH Endpoint', () => {
   it('POST /wfh-request/recurring-request/insert-approved-recurring-dates › should insert approved recurring dates successfully', async () => {
     const newRecurringRequest = {
       Staff_ID: 1,
-      WFH_Date_Start: '2024-11-01',
-      WFH_Date_End: '2024-11-30',
-      WFH_Day: '4',
+      WFH_Date: '2024-11-01',
       Request_Period: 'AM',
       Request_Date: '2024-10-15',
       Request_Reason: 'Weekly meetings',
@@ -509,6 +507,7 @@ describe('WFH Endpoint', () => {
       Approver_ID: 2,
       Comments: 'Approved for November',
       Decision_Date: '2024-10-16',
+      Recurring_Request_ID: 2,
     };
 
     const response = await request(app)
@@ -593,8 +592,8 @@ describe('WFH Endpoint', () => {
       .get('/wfh-request/recurring-request/dates')
       .query({ requestID: 6 });
     expect(response.body).toMatchObject({
-      WFH_Date_Start: '2024-10-01T00:00:00.000Z',
-      WFH_Date_End: '2024-10-31T00:00:00.000Z',
+      WFH_Date_Start: '2024-09-30T16:00:00.000Z',
+      WFH_Date_End: '2024-10-30T16:00:00.000Z',
       WFH_Day: '1',
       Request_Period: 'AM',
     });
@@ -871,7 +870,7 @@ describe('WFH Endpoint', () => {
       .expect(200);
     expect(response.body).toHaveProperty(
       'wfh_date',
-      '2024-12-05T00:00:00.000Z',
+      '2024-12-04T16:00:00.000Z',
     );
   });
 

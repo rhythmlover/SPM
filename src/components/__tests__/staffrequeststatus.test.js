@@ -370,7 +370,7 @@ describe('StaffRequestStatus.vue', () => {
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: {
-          requests: request_approved, // Initial data with 'Approved' status
+          requests: request_approved,
         },
       });
 
@@ -380,6 +380,7 @@ describe('StaffRequestStatus.vue', () => {
       let statusCell = requestRows[0].findAll('td').at(3);
       expect(statusCell.exists()).toBe(true);
 
+      // Check initial approved status
       const badge = statusCell.find('.text-bg-success');
       expect(badge.exists()).toBe(true);
       expect(badge.text()).toBe('Approved');
@@ -387,35 +388,39 @@ describe('StaffRequestStatus.vue', () => {
       let withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(true);
 
-      // Simulate the status update by changing the props
+      // Update props with new status
       await wrapper.setProps({
         requests: [
           {
             ...request_approved[0],
-            Status: 'Withdrawal Pending', // Change the status to Withdrawal Pending
-            showWithdrawButton: false, // Update to hide the Withdraw button
+            Status: 'Withdrawal Pending',
+            showWithdrawButton: false,
           },
         ],
       });
 
-      // Re-fetch request rows after props update
+      // Force a re-render
+      await wrapper.vm.$nextTick();
+
+      // Re-fetch elements after update
       const updatedRequestRows = wrapper.findAll('tbody tr');
-      expect(updatedRequestRows.length).toBe(1); // Should still be 1
+      expect(updatedRequestRows.length).toBe(1);
 
-      statusCell = updatedRequestRows[0].findAll('td').at(3);
-      expect(statusCell.exists()).toBe(true);
+      const updatedStatusCell = updatedRequestRows[0].findAll('td').at(3);
+      expect(updatedStatusCell.exists()).toBe(true);
 
-      const badge_pending_withdrawal = statusCell.find('.text-bg-light');
+      // Use the correct BBadge class for withdrawal pending
+      const badge_pending_withdrawal =
+        updatedStatusCell.find('.text-bg-warning');
       expect(badge_pending_withdrawal.exists()).toBe(true);
-      expect(badge_pending_withdrawal.text()).toBe('Withdrawal Pending'); // Fixed text
+      expect(badge_pending_withdrawal.text()).toBe('Withdrawal Pending');
 
-      withdrawButton = updatedRequestRows[0].find('.btn-danger');
-      expect(withdrawButton.exists()).toBe(false);
+      // Verify withdraw button is hidden
+      const updatedWithdrawButton = updatedRequestRows[0].find('.btn-danger');
+      expect(updatedWithdrawButton.exists()).toBe(false);
 
-      // Mark the test as passed
       await updateSheet(testId, 'Passed');
     } catch (error) {
-      // In case of error, mark as failed
       await updateSheet(testId, 'Failed');
       throw error;
     }

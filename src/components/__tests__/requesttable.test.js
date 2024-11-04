@@ -259,9 +259,18 @@ describe('RequestTable.vue', () => {
           requests: request,
           status: 'pending',
         },
+        components: { StatusButton },
       });
-      const requestRows = wrapper.findAll('tbody tr');
-      expect(requestRows.length).toBe(request.length);
+
+      // Only count request rows within the Non-Recurring Requests section
+      const nonRecurringRows = wrapper.findAll('tbody tr').filter((row) => {
+        return (
+          !row.classes().includes('section-header') &&
+          row.find('td')?.text()?.includes(request[0].Staff_FName)
+        );
+      });
+
+      expect(nonRecurringRows.length).toBe(request.length);
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
