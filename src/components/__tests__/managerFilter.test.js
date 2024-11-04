@@ -98,7 +98,7 @@ describe('ManagerFilter', () => {
     }
   });
 
-  it('should display the correct WFH time options in the dropdown', async () => {
+  it('should display the correct WFH period options in the dropdown', async () => {
     const testId = 'TC-123';
     try {
       const wfhTimeDropdown = wrapper

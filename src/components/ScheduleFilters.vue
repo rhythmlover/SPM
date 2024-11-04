@@ -22,7 +22,7 @@
       </BDropdown>
     </BCol>
     <BCol>
-      <BDropdown text="Filter by WFH Time" variant="light" auto-close="outside">
+      <BDropdown text="Filter by WFH Period" variant="light" auto-close="outside">
         <BDropdownForm>
           <BFormCheckbox
             v-model="selectAllWfhTimes"
