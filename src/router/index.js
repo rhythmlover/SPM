@@ -73,4 +73,13 @@ const router = createRouter({
   ],
 });
 
+router.beforeEach((to, from, next) => {
+  const staffID = localStorage.getItem('staffID');
+  if (!staffID && to.path !== '/') {
+    next('/');
+  } else {
+    next();
+  }
+});
+
 export default router;
