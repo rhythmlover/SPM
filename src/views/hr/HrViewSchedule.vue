@@ -238,7 +238,7 @@ onMounted(async () => {
           </BRow>
         </BContainer>
 
-        <BContainer v-if="isLoading">
+        <BContainer v-if="isLoading" class="loader-container">
           <BRow>
             <BCol class="d-flex justify-content-center">
               <BSpinner />
@@ -251,4 +251,17 @@ onMounted(async () => {
   </BContainer>
 </template>
 
-<style></style>
+<style scoped>
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+</style>

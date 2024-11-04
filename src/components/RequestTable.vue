@@ -1,7 +1,7 @@
 <template>
   <BContainer :style="{ marginTop: '20px' }">
     <div class="request-table">
-      <div v-if="isLoading">
+      <div v-if="isLoading" class="loader-container">
         <BSpinner label="Loading requests..." />
       </div>
       <div v-else>
@@ -309,6 +309,25 @@
       </div>
     </div>
   </BContainer>
+
+  <!-- Modal -->
+  <div v-if="showModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">{{ modalTitle }}</h5>
+        </div>
+        <div class="modal-body">
+          <p>{{ modalMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="closeModal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -329,6 +348,9 @@ export default {
       isWithdrawing: {},
       withdrawalReason: {},
       isLoading: false,
+      showModal: false,
+      modalTitle: '',
+      modalMessage: '',
     };
   },
   emits: [
@@ -351,9 +373,19 @@ export default {
       this.isWithdrawing[requestID] = false;
       this.withdrawalReason[requestID] = '';
     },
+    showModalPopup(title, message) {
+      this.modalTitle = title;
+      this.modalMessage = message;
+      this.showModal = true;
+    },
+    closeModal() {
+      this.showModal = false;
+      this.modalTitle = '';
+      this.modalMessage = '';
+    },
     submitRejection(requestID, status) {
       if (!this.rejectionReason[requestID]?.trim()) {
-        alert('Rejection reason is required');
+        this.showModalPopup('Error', 'Rejection reason is required');
         return;
       }
       this.isLoading = true;
@@ -385,7 +417,7 @@ export default {
     },
     submitRecurringRejection(requestID, status) {
       if (!this.rejectionReason[requestID]?.trim()) {
-        alert('Rejection reason is required');
+        this.showModalPopup('Error', 'Rejection reason is required');
         return;
       }
       this.isLoading = true;
@@ -503,6 +535,19 @@ export default {
 </script>
 
 <style scoped>
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+
 .request-table {
   background-color: white;
   border-radius: 10px;
@@ -543,5 +588,35 @@ textarea {
   font-weight: bold;
   text-align: left;
   border-top: 2px solid #000;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-dialog {
+  background-color: white;
+  border-radius: 5px;
+  max-width: 500px;
+  width: 100%;
+}
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.modal-body {
+  padding: 1rem;
+}
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  text-align: right;
 }
 </style>

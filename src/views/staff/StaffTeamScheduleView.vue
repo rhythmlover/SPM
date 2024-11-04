@@ -211,9 +211,26 @@ onMounted(async () => {
         </BContainer>
 
         <BAlert v-if="error" show variant="danger">{{ error }}</BAlert>
-        <BSpinner v-if="loading" label="Loading..."></BSpinner>
+        <div v-if="loading" class="loader-container">
+          <BSpinner label="Loading..." />
+        </div>
         <ScheduleList v-else-if="!error" :wfh-requests="filteredWFHRequests" />
       </BCol>
     </BRow>
   </BContainer>
 </template>
+
+<style scoped>
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+</style>
