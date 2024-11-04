@@ -394,7 +394,7 @@ describe('WFH Endpoint', () => {
       .post('/wfh-request/apply')
       .send(newWFHRequest)
       .expect(200);
-    expect(response.body.message).toBe('Application Submitted Successfully');
+    expect(response.body.message).toBe('Request Submitted Successfully');
     expect(response.body.data).toHaveProperty('insertId');
   });
 
@@ -416,7 +416,7 @@ describe('WFH Endpoint', () => {
       .post('/wfh-request/apply')
       .send(incompleteWFHRequest)
       .expect(400);
-    expect(response.body.message).toBe('Application Submission Failed');
+    expect(response.body.message).toBe('Request Submission Failed');
   });
 
   it('POST /wfh-request/apply › should fail to apply if WFH date is out of range', async () => {
@@ -536,7 +536,7 @@ describe('WFH Endpoint', () => {
       .post('/wfh-request/apply-recurring')
       .send(recurringRequest)
       .expect(200);
-    expect(response.body.message).toBe('Application Submitted Successfully');
+    expect(response.body.message).toBe('Request Submitted Successfully');
 
     // Verify in database
     const dbResponse = await mysqlClient.query(
@@ -658,7 +658,7 @@ describe('WFH Endpoint', () => {
       .send(withdrawalRequest)
       .expect(200);
     expect(response.body.message).toBe(
-      'Withdrawal Application Submitted Successfully',
+      'Withdrawal Request Submitted Successfully',
     );
   });
 

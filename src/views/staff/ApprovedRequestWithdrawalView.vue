@@ -93,7 +93,7 @@ export default {
         ) {
           this.errorMessage = error.response.data.message;
         } else {
-          this.errorMessage = 'Withdrawal Application Submission Failed';
+          this.errorMessage = 'Withdrawal Request Submission Failed';
         }
         this.successMessage = '';
       }

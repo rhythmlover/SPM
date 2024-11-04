@@ -16,12 +16,14 @@ export default {
       Status: 'Pending',
       Approver_ID: '',
       Approver_Name: '',
-      errorMessage: '',
-      successMessage: '',
       existingWFHDates: [],
       validDates: [],
       validDatesPeriod: [],
       isLoading: false,
+      errorMessage: '',
+      showAlertModal: false,
+      modalTitle: '',
+      modalMessage: '',
     };
   },
   computed: {
@@ -61,8 +63,10 @@ export default {
           this.Approver_Name = reportingManagerName.data.name;
         }
       } catch (error) {
-        this.errorMessage = 'Failed to fetch reporting manager information';
         console.log(error);
+        this.modalTitle = 'Error';
+        this.modalMessage = 'Failed to fetch reporting manager information';
+        this.showAlertModal = true;
       }
     },
     async fetchExistingWFHDates() {
@@ -82,8 +86,10 @@ export default {
         this.existingWFHDates = [...nonRecurringDates, ...recurringDates];
         console.log('Existing WFH Dates:', this.existingWFHDates);
       } catch (error) {
-        this.errorMessage = 'Failed to fetch existing WFH dates';
         console.log(error);
+        this.modalTitle = 'Error';
+        this.modalMessage = 'Failed to fetch existing WFH dates';
+        this.showAlertModal = true;
       }
     },
     getDatesInRange(startDate, endDate, dayOfWeek) {
@@ -136,7 +142,6 @@ export default {
       }
     },
     validateForm() {
-      this.successMessage = '';
       this.errorMessage = '';
       this.clashingDates = [];
 
@@ -147,7 +152,9 @@ export default {
         !this.Request_Period ||
         !this.Request_Reason
       ) {
-        this.errorMessage = 'Please fill in all fields';
+        this.modalTitle = 'Error';
+        this.modalMessage = 'Please fill in all fields';
+        this.showAlertModal = true;
         return false;
       }
 
@@ -181,10 +188,10 @@ export default {
       console.log('Existing WFH Dates:', this.existingWFHDates);
 
       if (clashingDates.length > 0) {
-        this.errorMessage = `You have a clashing request for the following dates: `;
+        this.errorMessage = `You have a clashing request for the following dates:\n`;
         this.errorMessage += clashingDates
           .map((date) => `${date[0]}`)
-          .join(', ');
+          .join('\n');
         return false;
       }
 
@@ -199,7 +206,7 @@ export default {
 
       try {
         const response = await axios.post(
-          this.API_ROUTE + '/wfh-request/apply-recurring',
+          `${this.API_ROUTE}/wfh-request/apply-recurring`,
           {
             Staff_ID: this.Staff_ID,
             WFH_Date_Start: this.WFH_Date_Start,
@@ -211,42 +218,48 @@ export default {
             Approver_ID: this.Approver_ID,
           },
         );
-        this.successMessage = 'Request Submitted Successfully';
-        this.errorMessage = '';
         console.log(response);
+        this.modalTitle = 'Success';
+        this.modalMessage = 'Request Submitted Successfully';
+        this.showAlertModal = true;
 
         await this.fetchExistingWFHDates();
+
+        this.resetForm();
       } catch (error) {
         console.log(error);
+        this.modalTitle = 'Error';
         if (
           error.response &&
           error.response.data &&
           error.response.data.message
         ) {
-          this.errorMessage = error.response.data.message;
+          this.modalMessage = error.response.data.message;
         } else {
-          this.errorMessage = 'Application Submission Failed';
+          this.modalMessage = 'Request Submission Failed';
         }
-        this.successMessage = '';
+        this.showAlertModal = true;
       } finally {
         this.isLoading = false;
-        this.WFH_Date_Start = '';
-        this.WFH_Date_End = '';
-        this.WFH_Day = '';
-        this.Request_Period = '';
-        this.Request_Reason = '';
       }
     },
-    cancel() {
+    resetForm() {
       this.WFH_Date_Start = '';
       this.WFH_Date_End = '';
       this.WFH_Day = '';
       this.Request_Period = '';
       this.Request_Reason = '';
-      this.errorMessage = '';
-      this.successMessage = '';
       this.validDates = [];
+      this.errorMessage = '';
+    },
+    cancel() {
+      this.resetForm();
       this.$router.push('/staff-myschedule');
+    },
+    closeModal() {
+      this.showAlertModal = false;
+      this.modalTitle = '';
+      this.modalMessage = '';
     },
     checkAndUpdateValidDates() {
       if (this.WFH_Date_Start && this.WFH_Date_End && this.WFH_Day) {
@@ -341,10 +354,7 @@ export default {
         />
       </div>
       <div v-if="errorMessage" class="alert alert-danger mb-3">
-        {{ errorMessage }}
-      </div>
-      <div v-if="successMessage" class="alert alert-success mb-3">
-        {{ successMessage }}
+        <pre>{{ errorMessage }}</pre>
       </div>
       <button type="submit" class="btn btn-primary m-1" :disabled="isLoading">
         <span v-if="isLoading">Loading...</span>
@@ -355,4 +365,66 @@ export default {
       </button>
     </form>
   </div>
+
+  <div v-if="showAlertModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div
+          class="modal-header"
+          :class="{
+            'bg-success text-white': modalTitle === 'Success',
+            'bg-danger text-white': modalTitle === 'Error',
+          }"
+        >
+          <h5 class="modal-title">{{ modalTitle }}</h5>
+        </div>
+        <div class="modal-body">
+          <p>{{ modalMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="closeModal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
+<style>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-dialog {
+  background-color: white;
+  border-radius: 5px;
+  max-width: 500px;
+  width: 100%;
+}
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.modal-body {
+  padding: 1rem;
+}
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  text-align: right;
+}
+.close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+</style>

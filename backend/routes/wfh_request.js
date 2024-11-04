@@ -180,14 +180,14 @@ router.post('/apply', async (req, res, next) => {
 
     if (!results) {
       return res.status(400).json({
-        message: 'Application Submission Failed',
+        message: 'Request Submission Failed',
         error: 'Invalid Request',
       });
     }
 
     res
       .status(200)
-      .json({ message: 'Application Submitted Successfully', data: results });
+      .json({ message: 'Request Submitted Successfully', data: results });
   } catch (error) {
     next(error);
   }
@@ -290,19 +290,19 @@ router.post('/apply-recurring', async (req, res, next) => {
 
       if (!results) {
         return res.status(400).json({
-          message: 'Application Submission Failed',
+          message: 'Request Submission Failed',
           error: 'Invalid Request',
         });
       }
     } catch (error) {
       console.error('Error:', error);
       return res.status(500).json({
-        message: 'Application Submission Failed',
+        message: 'Request Submission Failed',
         error: error.message,
       });
     }
 
-    res.status(200).json({ message: 'Application Submitted Successfully' });
+    res.status(200).json({ message: 'Request Submitted Successfully' });
   } catch (error) {
     next(error);
   }
@@ -619,7 +619,7 @@ router.post('/withdraw/post/id', async (req, res, next) => {
 
     if (!results) {
       return res.status(400).json({
-        message: 'Withdrawal Application Submission Failed',
+        message: 'Withdrawal Request Submission Failed',
         error: 'Invalid Request',
       });
     }
@@ -638,13 +638,13 @@ router.post('/withdraw/post/id', async (req, res, next) => {
     }
 
     res.status(200).json({
-      message: 'Withdrawal Application Submitted Successfully',
+      message: 'Withdrawal Request Submitted Successfully',
       data: results,
     });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({
-      message: 'Withdrawal Application Submission Failed',
+      message: 'Withdrawal Request Submission Failed',
       error: error.message,
     });
   }
