@@ -314,7 +314,7 @@ router.put('/request/status', async (req, res, next) => {
 
   try {
     let [result] = await executeQuery(
-      `UPDATE WFH_Request SET Status = '${newStatus}' WHERE Request_ID = ${requestID}`,
+      `UPDATE WFH_Request SET Status = '${newStatus}', Decision_Date = CURDATE() WHERE Request_ID = ${requestID}`,
     );
 
     if (result.affectedRows > 0) {
