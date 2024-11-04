@@ -33,74 +33,32 @@
             </tr>
           </thead>
           <tbody v-if="status === 'pending'">
-            <tr v-for="request in requests" :key="request.Request_ID">
+            <!-- Withdrawal Requests -->
+            <tr>
+              <td colspan="6" class="section-header">Withdrawal Requests</td>
+            </tr>
+            <tr
+              v-for="request in sortedWithdrawalRequests"
+              :key="request.Request_ID"
+            >
               <td class="col-2">
                 {{ request.Staff_FName }} {{ request.Staff_LName }}
               </td>
               <td class="col-2">{{ request.Request_Reason }}</td>
-              <td class="col-2" v-if="request.WFH_Date_Start">
+              <td class="col-2">
                 {{
-                  formatDateTimezone(request.WFH_Date_Start) +
-                  ' to ' +
-                  formatDateTimezone(request.WFH_Date_End) +
-                  ' | ' +
-                  'Every ' +
-                  getDay(request.WFH_Day) +
-                  ', ' +
-                  get_WFH_period(request.Request_Period)
-                }}
-              </td>
-              <td class="col-2" v-else>
-                {{
-                  formatDateTimezone(request.WFH_Date) +
+                  request.WFH_Date +
                   ', ' +
                   get_WFH_period(request.Request_Period)
                 }}
               </td>
               <td class="col-2">{{ request.Request_Date }}</td>
-              <td
-                class="col-2"
-                id="pending"
-                v-if="request.WFH_Date_Start && request.Status == 'Pending'"
-              >
-                <BBadge pill variant="info">New Recurring Request</BBadge>
-              </td>
-              <td
-                class="col-2"
-                id="pending"
-                v-if="!request.WFH_Date_Start && request.Status == 'Pending'"
-              >
-                <BBadge pill variant="info">New Request</BBadge>
-              </td>
-              <td class="col-1" v-if="request.Status == 'Withdrawal Pending'">
+              <td class="col-2">
                 <BBadge pill variant="warning">Withdrawal</BBadge>
               </td>
               <td class="col-2">
                 <template v-if="!isRejecting[request.Request_ID]">
                   <StatusButton
-                    v-if="request.Status == 'Pending' && request.WFH_Date_Start"
-                    @click="
-                      updateRecurringStatus(
-                        request.Request_ID,
-                        'Pending',
-                        'Approved',
-                      )
-                    "
-                    label="Accept"
-                    class="accept-btn"
-                  />
-                  <StatusButton
-                    v-if="
-                      request.Status == 'Pending' && !request.WFH_Date_Start
-                    "
-                    @click="
-                      updateStatus(request.Request_ID, 'Pending', 'Approved')
-                    "
-                    label="Accept"
-                    class="accept-btn"
-                  />
-                  <StatusButton
-                    v-if="request.Status == 'Withdrawal Pending'"
                     @click="
                       updateStatus(
                         request.Request_ID,
@@ -125,20 +83,146 @@
                   ></textarea>
                   <div class="reject-buttons">
                     <StatusButton
-                      v-if="request.WFH_Date_Start"
                       @click="
-                        submitRecurringRejection(
-                          request.Request_ID,
-                          request.Status,
-                        )
+                        submitRejection(request.Request_ID, request.Status)
                       "
                       label="Submit"
                       class="reject-submit-btn"
                     />
                     <StatusButton
-                      v-else
+                      @click="cancelRejection(request.Request_ID)"
+                      label="Cancel"
+                      class="reject-cancel-btn"
+                    />
+                  </div>
+                </template>
+              </td>
+            </tr>
+
+            <!-- Non-Recurring Requests -->
+            <tr>
+              <td colspan="6" class="section-header">Non-Recurring Requests</td>
+            </tr>
+            <tr
+              v-for="request in sortedNonRecurringRequests"
+              :key="request.Request_ID"
+            >
+              <td class="col-2">
+                {{ request.Staff_FName }} {{ request.Staff_LName }}
+              </td>
+              <td class="col-2">{{ request.Request_Reason }}</td>
+              <td class="col-2">
+                {{
+                  formatDateTimezone(request.WFH_Date) +
+                  ', ' +
+                  get_WFH_period(request.Request_Period)
+                }}
+              </td>
+              <td class="col-2">{{ request.Request_Date }}</td>
+              <td class="col-2">
+                <BBadge pill variant="info">New Request</BBadge>
+              </td>
+              <td class="col-2">
+                <template v-if="!isRejecting[request.Request_ID]">
+                  <StatusButton
+                    v-if="request.Status == 'Pending'"
+                    @click="
+                      updateStatus(request.Request_ID, 'Pending', 'Approved')
+                    "
+                    label="Accept"
+                    class="accept-btn"
+                  />
+                  <StatusButton
+                    @click="startRejection(request.Request_ID)"
+                    label="Reject"
+                    class="reject-btn"
+                  />
+                </template>
+                <template v-else>
+                  <textarea
+                    v-model="rejectionReason[request.Request_ID]"
+                    placeholder="Enter rejection reason"
+                    rows="2"
+                  ></textarea>
+                  <div class="reject-buttons">
+                    <StatusButton
                       @click="
                         submitRejection(request.Request_ID, request.Status)
+                      "
+                      label="Submit"
+                      class="reject-submit-btn"
+                    />
+                    <StatusButton
+                      @click="cancelRejection(request.Request_ID)"
+                      label="Cancel"
+                      class="reject-cancel-btn"
+                    />
+                  </div>
+                </template>
+              </td>
+            </tr>
+
+            <!-- Recurring Requests -->
+            <tr>
+              <td colspan="6" class="section-header">Recurring Requests</td>
+            </tr>
+            <tr
+              v-for="request in sortedRecurringRequests"
+              :key="request.Request_ID"
+            >
+              <td class="col-2">
+                {{ request.Staff_FName }} {{ request.Staff_LName }}
+              </td>
+              <td class="col-2">{{ request.Request_Reason }}</td>
+              <td class="col-2">
+                {{
+                  formatDateTimezone(request.WFH_Date_Start) +
+                  ' to ' +
+                  formatDateTimezone(request.WFH_Date_End) +
+                  ' | ' +
+                  'Every ' +
+                  getDay(request.WFH_Day) +
+                  ', ' +
+                  get_WFH_period(request.Request_Period)
+                }}
+              </td>
+              <td class="col-2">{{ request.Request_Date }}</td>
+              <td class="col-2">
+                <BBadge pill variant="info">New Recurring Request</BBadge>
+              </td>
+              <td class="col-2">
+                <template v-if="!isRejecting[request.Request_ID]">
+                  <StatusButton
+                    v-if="request.Status == 'Pending'"
+                    @click="
+                      updateRecurringStatus(
+                        request.Request_ID,
+                        'Pending',
+                        'Approved',
+                      )
+                    "
+                    label="Accept"
+                    class="accept-btn"
+                  />
+                  <StatusButton
+                    @click="startRejection(request.Request_ID)"
+                    label="Reject"
+                    class="reject-btn"
+                  />
+                </template>
+                <template v-else>
+                  <textarea
+                    v-model="rejectionReason[request.Request_ID]"
+                    placeholder="Enter rejection reason"
+                    rows="2"
+                  ></textarea>
+                  <div class="reject-buttons">
+                    <StatusButton
+                      @click="
+                        submitRecurringRejection(
+                          request.Request_ID,
+                          request.Status,
+                        )
                       "
                       label="Submit"
                       class="reject-submit-btn"
@@ -393,6 +477,28 @@ export default {
       return days[dayOfWeek];
     },
   },
+  computed: {
+    sortedRecurringRequests() {
+      return this.requests
+        .filter((request) => request.WFH_Date_Start)
+        .sort(
+          (a, b) => new Date(a.WFH_Date_Start) - new Date(b.WFH_Date_Start),
+        );
+    },
+    sortedNonRecurringRequests() {
+      return this.requests
+        .filter(
+          (request) =>
+            !request.WFH_Date_Start && request.Status !== 'Withdrawal Pending',
+        )
+        .sort((a, b) => new Date(a.WFH_Date) - new Date(b.WFH_Date));
+    },
+    sortedWithdrawalRequests() {
+      return this.requests
+        .filter((request) => request.Status === 'Withdrawal Pending')
+        .sort((a, b) => new Date(a.WFH_Date) - new Date(b.WFH_Date));
+    },
+  },
 };
 </script>
 
@@ -430,5 +536,12 @@ textarea {
   margin-top: 10px;
   border-radius: 5px;
   border: 1px solid #ced4da;
+}
+
+.section-header {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  text-align: left;
+  border-top: 2px solid #000;
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup>
 import axios from 'axios';
-import { inject, onMounted, ref, watch } from 'vue';
+import { inject, onMounted, ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 // Declare `requests` as a prop
@@ -101,6 +101,12 @@ const modalMessage = ref('');
 const modalType = ref(''); // 'alert' or 'confirm'
 let modalResolve;
 
+const sortedRequests = computed(() => {
+  return [...localRequests.value].sort((a, b) => {
+    return new Date(b.WFH_Date) - new Date(a.WFH_Date);
+  });
+});
+
 // Fetch WFH requests for the correct staff
 const getWFHRequests = async (staffID) => {
   try {
@@ -109,24 +115,56 @@ const getWFHRequests = async (staffID) => {
     });
 
     if (res.data && Array.isArray(res.data.results)) {
-      localRequests.value = res.data.results
-        .filter((requestObj) => notMoreThanTwoMonthsAgo(requestObj['WFH_Date']))
-        .map((request) => ({
-          Staff_ID: request.Staff_ID,
-          Request_ID: request.Request_ID,
-          Request_Date: formatRequestDate(request.Request_Date),
-          WFH_Date: formatRequestDate(request.WFH_Date),
-          Request_Period: request.Request_Period,
-          Reason: request.Request_Reason,
-          Status: request.Status,
-          Comments: request.Comments,
-          showWithdrawButton:
-            request.Status.toLowerCase() === 'approved' &&
-            canWithdraw(request.WFH_Date),
-          showCancelButton:
-            request.Status.toLowerCase() === 'pending' &&
-            canCancel(request.WFH_Date),
-        }));
+      // Process each request
+      const processedRequests = await Promise.all(
+        res.data.results
+          .filter((requestObj) =>
+            notMoreThanTwoMonthsAgo(requestObj['WFH_Date']),
+          )
+          .map(async (request) => {
+            let comments = request.Comments;
+
+            // If request was previously a withdrawal request that was rejected
+            if (request.Status === 'Approved') {
+              try {
+                // Get withdrawal request details
+                const withdrawalRes = await axios.get(
+                  `${API_ROUTE}/wfh-request/withdrawal/get-request-comment-of-request-id`,
+                  {
+                    params: { requestID: request.Request_ID },
+                  },
+                );
+
+                // If withdrawal request exists and was rejected, update comments
+                if (withdrawalRes.data && withdrawalRes.data.comments) {
+                  comments = `Withdrawal Request Rejection Remarks:\n${withdrawalRes.data.comments}`;
+                }
+              } catch (error) {
+                // If no withdrawal request found, keep original comments
+                console.log('No withdrawal request found for this request');
+              }
+            }
+
+            return {
+              Staff_ID: request.Staff_ID,
+              Request_ID: request.Request_ID,
+              Request_Date: formatRequestDate(request.Request_Date),
+              WFH_Date: formatRequestDate(request.WFH_Date),
+              Request_Period: request.Request_Period,
+              Reason: request.Request_Reason,
+              Status: request.Status,
+              Comments: comments,
+              showWithdrawButton:
+                request.Status.toLowerCase() === 'approved' &&
+                canWithdraw(request.WFH_Date),
+              showCancelButton:
+                request.Status.toLowerCase() === 'pending' &&
+                canCancel(request.WFH_Date),
+            };
+          }),
+      );
+
+      localRequests.value = processedRequests;
     } else {
       console.warn('No valid results found in the response.');
     }
@@ -229,7 +267,7 @@ defineExpose({
   <BContainer fluid class="py-4">
     <BRow class="justify-content-center">
       <BCol lg="10" xl="8">
-        <h1 class="mb-4 text-center">All Work From Home Requests</h1>
+        <h1 class="mb-4 text-center">My WFH Requests</h1>
 
         <div class="table-responsive">
           <table class="table table-striped table-hover">
@@ -244,7 +282,7 @@ defineExpose({
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(request, index) in localRequests" :key="index">
+              <tr v-for="(request, index) in sortedRequests" :key="index">
                 <td>{{ request.Reason }}</td>
                 <td>
                   {{ request.WFH_Date }},
@@ -327,7 +365,25 @@ defineExpose({
                     Withdrawal Pending
                   </span>
                 </td>
-                <td>{{ request.Comments }}</td>
+                <td>
+                  <template
+                    v-if="
+                      request.Comments &&
+                      request.Comments.startsWith(
+                        'Withdrawal Request Rejection Remarks:',
+                      )
+                    "
+                  >
+                    <div class="withdrawal-remarks">
+                      <strong>Withdrawal Request Rejection Remarks:</strong>
+                      <br />
+                      {{ request.Comments.split('\n')[1] }}
+                    </div>
+                  </template>
+                  <template v-else>
+                    {{ request.Comments }}
+                  </template>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -417,6 +473,7 @@ td {
   text-align: left;
   vertical-align: middle;
   border: 1px solid #ddd;
+  white-space: pre-line;
 }
 
 table th {
@@ -451,6 +508,16 @@ button {
 
 button:hover {
   opacity: 0.8;
+}
+
+.withdrawal-remarks {
+  color: #666;
+  font-style: italic;
+}
+
+.withdrawal-remarks strong {
+  color: #495057;
+  display: block;
 }
 
 /* Modal styles */

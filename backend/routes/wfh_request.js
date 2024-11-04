@@ -547,6 +547,23 @@ router.get(
   },
 );
 
+router.get(
+  '/withdrawal/get-request-comment-of-request-id',
+  async (req, res, next) => {
+    const requestID = req.query.requestID;
+
+    try {
+      let [results] = await executeQuery(
+        `SELECT Comments FROM WFH_Withdrawal WHERE Request_ID = ${requestID}`,
+      );
+      let comments = results[0]['Comments'];
+      res.json({ comments });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 router.get('/my-subordinate-and-me-requests', async (req, res, next) => {
   const staffID = req.query.staffID;
 
