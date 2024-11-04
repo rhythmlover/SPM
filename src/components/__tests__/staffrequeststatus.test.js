@@ -181,7 +181,7 @@ describe('StaffRequestStatus.vue', () => {
       expect(wrapper.vm.showModal).toBe(true);
       expect(wrapper.vm.modalTitle).toBe('Success');
       expect(wrapper.vm.modalMessage).toBe(
-        '1 has been successfully cancelled.',
+        'Request has been successfully cancelled.',
       );
       expect(wrapper.vm.localRequests.length).toBe(0);
 

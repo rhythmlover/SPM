@@ -1,6 +1,7 @@
 <script setup>
 import axios from 'axios';
 import { inject, ref, onMounted } from 'vue';
+import { BSpinner, BContainer } from 'bootstrap-vue-next';
 
 const employees = ref([]);
 const wfhRequests = ref([]);
@@ -8,6 +9,7 @@ const wfhRecurringRequests = ref([]);
 const pendingRequests = ref([]);
 const acceptedRequests = ref([]);
 const rejectedRequests = ref([]);
+const loading = ref(true);
 const staffID = inject('staffID');
 
 const API_ROUTE = inject('API_ROUTE');
@@ -25,8 +27,10 @@ const fetchEmployees = async () => {
 
 const fetchWFHRequests = async () => {
   try {
+    loading.value = true;
     if (employees.value.length === 0) {
       console.error('No employees found for the reporting manager.');
+      loading.value = false;
       return;
     }
 
@@ -53,11 +57,13 @@ const fetchWFHRequests = async () => {
     // Now join both requests to employees
     joinEmployeesToWFHRequests();
     joinEmployeesToWFHRecurringRequests();
+    loading.value = false;
 
     // Output combined pending requests
     console.log('OUTPUTS: ', pendingRequests);
   } catch (error) {
     console.error('Error fetching WFH requests:', error);
+    loading.value = false;
   }
 };
 
@@ -414,26 +420,31 @@ onMounted(async () => {
 
     <RequestLinks @linkChange="setActiveLink" />
 
-    <RequestTable
-      v-if="isActive('/incoming-requests')"
-      :requests="pendingRequests"
-      status="pending"
-      @updateRequestStatus="updateRequestStatus"
-      @updateRecurringRequestStatus="updateRecurringRequestStatus"
-      @updateWithdrawalStatus="updateWithdrawalStatus"
-    />
-    <RequestTable
-      v-if="isActive('/previously-accepted')"
-      :requests="acceptedRequests"
-      status="accepted"
-      @updateRequestStatus="updateRequestStatus"
-      @updateWithdrawalStatus="updateWithdrawalStatus"
-    />
-    <RequestTable
-      v-if="isActive('/previously-rejected')"
-      :requests="rejectedRequests"
-      status="rejected"
-    />
+    <div v-if="loading">
+      <BSpinner label="Loading..." />
+    </div>
+    <div v-else>
+      <RequestTable
+        v-if="isActive('/incoming-requests')"
+        :requests="pendingRequests"
+        status="pending"
+        @updateRequestStatus="updateRequestStatus"
+        @updateRecurringRequestStatus="updateRecurringRequestStatus"
+        @updateWithdrawalStatus="updateWithdrawalStatus"
+      />
+      <RequestTable
+        v-if="isActive('/previously-accepted')"
+        :requests="acceptedRequests"
+        status="accepted"
+        @updateRequestStatus="updateRequestStatus"
+        @updateWithdrawalStatus="updateWithdrawalStatus"
+      />
+      <RequestTable
+        v-if="isActive('/previously-rejected')"
+        :requests="rejectedRequests"
+        status="rejected"
+      />
+    </div>
   </BContainer>
 </template>
 

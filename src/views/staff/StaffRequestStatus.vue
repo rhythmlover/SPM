@@ -165,7 +165,7 @@ const cancelRequest = async (requestID) => {
       (request) => request.Request_ID !== requestID,
     );
 
-    showAlert('Success', `${requestID} has been successfully cancelled.`);
+    showAlert('Success', `Request has been successfully cancelled.`);
   } catch (error) {
     console.error('Error updating WFH request', error);
     showAlert('Error', 'Failed to cancel the request.');
