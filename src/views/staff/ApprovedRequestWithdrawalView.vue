@@ -4,16 +4,7 @@ import { mapGetters } from 'vuex';
 import { inject } from 'vue';
 
 export default {
-  props: {
-    initialSuccessMessage: {
-      type: String,
-      default: '',
-    },
-    initialErrorMessage: {
-      type: String,
-      default: '',
-    },
-  },
+  props: {},
   data() {
     return {
       API_ROUTE: inject('API_ROUTE'),
@@ -28,20 +19,14 @@ export default {
       Status: '',
       Approver_ID: '',
       Approver_Name: '',
-      errorMessage: this.initialErrorMessage,
-      successMessage: this.initialSuccessMessage,
       existingRequestDates: [],
       operationDone: false,
+      showAlertModal: false,
+      modalTitle: '',
+      modalMessage: '',
     };
   },
-  watch: {
-    initialSuccessMessage(newVal) {
-      this.successMessage = newVal;
-    },
-    initialErrorMessage(newVal) {
-      this.errorMessage = newVal;
-    },
-  },
+  watch: {},
   computed: {
     ...mapGetters(['getStaffID']),
   },
@@ -81,8 +66,9 @@ export default {
           WFH_Date: this.WFH_Date,
         });
 
-        this.successMessage = 'Withdrawal Request Submitted Successfully';
-        this.errorMessage = '';
+        this.modalTitle = 'Success';
+        this.modalMessage = 'Withdrawal Request Submitted Successfully';
+        this.showAlertModal = true;
         this.operationDone = true;
       } catch (error) {
         console.log(error);
@@ -91,18 +77,27 @@ export default {
           error.response.data &&
           error.response.data.message
         ) {
-          this.errorMessage = error.response.data.message;
+          this.modalTitle = 'Error';
+          this.modalMessage = error.response.data.message;
         } else {
-          this.errorMessage = 'Withdrawal Request Submission Failed';
+          this.modalTitle = 'Error';
+          this.modalMessage = 'Withdrawal Request Submission Failed';
         }
+        this.showAlertModal = true;
         this.successMessage = '';
       }
     },
     cancel() {
       this.Request_Reason = '';
-      this.errorMessage = '';
-      this.successMessage = '';
       this.$router.push('/staff-requeststatus');
+    },
+    closeModal() {
+      this.showAlertModal = false;
+      this.modalTitle = '';
+      this.modalMessage = '';
+      if (this.operationDone) {
+        this.$router.push('/staff-requeststatus');
+      }
     },
   },
   mounted() {
@@ -173,12 +168,6 @@ export default {
           disabled
         />
       </div>
-      <div v-if="errorMessage" class="alert alert-danger mb-3">
-        {{ errorMessage }}
-      </div>
-      <div v-if="successMessage" class="alert alert-success mb-3">
-        {{ successMessage }}
-      </div>
       <div v-if="!operationDone">
         <button type="submit" class="btn btn-primary m-1">Submit</button>
         <button type="button" class="btn btn-secondary m-1" @click="cancel">
@@ -187,4 +176,60 @@ export default {
       </div>
     </form>
   </div>
+
+  <div v-if="showAlertModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div
+          class="modal-header"
+          :class="{
+            'bg-success text-white': modalTitle === 'Success',
+            'bg-danger text-white': modalTitle === 'Error',
+          }"
+        >
+          <h5 class="modal-title">{{ modalTitle }}</h5>
+        </div>
+        <div class="modal-body">
+          <p>{{ modalMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="closeModal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
+<style>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-dialog {
+  background-color: white;
+  border-radius: 5px;
+  max-width: 500px;
+  width: 100%;
+}
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.modal-body {
+  padding: 1rem;
+}
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  text-align: right;
+}
+</style>

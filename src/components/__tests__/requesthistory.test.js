@@ -13,8 +13,8 @@ describe('RequestHistory', () => {
       },
       Request_Reason: 'Sick Leave',
       WFH_Date: '2024-10-01T16:00:00.000Z',
-      Request_Date: '2024-09-01T16:00:00.000Z',
-      Decision_Date: '2024-09-5T16:00:00.000Z',
+      Request_Date: '2024-09-02T00:00:00.000Z',
+      Decision_Date: '2024-09-5T00:00:00.000Z',
       Request_Period: 'AM',
       Status: 'Approved',
       Comment: 'Get well soon!',
@@ -100,7 +100,7 @@ describe('RequestHistory', () => {
         },
       });
       const requestDate = wrapper.find('tbody tr td:nth-child(4)').text();
-      expect(requestDate).toBe('September 1, 2024 (Sunday)');
+      expect(requestDate).toBe('September 2, 2024 (Monday)');
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');

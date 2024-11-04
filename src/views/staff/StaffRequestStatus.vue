@@ -167,7 +167,7 @@ const cancelRequest = async (requestID) => {
 
     showAlert('Success', `${requestID} has been successfully cancelled.`);
   } catch (error) {
-    console.error('Error cancelling WFH request:', error);
+    console.error('Error updating WFH request', error);
     showAlert('Error', 'Failed to cancel the request.');
   }
 };
@@ -197,6 +197,11 @@ onMounted(async () => {
   } else {
     console.error('Staff ID is not available.');
   }
+});
+
+defineExpose({
+  openWithdrawForm,
+  cancelRequest,
 });
 </script>
 
