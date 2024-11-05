@@ -72,11 +72,18 @@ onMounted(() => {
                   </BTbody>
                 </BTableSimple>
                 <p>
-                  WFH: {{ dateObject['wfh_count'] }} /
+                  WFH (Approved): {{ dateObject['wfh_count'] }} /
                   {{ dateObject['total_count'] }}
                 </p>
+                <p>
+                  In Office:
+                  {{ dateObject['total_count'] - dateObject['wfh_count'] }}
+                </p>
               </div>
-              <p v-else>No WFH requests for this day</p>
+              <div v-else>
+                <h5>No WFH requests for this day</h5>
+                <p>In Office: 554</p>
+              </div>
             </BCard>
           </BCol>
         </BRow>
