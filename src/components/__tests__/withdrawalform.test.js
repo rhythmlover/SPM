@@ -1,12 +1,35 @@
 import { mount } from '@vue/test-utils';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import ApprovedRequestWithdrawal from '../../views/staff/ApprovedRequestWithdrawalView.vue';
 import { updateSheet } from '../../../updateGoogleSheet';
 import axios from 'axios';
+import { createRouter, createMemoryHistory } from 'vue-router';
 
 vi.mock('axios');
 
+const routes = [
+  {
+    path: '/staff-requeststatus',
+    name: 'staff-requeststatus',
+    component: { template: '<div>Staff Request Status</div>' },
+  },
+  {
+    path: '/withdraw-request/:requestID/:WFH_Date/:Request_Period/',
+    name: 'staff-approved-requests-withdrawal',
+    component: { template: '<div>Withdraw Form</div>' },
+  },
+];
+
+const router = createRouter({
+  history: createMemoryHistory(),
+  routes,
+});
+
 describe('ApprovedRequestWithdrawal.vue', () => {
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
   it('User Successfully Submits the Withdrawal Form', async () => {
     const testId = 'TC-037';
 
@@ -40,15 +63,19 @@ describe('ApprovedRequestWithdrawal.vue', () => {
       const form = wrapper.find('form');
       await form.trigger('submit.prevent');
 
-      wrapper.vm.successMessage = 'Withdrawal Request Submitted Successfully';
-      wrapper.vm.errorMessage = '';
-      wrapper.vm.operationDone = true;
-
       await wrapper.vm.$nextTick();
 
-      const successAlert = wrapper.find('.alert-success');
-      expect(successAlert.exists()).toBe(true);
-      expect(successAlert.text()).toContain(
+      expect(wrapper.vm.showAlertModal).toBe(true);
+      expect(wrapper.vm.modalTitle).toBe('Success');
+      expect(wrapper.vm.modalMessage).toBe(
+        'Withdrawal Request Submitted Successfully',
+      );
+
+      const modalTitle = wrapper.find('.modal-title');
+      expect(modalTitle.text()).toContain('Success');
+
+      const modalMessage = wrapper.find('.modal-body p');
+      expect(modalMessage.text()).toContain(
         'Withdrawal Request Submitted Successfully',
       );
 
@@ -96,15 +123,19 @@ describe('ApprovedRequestWithdrawal.vue', () => {
       const form = wrapper.find('form');
       await form.trigger('submit.prevent');
 
-      wrapper.vm.errorMessage = 'Withdrawal Request Submission Failed';
-      wrapper.vm.successMessage = '';
-      wrapper.vm.operationDone = true;
-
       await wrapper.vm.$nextTick();
 
-      const errorAlert = wrapper.find('.alert-danger');
-      expect(errorAlert.exists()).toBe(true);
-      expect(errorAlert.text()).toContain(
+      expect(wrapper.vm.showAlertModal).toBe(true);
+      expect(wrapper.vm.modalTitle).toBe('Error');
+      expect(wrapper.vm.modalMessage).toBe(
+        'Withdrawal Request Submission Failed',
+      );
+
+      const modalTitle = wrapper.find('.modal-title');
+      expect(modalTitle.text()).toContain('Error');
+
+      const modalMessage = wrapper.find('.modal-body p');
+      expect(modalMessage.text()).toContain(
         'Withdrawal Request Submission Failed',
       );
 
@@ -122,6 +153,7 @@ describe('ApprovedRequestWithdrawal.vue', () => {
     try {
       const wrapper = mount(ApprovedRequestWithdrawal, {
         global: {
+          plugins: [router],
           mocks: {
             $route: {
               params: {
@@ -155,6 +187,7 @@ describe('ApprovedRequestWithdrawal.vue', () => {
     try {
       const wrapper = mount(ApprovedRequestWithdrawal, {
         global: {
+          plugins: [router],
           mocks: {
             $route: {
               params: {
@@ -177,7 +210,6 @@ describe('ApprovedRequestWithdrawal.vue', () => {
 
       await updateSheet(testId, 'Passed');
       consoleSpy.mockRestore();
-      axios.get.mockReset();
     } catch (error) {
       await updateSheet(testId, 'Failed');
       throw error;
@@ -189,6 +221,7 @@ describe('ApprovedRequestWithdrawal.vue', () => {
     try {
       const wrapper = mount(ApprovedRequestWithdrawal, {
         global: {
+          plugins: [router],
           mocks: {
             $route: {
               params: {
@@ -206,14 +239,21 @@ describe('ApprovedRequestWithdrawal.vue', () => {
         },
       });
 
-      expect(wrapper.vm.successMessage).toBe('Initial Success');
-      expect(wrapper.vm.errorMessage).toBe('Initial Error');
+      await wrapper.setData({
+        modalTitle: 'Initial Success',
+        modalMessage: 'Initial Error',
+      });
 
-      await wrapper.setProps({ initialSuccessMessage: 'Updated Success' });
-      await wrapper.setProps({ initialErrorMessage: 'Updated Error' });
+      expect(wrapper.vm.modalTitle).toBe('Initial Success');
+      expect(wrapper.vm.modalMessage).toBe('Initial Error');
 
-      expect(wrapper.vm.successMessage).toBe('Updated Success');
-      expect(wrapper.vm.errorMessage).toBe('Updated Error');
+      await wrapper.setData({
+        modalTitle: 'Updated Success',
+        modalMessage: 'Updated Error',
+      });
+
+      expect(wrapper.vm.modalTitle).toBe('Updated Success');
+      expect(wrapper.vm.modalMessage).toBe('Updated Error');
 
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -228,6 +268,7 @@ describe('ApprovedRequestWithdrawal.vue', () => {
       const mockRouterPush = vi.fn();
       const wrapper = mount(ApprovedRequestWithdrawal, {
         global: {
+          plugins: [router],
           mocks: {
             $router: {
               push: mockRouterPush,
@@ -251,8 +292,8 @@ describe('ApprovedRequestWithdrawal.vue', () => {
       await wrapper.vm.cancel();
 
       expect(wrapper.vm.Request_Reason).toBe('');
-      expect(wrapper.vm.successMessage).toBe('');
-      expect(wrapper.vm.errorMessage).toBe('');
+      expect(wrapper.vm.modalTitle).toBe('');
+      expect(wrapper.vm.modalMessage).toBe('');
       expect(mockRouterPush).toHaveBeenCalledWith('/staff-requeststatus');
 
       await updateSheet(testId, 'Passed');
@@ -267,6 +308,7 @@ describe('ApprovedRequestWithdrawal.vue', () => {
     try {
       const wrapper = mount(ApprovedRequestWithdrawal, {
         global: {
+          plugins: [router],
           mocks: {
             $route: {
               params: {
@@ -282,15 +324,15 @@ describe('ApprovedRequestWithdrawal.vue', () => {
 
       wrapper.vm.Status = 'Pending';
       await wrapper.vm.$nextTick();
-      expect(wrapper.find('.alert-danger').exists()).toBe(false);
+      expect(wrapper.find('.modal-overlay').exists()).toBe(false);
 
       wrapper.vm.Status = 'Rejected';
       await wrapper.vm.$nextTick();
-      expect(wrapper.find('.alert-danger').exists()).toBe(false);
+      expect(wrapper.find('.modal-overlay').exists()).toBe(false);
 
       wrapper.vm.Status = 'Approved';
       await wrapper.vm.$nextTick();
-      expect(wrapper.find('.alert-danger').exists()).toBe(false);
+      expect(wrapper.find('.modal-overlay').exists()).toBe(false);
 
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -304,6 +346,7 @@ describe('ApprovedRequestWithdrawal.vue', () => {
     try {
       const wrapper = mount(ApprovedRequestWithdrawal, {
         global: {
+          plugins: [router],
           mocks: {
             $route: {
               params: {
@@ -318,24 +361,25 @@ describe('ApprovedRequestWithdrawal.vue', () => {
       });
 
       await wrapper.setData({
-        successMessage: '',
-        errorMessage: 'Error Message',
+        modalTitle: '',
+        modalMessage: 'Error Message',
+        showAlertModal: true,
       });
 
-      expect(wrapper.find('.alert-danger').exists()).toBe(true);
-      expect(wrapper.find('.alert-danger').text()).toContain('Error Message');
-      expect(wrapper.find('.alert-success').exists()).toBe(false);
+      expect(wrapper.find('.modal-overlay').exists()).toBe(true);
+      const modalMessage = wrapper.find('.modal-body p');
+      expect(modalMessage.text()).toContain('Error Message');
+      expect(wrapper.find('.modal-title').text()).not.toContain('Success');
 
       await wrapper.setData({
-        successMessage: 'Success Message',
-        errorMessage: '',
+        modalTitle: 'Success',
+        modalMessage: 'Success Message',
       });
 
-      expect(wrapper.find('.alert-success').exists()).toBe(true);
-      expect(wrapper.find('.alert-success').text()).toContain(
-        'Success Message',
-      );
-      expect(wrapper.find('.alert-danger').exists()).toBe(false);
+      expect(wrapper.find('.modal-overlay').exists()).toBe(true);
+      const successModalMessage = wrapper.find('.modal-body p');
+      expect(successModalMessage.text()).toContain('Success Message');
+      expect(wrapper.find('.modal-title').text()).not.toContain('Error');
 
       await updateSheet(testId, 'Passed');
     } catch (error) {

@@ -44,7 +44,7 @@ onMounted(() => {
                   <BTr>
                     <BTh class="col-3">Name</BTh>
                     <BTh class="col-3">Position</BTh>
-                    <BTh class="col-3">WFH Time</BTh>
+                    <BTh class="col-3">WFH Period</BTh>
                     <BTh class="col-3">Status</BTh>
                   </BTr>
                 </BThead>

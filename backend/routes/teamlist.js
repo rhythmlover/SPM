@@ -120,6 +120,8 @@ router.get("/subordinateHierarchy", async (req, res, next) => {
 
         // Get all subordinates
         const allSubordinateIds = findAllSubordinates(Staff_ID);
+        // Get own requests as well
+        allSubordinateIds.push(Staff_ID);
 
         // Fetch detailed information for all subordinates
         const subordinatesDetails = await Promise.all(allSubordinateIds.map(async (subId) => {

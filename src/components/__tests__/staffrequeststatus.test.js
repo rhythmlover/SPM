@@ -1,13 +1,19 @@
-import { mount } from '@vue/test-utils';
-import { describe, it, expect, vi } from 'vitest';
+import { mount, flushPromises } from '@vue/test-utils';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import StaffRequestStatus from '../../views/staff/StaffRequestStatus.vue';
 import { updateSheet } from '../../../updateGoogleSheet';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import axios from 'axios';
+import { nextTick } from 'vue';
 
 vi.mock('axios');
 
 const routes = [
+  {
+    path: '/staff-requeststatus',
+    name: 'staff-requeststatus',
+    component: { template: '<div>Staff Request Status</div>' },
+  },
   {
     path: '/withdraw-request/:requestID/:WFH_Date/:Request_Period/',
     name: 'staff-approved-requests-withdrawal',
@@ -19,6 +25,11 @@ const router = createRouter({
   history: createMemoryHistory(),
   routes,
 });
+
+const flushAll = async () => {
+  await flushPromises();
+  await nextTick();
+};
 
 describe('StaffRequestStatus.vue', () => {
   const request = [
@@ -77,46 +88,104 @@ describe('StaffRequestStatus.vue', () => {
     },
   ];
 
-  it('User Cancels Process of Deleting Pending Request', async () => {
+  const request_not_pending = [
+    {
+      Staff_ID: 171015,
+      Request_ID: 4,
+      Request_Reason: 'Personal',
+      WFH_Date: '2024-12-01',
+      Request_Date: '2024-11-25',
+      Status: 'Approved',
+      showWithdrawButton: false,
+      Comments: 'Some comments',
+      Request_Period: 'PM',
+    },
+  ];
+
+  const request_not_approved = [
+    {
+      Staff_ID: 171015,
+      Request_ID: 6,
+      Request_Reason: 'Personal',
+      WFH_Date: '2024-12-05',
+      Request_Date: '2024-11-25',
+      Status: 'Rejected',
+      showWithdrawButton: false,
+      Comments: 'Some comments',
+      Request_Period: 'FULL',
+    },
+  ];
+
+  beforeEach(async () => {
+    router.push('/');
+    await router.isReady();
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('User Cancels Process of Cancelling Pending Request', async () => {
     const testId = 'TC-022';
     try {
-      const confirmMock = vi.spyOn(window, 'confirm').mockReturnValue(false);
       const wrapper = mount(StaffRequestStatus, {
         props: { requests: request, status: 'pending' },
+        global: {
+          plugins: [router],
+        },
       });
 
       await wrapper.find('.btn-warning').trigger('click');
-      expect(confirmMock).toHaveBeenCalled();
-      expect(confirmMock).toHaveReturnedWith(false);
+
+      expect(wrapper.vm.showModal).toBe(true);
+      expect(wrapper.vm.modalTitle).toBe('Confirm Cancellation');
+      expect(wrapper.vm.modalMessage).toBe(
+        'Confirm cancellation of this pending request?',
+      );
+
+      const cancelButton = wrapper.find('.modal-footer .btn-secondary');
+      await cancelButton.trigger('click');
+
+      await flushPromises();
+
+      expect(wrapper.vm.showModal).toBe(false);
       expect(wrapper.vm.localRequests.length).toBe(1);
 
       await updateSheet(testId, 'Passed');
-      confirmMock.mockRestore();
     } catch (error) {
       await updateSheet(testId, 'Failed');
       throw error;
     }
   });
 
-  it('Successful Deletion of Pending Request', async () => {
+  it('Successful Cancellation of Pending Request', async () => {
     const testId = 'TC-023';
-    axios.delete.mockResolvedValueOnce({
-      data: { message: 'Request deleted successfully' },
-    });
     try {
-      const confirmMock = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      axios.put.mockResolvedValueOnce({
+        data: { message: 'Request cancelled successfully' },
+      });
+
       const wrapper = mount(StaffRequestStatus, {
         props: { requests: request, status: 'pending' },
+        global: {
+          plugins: [router],
+        },
       });
 
       await wrapper.find('.btn-warning').trigger('click');
-      expect(confirmMock).toHaveBeenCalled();
-      expect(confirmMock).toHaveReturnedWith(true);
-      await wrapper.vm.$nextTick();
+
+      await wrapper.find('.modal-footer .btn-primary').trigger('click');
+
+      await flushAll();
+
+      expect(wrapper.vm.showModal).toBe(true);
+      expect(wrapper.vm.modalTitle).toBe('Success');
+      expect(wrapper.vm.modalMessage).toBe(
+        'Request has been successfully cancelled.',
+      );
       expect(wrapper.vm.localRequests.length).toBe(0);
 
       await updateSheet(testId, 'Passed');
-      confirmMock.mockRestore();
     } catch (error) {
       await updateSheet(testId, 'Failed');
       throw error;
@@ -169,12 +238,26 @@ describe('StaffRequestStatus.vue', () => {
       const confirmMock = vi.spyOn(window, 'confirm').mockReturnValue(false);
       const wrapper = mount(StaffRequestStatus, {
         props: { requests: request_approved, status: 'approved' },
+        global: {
+          plugins: [router],
+        },
       });
 
       await wrapper.find('.btn-danger').trigger('click');
-      expect(confirmMock).toHaveBeenCalled();
-      expect(confirmMock).toHaveReturnedWith(false);
+      expect(wrapper.vm.showModal).toBe(true);
+      expect(wrapper.vm.modalTitle).toBe('Confirm Withdrawal');
+      expect(wrapper.vm.modalMessage).toBe(
+        'Send request to manager to approve withdrawal of this request?',
+      );
+
+      const cancelButton = wrapper.find('.modal-footer .btn-secondary');
+      await cancelButton.trigger('click');
+
+      expect(wrapper.vm.showModal).toBe(false);
       expect(wrapper.vm.localRequests.length).toBe(1);
+      expect(wrapper.vm.$route.name).not.toBe(
+        'staff-approved-requests-withdrawal',
+      );
 
       await updateSheet(testId, 'Passed');
       confirmMock.mockRestore();
@@ -187,38 +270,36 @@ describe('StaffRequestStatus.vue', () => {
   it('User Confirms Withdrawal of Approved Request', async () => {
     const testId = 'TC-036';
     try {
-      const confirmMock = vi.spyOn(window, 'confirm').mockReturnValue(true);
       const wrapper = mount(StaffRequestStatus, {
-        props: { requests: request_approved, status: 'approved' },
+        props: { requests: request_approved },
         global: {
           plugins: [router],
         },
       });
 
-      const withdrawButton = wrapper.find('.btn-danger');
-      if (!withdrawButton.exists()) {
-        throw new Error('Withdraw button not found');
-      }
+      await wrapper.find('.btn-danger').trigger('click');
 
-      await withdrawButton.trigger('click');
+      expect(wrapper.vm.showModal).toBe(true);
+      expect(wrapper.vm.modalTitle).toBe('Confirm Withdrawal');
+
+      const confirmButton = wrapper.find('.modal-footer .btn-primary');
+      await confirmButton.trigger('click');
+
+      await flushAll();
+
+      expect(wrapper.vm.showModal).toBe(false);
+
+      // Wait for navigation
       await router.isReady();
 
-      expect(confirmMock).toHaveBeenCalled();
-      expect(confirmMock).toHaveReturnedWith(true);
-
-      await wrapper.vm.$nextTick();
-
-      expect(wrapper.vm.$router.currentRoute.value.name).toBe(
-        'staff-approved-requests-withdrawal',
-      );
-      expect(wrapper.vm.$router.currentRoute.value.params).toMatchObject({
-        requestID: '2',
-        WFH_Date: '2024-10-03',
-        Request_Period: 'AM',
+      expect(wrapper.vm.$route.name).toBe('staff-approved-requests-withdrawal');
+      expect(wrapper.vm.$route.params).toMatchObject({
+        requestID: String(request_approved[0].Request_ID),
+        WFH_Date: request_approved[0].WFH_Date,
+        Request_Period: request_approved[0].Request_Period,
       });
 
       await updateSheet(testId, 'Passed');
-      confirmMock.mockRestore();
     } catch (error) {
       await updateSheet(testId, 'Failed');
       throw error;
@@ -289,7 +370,7 @@ describe('StaffRequestStatus.vue', () => {
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: {
-          requests: request_approved, // Initial data with 'Approved' status
+          requests: request_approved,
         },
       });
 
@@ -299,6 +380,7 @@ describe('StaffRequestStatus.vue', () => {
       let statusCell = requestRows[0].findAll('td').at(3);
       expect(statusCell.exists()).toBe(true);
 
+      // Check initial approved status
       const badge = statusCell.find('.text-bg-success');
       expect(badge.exists()).toBe(true);
       expect(badge.text()).toBe('Approved');
@@ -306,35 +388,39 @@ describe('StaffRequestStatus.vue', () => {
       let withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(true);
 
-      // Simulate the status update by changing the props
+      // Update props with new status
       await wrapper.setProps({
         requests: [
           {
             ...request_approved[0],
-            Status: 'Withdrawal Pending', // Change the status to Withdrawal Pending
-            showWithdrawButton: false, // Update to hide the Withdraw button
+            Status: 'Withdrawal Pending',
+            showWithdrawButton: false,
           },
         ],
       });
 
-      // Re-fetch request rows after props update
+      // Force a re-render
+      await wrapper.vm.$nextTick();
+
+      // Re-fetch elements after update
       const updatedRequestRows = wrapper.findAll('tbody tr');
-      expect(updatedRequestRows.length).toBe(1); // Should still be 1
+      expect(updatedRequestRows.length).toBe(1);
 
-      statusCell = updatedRequestRows[0].findAll('td').at(3);
-      expect(statusCell.exists()).toBe(true);
+      const updatedStatusCell = updatedRequestRows[0].findAll('td').at(3);
+      expect(updatedStatusCell.exists()).toBe(true);
 
-      const badge_pending_withdrawal = statusCell.find('.text-bg-light');
+      // Use the correct BBadge class for withdrawal pending
+      const badge_pending_withdrawal =
+        updatedStatusCell.find('.text-bg-warning');
       expect(badge_pending_withdrawal.exists()).toBe(true);
-      expect(badge_pending_withdrawal.text()).toBe('Withdrawal Pending'); // Fixed text
+      expect(badge_pending_withdrawal.text()).toBe('Withdrawal Pending');
 
-      withdrawButton = updatedRequestRows[0].find('.btn-danger');
-      expect(withdrawButton.exists()).toBe(false);
+      // Verify withdraw button is hidden
+      const updatedWithdrawButton = updatedRequestRows[0].find('.btn-danger');
+      expect(updatedWithdrawButton.exists()).toBe(false);
 
-      // Mark the test as passed
       await updateSheet(testId, 'Passed');
     } catch (error) {
-      // In case of error, mark as failed
       await updateSheet(testId, 'Failed');
       throw error;
     }
@@ -469,14 +555,23 @@ describe('StaffRequestStatus.vue', () => {
     }
   });
 
-  it('deleteRequest method when request is not pending', async () => {
+  it('cancelRequest method when request is not pending', async () => {
     const testId = 'TC-110';
     try {
       const wrapper = mount(StaffRequestStatus, {
-        props: { requests: request_approved },
+        props: { requests: request_not_pending },
+        global: {
+          plugins: [router],
+        },
       });
-      await wrapper.vm.deleteRequest(request_approved[0].Request_ID);
-      expect(wrapper.vm.localRequests.length).toBe(1); // Request should not be deleted
+
+      const cancelButton = wrapper.find('.btn-warning');
+      expect(cancelButton.exists()).toBe(false);
+
+      expect(wrapper.vm.showModal).toBe(false);
+
+      await flushAll();
+
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -488,19 +583,20 @@ describe('StaffRequestStatus.vue', () => {
     const testId = 'TC-111';
     try {
       const wrapper = mount(StaffRequestStatus, {
-        props: { requests: request },
+        props: { requests: request_not_approved, status },
         global: {
           plugins: [router],
         },
       });
-      await wrapper.vm.openWithdrawForm(
-        request[0].Request_ID,
-        request[0].WFH_Date,
-        request[0].Request_Period,
-      );
-      expect(wrapper.vm.$router.currentRoute.value.name).toBe(
-        'staff-approved-requests-withdrawal',
-      ); // Route should not change
+
+      const withdrawButton = wrapper.find('.btn-danger');
+      expect(withdrawButton.exists()).toBe(false);
+
+      // Ensure modal is not shown
+      expect(wrapper.vm.showModal).toBe(false);
+
+      await flushAll();
+
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');

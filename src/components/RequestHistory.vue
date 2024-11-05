@@ -5,6 +5,8 @@ import axios from 'axios';
 
 const formatRequestDate = (isoDate) => {
   const date = new Date(isoDate);
+  // Adjust for timezone offset
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
   const day = date.getUTCDate();
   const month = date.toLocaleString('en-US', {
     month: 'long',
@@ -47,7 +49,7 @@ export default {
     },
   },
   setup(props) {
-    const API_ROUTE = inject('API_ROUTE', 'http://localhost:3000');
+    const API_ROUTE = inject('API_ROUTE');
     const staffID = localStorage.getItem('staffID');
     const localRequests = ref([...props.requests]);
 

@@ -133,8 +133,12 @@ describe('ApplyArrangementRecurring.vue', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.successMessage).toBe('Request Submitted Successfully');
-    expect(wrapper.vm.errorMessage).toBe('');
+    const modal = wrapper.find('.modal-overlay');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find('.modal-title').text()).toBe('Success');
+    expect(modal.find('.modal-body p').text()).toBe(
+      'Request Submitted Successfully',
+    );
     await updateSheet(testId, 'Passed');
   });
 
@@ -145,8 +149,12 @@ describe('ApplyArrangementRecurring.vue', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.errorMessage).toBe('Please fill in all fields');
-    expect(wrapper.vm.successMessage).toBe('');
+    const modal = wrapper.find('.modal-overlay');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find('.modal-title').text()).toBe('Error');
+    expect(modal.find('.modal-body p').text()).toBe(
+      'Please fill in all fields',
+    );
     await updateSheet(testId, 'Passed');
   });
 
@@ -160,7 +168,6 @@ describe('ApplyArrangementRecurring.vue', () => {
     expect(wrapper.vm.errorMessage).toBe(
       'No valid dates found for the selected range and day of the week',
     );
-    expect(wrapper.vm.successMessage).toBe('');
     await updateSheet(testId, 'Passed');
   });
 
@@ -171,7 +178,12 @@ describe('ApplyArrangementRecurring.vue', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.successMessage).toBe('Request Submitted Successfully');
+    const modal = wrapper.find('.modal-overlay');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find('.modal-title').text()).toBe('Success');
+    expect(modal.find('.modal-body p').text()).toBe(
+      'Request Submitted Successfully',
+    );
     expect(wrapper.vm.errorMessage).toBe('');
     await updateSheet(testId, 'Passed');
   });
@@ -202,7 +214,12 @@ describe('ApplyArrangementRecurring.vue', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.successMessage).toBe('Request Submitted Successfully');
+    const modal = wrapper.find('.modal-overlay');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find('.modal-title').text()).toBe('Success');
+    expect(modal.find('.modal-body p').text()).toBe(
+      'Request Submitted Successfully',
+    );
     await updateSheet(testId, 'Passed');
   });
 
@@ -227,9 +244,8 @@ describe('ApplyArrangementRecurring.vue', () => {
     await flushPromises();
 
     expect(wrapper.vm.errorMessage).toBe(
-      'You have a clashing request for the following dates: 2024-10-16',
+      'You have a clashing request for the following dates:\n2024-10-16',
     );
-    expect(wrapper.vm.successMessage).toBe('');
     await updateSheet(testId, 'Passed');
   });
 
@@ -243,8 +259,12 @@ describe('ApplyArrangementRecurring.vue', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.errorMessage).toBe('Please fill in all fields');
-    expect(wrapper.vm.successMessage).toBe('');
+    const modal = wrapper.find('.modal-overlay');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find('.modal-title').text()).toBe('Error');
+    expect(modal.find('.modal-body p').text()).toBe(
+      'Please fill in all fields',
+    );
     expect(axios.post).not.toHaveBeenCalled();
     await updateSheet(testId, 'Passed');
   });
@@ -272,7 +292,12 @@ describe('ApplyArrangementRecurring.vue', () => {
     expect(wrapper.vm.Request_Period).toBe('');
     expect(wrapper.vm.Request_Reason).toBe('');
     expect(wrapper.vm.errorMessage).toBe('');
-    expect(wrapper.vm.successMessage).toBe('Request Submitted Successfully');
+    const modal = wrapper.find('.modal-overlay');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find('.modal-title').text()).toBe('Success');
+    expect(modal.find('.modal-body p').text()).toBe(
+      'Request Submitted Successfully',
+    );
     await updateSheet(testId, 'Passed');
   });
 
@@ -286,9 +311,11 @@ describe('ApplyArrangementRecurring.vue', () => {
 
   it('should handle API failure in fetchReportingManagerID', async () => {
     const testId = 'TC-141';
+
     axios.get.mockImplementationOnce(() =>
       Promise.reject(new Error('API Error')),
     );
+
     const wrapper = mount(ApplyArrangementRecurring, {
       global: {
         provide: {
@@ -299,7 +326,10 @@ describe('ApplyArrangementRecurring.vue', () => {
 
     await flushPromises();
 
-    expect(wrapper.vm.errorMessage).toBe(
+    const modal = wrapper.find('.modal-overlay');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find('.modal-title').text()).toBe('Error');
+    expect(modal.find('.modal-body p').text()).toBe(
       'Failed to fetch reporting manager information',
     );
     await updateSheet(testId, 'Passed');
@@ -307,12 +337,25 @@ describe('ApplyArrangementRecurring.vue', () => {
 
   it('should handle API failure in fetchExistingWFHDates', async () => {
     const testId = 'TC-142';
-    axios.get.mockImplementationOnce(() =>
-      Promise.reject(new Error('API Error')),
-    );
-    axios.get.mockImplementationOnce(() =>
-      Promise.reject(new Error('API Error')),
-    );
+
+    axios.get.mockImplementation((url) => {
+      if (url.includes('/employee/get-staff-reporting-manager')) {
+        return Promise.resolve({
+          data: { results: [{ Reporting_Manager: '171018' }] },
+        });
+      }
+      if (url.includes('/employee/get-staff-name-by-id')) {
+        return Promise.resolve({ data: { name: 'Ji Truong' } });
+      }
+      if (
+        url.includes('/wfh-request/user/non-recurring-dates') ||
+        url.includes('/wfh-request/user/recurring-dates')
+      ) {
+        return Promise.reject(new Error('API Error'));
+      }
+      return Promise.reject(new Error('Unknown endpoint'));
+    });
+
     const wrapper = mount(ApplyArrangementRecurring, {
       global: {
         provide: {
@@ -322,8 +365,14 @@ describe('ApplyArrangementRecurring.vue', () => {
     });
 
     await flushPromises();
+    await wrapper.vm.$nextTick();
 
-    expect(wrapper.vm.errorMessage).toBe('Failed to fetch existing WFH dates');
+    const modal = wrapper.find('.modal-overlay');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find('.modal-title').text()).toBe('Error');
+    expect(modal.find('.modal-body p').text()).toBe(
+      'Failed to fetch existing WFH dates',
+    );
     await updateSheet(testId, 'Passed');
   });
 
@@ -345,15 +394,43 @@ describe('ApplyArrangementRecurring.vue', () => {
 
   it('should handle API error during apply request', async () => {
     const testId = 'TC-144';
-    axios.post.mockRejectedValueOnce(new Error('API Error'));
+
+    axios.get.mockReset();
+    axios.post.mockReset();
+
+    axios.get.mockImplementation((url) => {
+      if (url.includes('/employee/get-staff-reporting-manager')) {
+        return Promise.resolve({
+          data: { results: [{ Reporting_Manager: '171018' }] },
+        });
+      }
+      if (url.includes('/employee/get-staff-name-by-id')) {
+        return Promise.resolve({ data: { name: 'Ji Truong' } });
+      }
+      if (
+        url.includes('/wfh-request/user/non-recurring-dates') ||
+        url.includes('/wfh-request/user/recurring-dates')
+      ) {
+        return Promise.resolve({
+          data: { results: [], recurringDates: [] },
+        });
+      }
+      return Promise.reject(new Error('Unknown endpoint'));
+    });
+
+    axios.post.mockImplementation(() => Promise.reject(new Error('API Error')));
 
     const wrapper = await createWrapper(validRequest);
 
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.vm.errorMessage).toBe('Application Submission Failed');
-    expect(wrapper.vm.successMessage).toBe('');
+    const modal = wrapper.find('.modal-overlay');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find('.modal-title').text()).toBe('Error');
+    expect(modal.find('.modal-body p').text()).toBe(
+      'Request Submission Failed',
+    );
     await updateSheet(testId, 'Passed');
   });
 

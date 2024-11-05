@@ -394,7 +394,7 @@ describe('WFH Endpoint', () => {
       .post('/wfh-request/apply')
       .send(newWFHRequest)
       .expect(200);
-    expect(response.body.message).toBe('Application Submitted Successfully');
+    expect(response.body.message).toBe('Request Submitted Successfully');
     expect(response.body.data).toHaveProperty('insertId');
   });
 
@@ -416,7 +416,7 @@ describe('WFH Endpoint', () => {
       .post('/wfh-request/apply')
       .send(incompleteWFHRequest)
       .expect(400);
-    expect(response.body.message).toBe('Application Submission Failed');
+    expect(response.body.message).toBe('Request Submission Failed');
   });
 
   it('POST /wfh-request/apply › should fail to apply if WFH date is out of range', async () => {
@@ -499,9 +499,7 @@ describe('WFH Endpoint', () => {
   it('POST /wfh-request/recurring-request/insert-approved-recurring-dates › should insert approved recurring dates successfully', async () => {
     const newRecurringRequest = {
       Staff_ID: 1,
-      WFH_Date_Start: '2024-11-01',
-      WFH_Date_End: '2024-11-30',
-      WFH_Day: '4',
+      WFH_Date: '2024-11-01',
       Request_Period: 'AM',
       Request_Date: '2024-10-15',
       Request_Reason: 'Weekly meetings',
@@ -509,6 +507,7 @@ describe('WFH Endpoint', () => {
       Approver_ID: 2,
       Comments: 'Approved for November',
       Decision_Date: '2024-10-16',
+      Recurring_Request_ID: 2,
     };
 
     const response = await request(app)
@@ -536,7 +535,7 @@ describe('WFH Endpoint', () => {
       .post('/wfh-request/apply-recurring')
       .send(recurringRequest)
       .expect(200);
-    expect(response.body.message).toBe('Application Submitted Successfully');
+    expect(response.body.message).toBe('Request Submitted Successfully');
 
     // Verify in database
     const dbResponse = await mysqlClient.query(
@@ -658,7 +657,7 @@ describe('WFH Endpoint', () => {
       .send(withdrawalRequest)
       .expect(200);
     expect(response.body.message).toBe(
-      'Withdrawal Application Submitted Successfully',
+      'Withdrawal Request Submitted Successfully',
     );
   });
 

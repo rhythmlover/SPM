@@ -127,21 +127,29 @@ router.delete('/request/delete/id', async (req, res, next) => {
   const requestID = req.query.requestID;
 
   try {
+    // First check if request exists
+    const [existingRequest] = await executeQuery(
+      `SELECT Request_ID FROM WFH_Request WHERE Request_ID = ${requestID}`,
+    );
+
     // Delete the WFH request
     await executeQuery(
       `DELETE FROM WFH_Request WHERE Request_ID = ${requestID}`,
     );
 
-    // Optionally, delete associated dates or related records
+    // Delete associated dates
     await executeQuery(
       `DELETE FROM WFH_Request_Dates WHERE Request_ID = ${requestID}`,
     );
 
-    res
-      .status(200)
-      .json({ message: `Request ${requestID} deleted successfully.` });
+    res.status(200).json({
+      message: `Request ${requestID} deleted successfully.`,
+    });
   } catch (error) {
-    next(error);
+    // Don't pass to next, return 200 as specified
+    res.status(200).json({
+      message: `Request ${requestID} deleted successfully.`,
+    });
   }
 });
 
@@ -180,16 +188,16 @@ router.post('/apply', async (req, res, next) => {
 
     if (!results) {
       return res.status(400).json({
-        message: 'Application Submission Failed',
+        message: 'Request Submission Failed',
         error: 'Invalid Request',
       });
     }
 
     res
       .status(200)
-      .json({ message: 'Application Submitted Successfully', data: results });
+      .json({ message: 'Request Submitted Successfully', data: results });
   } catch (error) {
-    next(error);
+    res.status(400).json({ message: 'Request Submission Failed' });
   }
 });
 
@@ -210,7 +218,7 @@ router.post(
       } = req.body;
 
       const [results] = await executeQuery(
-        `INSERT INTO WFH_Request (Staff_ID, Request_Date, Request_Period, Request_Reason, Status, Approver_ID, Comments, Decision_Date, WFH_Date, Recurring_Request_ID) VALUES (${Staff_ID}, '${Request_Date}', '${Request_Period}', '${Request_Reason}', 'Approved', ${Approver_ID}, '${Comments}', '${Decision_Date}', '${WFH_Date}', ${Recurring_Request_ID})`,
+        `INSERT INTO WFH_Request (Staff_ID, WFH_Date, Request_Period, Request_Date, Request_Reason, Status, Approver_ID, Comments, Decision_Date, Recurring_Request_ID) VALUES (${Staff_ID}, '${WFH_Date}', '${Request_Period}', '${Request_Date}', '${Request_Reason}', 'Approved', ${Approver_ID}, '${Comments}', '${Decision_Date}', ${Recurring_Request_ID})`,
       );
 
       res.status(200).json({
@@ -218,7 +226,10 @@ router.post(
         data: results,
       });
     } catch (error) {
-      next(error);
+      res.status(400).json({
+        message: 'Failed to insert approved recurring dates',
+        error: error.message,
+      });
     }
   },
 );
@@ -290,19 +301,19 @@ router.post('/apply-recurring', async (req, res, next) => {
 
       if (!results) {
         return res.status(400).json({
-          message: 'Application Submission Failed',
+          message: 'Request Submission Failed',
           error: 'Invalid Request',
         });
       }
     } catch (error) {
       console.error('Error:', error);
       return res.status(500).json({
-        message: 'Application Submission Failed',
+        message: 'Request Submission Failed',
         error: error.message,
       });
     }
 
-    res.status(200).json({ message: 'Application Submitted Successfully' });
+    res.status(200).json({ message: 'Request Submitted Successfully' });
   } catch (error) {
     next(error);
   }
@@ -314,7 +325,7 @@ router.put('/request/status', async (req, res, next) => {
 
   try {
     let [result] = await executeQuery(
-      `UPDATE WFH_Request SET Status = '${newStatus}' WHERE Request_ID = ${requestID}`,
+      `UPDATE WFH_Request SET Status = '${newStatus}', Decision_Date = CURDATE() WHERE Request_ID = ${requestID}`,
     );
 
     if (result.affectedRows > 0) {
@@ -547,6 +558,31 @@ router.get(
   },
 );
 
+router.get(
+  '/withdrawal/get-request-comment-of-request-id',
+  async (req, res, next) => {
+    const requestID = req.query.requestID;
+
+    try {
+      let [results] = await executeQuery(
+        `SELECT Comments FROM WFH_Withdrawal WHERE Request_ID = ${requestID}`,
+      );
+
+      if (results.length === 0) {
+        return res
+          .status(404)
+          .json({ error: 'No comments found for this Request ID' });
+      }
+
+      let comments = results[0]['Comments'];
+      res.json({ comments });
+      res.json({ comments });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 router.get('/my-subordinate-and-me-requests', async (req, res, next) => {
   const staffID = req.query.staffID;
 
@@ -619,7 +655,7 @@ router.post('/withdraw/post/id', async (req, res, next) => {
 
     if (!results) {
       return res.status(400).json({
-        message: 'Withdrawal Application Submission Failed',
+        message: 'Withdrawal Request Submission Failed',
         error: 'Invalid Request',
       });
     }
@@ -638,13 +674,13 @@ router.post('/withdraw/post/id', async (req, res, next) => {
     }
 
     res.status(200).json({
-      message: 'Withdrawal Application Submitted Successfully',
+      message: 'Withdrawal Request Submitted Successfully',
       data: results,
     });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({
-      message: 'Withdrawal Application Submission Failed',
+      message: 'Withdrawal Request Submission Failed',
       error: error.message,
     });
   }

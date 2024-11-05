@@ -14,11 +14,12 @@ export default {
       Status: 'Pending',
       Approver_ID: '',
       Approver_Name: '',
-      errorMessage: '',
-      successMessage: '',
       existingWFHDates: [],
       isLoading: false,
       validDatePeriod: [],
+      showAlertModal: false,
+      modalTitle: '',
+      modalMessage: '',
     };
   },
   computed: {
@@ -63,7 +64,9 @@ export default {
           this.Approver_Name = reportingManagerName.data.name;
         }
       } catch (error) {
-        this.errorMessage = 'Failed to fetch reporting manager information';
+        this.modalTitle = 'Error';
+        this.modalMessage = 'Failed to fetch reporting manager information';
+        this.showAlertModal = true;
         console.log(error);
       }
     },
@@ -85,16 +88,17 @@ export default {
         console.log('Existing WFH Dates:', this.existingWFHDates);
       } catch (error) {
         console.error('Error fetching WFH dates:', error);
-        this.errorMessage = 'Failed to fetch existing WFH dates';
+        this.modalTitle = 'Error';
+        this.modalMessage = 'Failed to fetch existing WFH dates';
+        this.showAlertModal = true;
         console.log(error);
       }
     },
     validateForm() {
-      this.successMessage = '';
-      this.errorMessage = '';
-
       if (!this.WFH_Date || !this.Request_Period || !this.Request_Reason) {
-        this.errorMessage = 'Please fill in all fields';
+        this.modalTitle = 'Error';
+        this.modalMessage = 'Please fill in all fields';
+        this.showAlertModal = true;
         return false;
       }
 
@@ -103,12 +107,16 @@ export default {
         WFHDate < new Date(this.minDate) ||
         WFHDate > new Date(this.maxDate)
       ) {
-        this.errorMessage = 'Request date is outside the allowed range';
+        this.modalTitle = 'Error';
+        this.modalMessage = 'Request date is outside the allowed range';
+        this.showAlertModal = true;
         return false;
       }
 
       if (this.isDateDisabled(this.WFH_Date)) {
-        this.errorMessage = 'This date already has a request or is a weekend';
+        this.modalTitle = 'Error';
+        this.modalMessage = 'This date already has a request or is a weekend';
+        this.showAlertModal = true;
         return false;
       }
 
@@ -133,7 +141,10 @@ export default {
       console.log('Existing WFH Dates:', this.existingWFHDates);
 
       if (clashingDates.length > 0) {
-        this.errorMessage = `You have a clashing request for the chosen date and period`;
+        this.modalTitle = 'Error';
+        this.modalMessage =
+          'You have a clashing request for the chosen date and period';
+        this.showAlertModal = true;
         return false;
       }
 
@@ -160,8 +171,9 @@ export default {
           },
         );
 
-        this.successMessage = 'Request Submitted Successfully';
-        this.errorMessage = '';
+        this.modalTitle = 'Success';
+        this.modalMessage = 'Request Submitted Successfully';
+        this.showAlertModal = true;
 
         console.log(response);
         setTimeout(() => {
@@ -169,9 +181,10 @@ export default {
         }, 3000);
       } catch (error) {
         console.log(error);
-        this.errorMessage =
-          error.response?.data?.message || 'Application Submission Failed';
-        this.successMessage = '';
+        this.modalTitle = 'Error';
+        this.modalMessage =
+          error.response?.data?.message || 'Request Submission Failed';
+        this.showAlertModal = true;
       } finally {
         this.isLoading = false;
         this.WFH_Date = '';
@@ -184,12 +197,15 @@ export default {
       this.WFH_Date = '';
       this.Request_Period = '';
       this.Request_Reason = '';
-      this.errorMessage = '';
-      this.successMessage = '';
     },
     cancel() {
       this.resetForm();
       this.$router.push('/staff-myschedule');
+    },
+    closeModal() {
+      this.showAlertModal = false;
+      this.modalTitle = '';
+      this.modalMessage = '';
     },
   },
   mounted() {
@@ -248,12 +264,6 @@ export default {
           disabled
         />
       </div>
-      <div v-if="errorMessage" class="alert alert-danger mb-3">
-        {{ errorMessage }}
-      </div>
-      <div v-if="successMessage" class="alert alert-success mb-3">
-        {{ successMessage }}
-      </div>
       <button
         type="submit"
         class="btn btn-primary m-1"
@@ -267,4 +277,66 @@ export default {
       </button>
     </form>
   </div>
+
+  <div v-if="showAlertModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div
+          class="modal-header"
+          :class="{
+            'bg-success text-white': modalTitle === 'Success',
+            'bg-danger text-white': modalTitle === 'Error',
+          }"
+        >
+          <h5 class="modal-title">{{ modalTitle }}</h5>
+        </div>
+        <div class="modal-body">
+          <p>{{ modalMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="closeModal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
+<style>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-dialog {
+  background-color: white;
+  border-radius: 5px;
+  max-width: 500px;
+  width: 100%;
+}
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.modal-body {
+  padding: 1rem;
+}
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  text-align: right;
+}
+.close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+</style>

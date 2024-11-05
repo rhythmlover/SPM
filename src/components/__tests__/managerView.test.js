@@ -38,7 +38,7 @@ describe('ManagerView', () => {
       const headers = wrapper.findAll('th');
       expect(headers[0].text()).toBe('Name');
       expect(headers[1].text()).toBe('Position');
-      expect(headers[2].text()).toBe('WFH Time');
+      expect(headers[2].text()).toBe('WFH Period');
       expect(headers[3].text()).toBe('Status');
       await updateSheet(testId, 'Passed');
     } catch (error) {

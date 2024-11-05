@@ -99,6 +99,11 @@ router.get('/get-staff-reporting-manager', async (req, res, next) => {
 
 router.get('/get-staff-under-reporting-manager', async (req, res, next) => {
   const reportingManagerID = req.query.reportingManagerID;
+
+  if (!reportingManagerID) {
+    return res.status(400).json({ error: 'reportingManagerID is required' });
+  }
+
   try {
     let [results] = await executeQuery(
       `SELECT Staff_ID FROM Employee WHERE Reporting_Manager = ${reportingManagerID}`,
