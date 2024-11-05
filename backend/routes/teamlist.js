@@ -36,13 +36,79 @@ router.get("/byReportingManager", async (req, res, next) => {
             return res.status(404).json({ error: "No employees found reporting to this manager" });
         }
 
+        // Function to convert date to Singapore timezone
+        const convertToSGTime = (date) => {
+            const sgDate = new Date(date);
+            sgDate.setHours(sgDate.getHours() + 8); // UTC+8 for Singapore
+            return sgDate.toISOString().split('T')[0];
+        };
+
         // Iterate through all employees and get their WFH Requests
         const employeeRequests = [];
         for (const employee of employeeResults) {
             const { Staff_ID: employeeStaffId } = employee;
 
-            // Query the WFH_Request table for this employee's requests
+            // Query the regular WFH_Request table
             let [wfhResults] = await executeQuery(`SELECT * FROM WFH_Request WHERE Staff_ID = ${employeeStaffId}`);
+
+            // Format dates for regular WFH requests
+            wfhResults = wfhResults.map(request => ({
+                ...request,
+                WFH_Date: convertToSGTime(request.WFH_Date)
+            }));
+
+            // Query the recurring WFH requests (pending and rejected only)
+            const [recurringResults] = await executeQuery(`
+                SELECT Request_ID, Staff_ID, WFH_Date_Start, WFH_Date_End, 
+                       WFH_Day, Request_Period, Request_Date, Request_Reason, 
+                       Status, Approver_ID, Comments, Decision_Date 
+                FROM WFH_Request_Recurring 
+                WHERE Staff_ID = ${employeeStaffId} 
+                AND Status IN ('Pending', 'Rejected')
+            `);
+
+            // Process recurring requests to expand dates
+            const expandedRecurringRequests = [];
+            for (const request of recurringResults) {
+                // Convert start and end dates to Singapore timezone
+                const startDate = new Date(request.WFH_Date_Start);
+                startDate.setHours(8, 0, 0, 0); // Set to 8 AM SGT
+                
+                const endDate = new Date(request.WFH_Date_End);
+                endDate.setHours(8, 0, 0, 0); // Set to 8 AM SGT
+
+                const requestDay = parseInt(request.WFH_Day);
+                const dayMap = {
+                    1: 1,  // Monday
+                    2: 2,  // Tuesday
+                    3: 3,  // Wednesday
+                    4: 4,  // Thursday
+                    5: 5   // Friday
+                };
+
+                const targetDayNum = dayMap[requestDay];
+
+                // Iterate through each date in the range
+                for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+                    if (date.getDay() === targetDayNum) {
+                        expandedRecurringRequests.push({
+                            Request_ID: request.Request_ID,
+                            Staff_ID: request.Staff_ID,
+                            WFH_Date: convertToSGTime(date),
+                            Request_Date: request.Request_Date,
+                            Request_Reason: request.Request_Reason,
+                            Status: request.Status,
+                            Approver_ID: request.Approver_ID,
+                            Comments: request.Comments,
+                            Decision_Date: request.Decision_Date,
+                            Is_Recurring: true,
+                            Original_Request_ID: request.Request_ID,
+                            WFH_Day: request.WFH_Day,
+                            Request_Period: request.Request_Period
+                        });
+                    }
+                }
+            }
 
             employeeRequests.push({
                 employee: {
@@ -51,16 +117,16 @@ router.get("/byReportingManager", async (req, res, next) => {
                     Staff_LName: employee.Staff_LName,
                     position: employee.position
                 },
-                wfhRequests: wfhResults
+                wfhRequests: [...wfhResults, ...expandedRecurringRequests]
             });
         }
 
         res.json({ employeeRequests });
     } catch (error) {
+        console.error('Error:', error);
         next(error);
     }
 });
-
 router.get("/subordinateHierarchy", async (req, res, next) => {
     try {
         const Staff_ID = req.query.Staff_ID;
