@@ -140,4 +140,38 @@ router.get('/getStaffPositionByID', async (req, res, next) => {
   }
 });
 
+router.get('/staff-recurring', async (req, res, next) => {
+  const staffID = req.query.staffID;
+
+  try {
+    // Fetch current staff information
+    let [currstaffresults] = await executeQuery(
+      `SELECT * FROM Employee WHERE Staff_ID = ${staffID}`
+    );
+
+    // Fetch recurring requests
+    let [results] = await executeQuery(
+      `SELECT * FROM WFH_Request_Recurring
+       WHERE Staff_ID = ${staffID} AND (Status = 'Pending' OR Status = 'Rejected')`
+    );
+
+    // Attach other info into each recurring request
+    for (let r of results) {
+      // Query Staff_ID and Approver_ID for more info on Employee
+      let [approverresults] = await executeQuery(
+        `SELECT * FROM Employee WHERE Staff_ID = ${r['Approver_ID']}`
+      );
+      
+      // Attach current staff and approver details to the recurring request
+      r['Staff'] = currstaffresults[0];
+      r['Approver'] = approverresults[0];
+    }
+
+    res.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 export default router;

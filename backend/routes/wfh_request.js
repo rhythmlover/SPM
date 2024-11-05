@@ -758,4 +758,45 @@ router.get('/recurring-request/get-request-details', async (req, res, next) => {
   }
 });
 
+router.get('/user-recurring-requests', async (req, res, next) => {
+  const staffID = req.query.staffID;
+
+  try {
+    // Fetch current staff information
+    let [currstaffresults] = await executeQuery(
+      `SELECT * FROM Employee WHERE Staff_ID = ${staffID}`
+    );
+
+    // Fetch non-recurring requests
+    let [nonRecurringResults] = await executeQuery(
+      `SELECT * FROM WFH_Request WHERE Staff_ID = ${staffID}`
+    );
+
+    // Fetch recurring requests
+    let [recurringResults] = await executeQuery(
+      `SELECT * FROM WFH_Request_Recurring WHERE Staff_ID = ${staffID} 
+       AND (Status = 'Pending' OR Status = 'Rejected')`
+    );
+
+    // Combine both results
+    const combinedResults = [...nonRecurringResults, ...recurringResults];
+
+    // Attach other info into each request
+    for (let r of combinedResults) {
+      let approverId = r.Approver_ID || r.Approver_ID; // Use the approver ID from the appropriate request
+      let [approverresults] = await executeQuery(
+        `SELECT * FROM Employee WHERE Staff_ID = ${approverId}`
+      );
+
+      // Attach current staff and approver details to the request
+      r['Staff'] = currstaffresults[0];
+      r['Approver'] = approverresults[0];
+    }
+
+    res.json({ results: combinedResults });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
