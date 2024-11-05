@@ -107,7 +107,7 @@ const calculateWFHCount = (date) => {
       AM: `${inOfficeCounts.AM}/${originalTotalTeamCount.value}`,
       PM: `${inOfficeCounts.PM}/${originalTotalTeamCount.value}`,
       FULL: `${inOfficeCounts.FULL}/${originalTotalTeamCount.value}`,
-    }
+    },
   };
 };
 
@@ -277,7 +277,6 @@ const countAllSubordinates = (manager) => {
     return count + 1 + countAllSubordinates(sub);
   }, 0);
 };
-
 
 const managerOptions = computed(() => {
   if (!managerSubordinates.value) return [];
