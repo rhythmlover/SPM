@@ -88,7 +88,7 @@ onMounted(() => {
   <div class="main">
     <BContainer>
       <BRow>
-        <BCol> </BCol>
+        <BCol></BCol>
         <BCol>
           <BFormInput
             v-model="employeeID"
@@ -101,23 +101,36 @@ onMounted(() => {
               block
               variant="success"
               class="mt-2"
-              >Submit</BButton
             >
+              Submit
+            </BButton>
           </div>
         </BCol>
-        <BCol> </BCol>
+        <BCol></BCol>
       </BRow>
     </BContainer>
-    <BModal v-model="showErrorModal" title="Error" hide-footer centered>
-      <div class="d-block">
-        {{ errorMessage }}
+
+    <div v-if="showErrorModal" class="modal-overlay">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">Error</h5>
+          </div>
+          <div class="modal-body">
+            <p>{{ errorMessage }}</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="showErrorModal = false"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       </div>
-      <template #modal-footer>
-        <BButton variant="primary" @click="showErrorModal = false"
-          >Close</BButton
-        >
-      </template>
-    </BModal>
+    </div>
   </div>
 </template>
 
@@ -126,5 +139,47 @@ onMounted(() => {
   min-height: 80vh;
   display: flex;
   align-items: center;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-dialog {
+  background-color: white;
+  border-radius: 5px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-body {
+  padding: 1rem;
+}
+
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  text-align: right;
+}
+
+.close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 </style>
