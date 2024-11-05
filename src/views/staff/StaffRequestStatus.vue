@@ -403,9 +403,6 @@ defineExpose({
           }"
         >
           <h5 class="modal-title">{{ modalTitle }}</h5>
-          <button type="button" class="close" @click="showModal = false">
-            <span>&times;</span>
-          </button>
         </div>
         <div class="modal-body">
           <p>{{ modalMessage }}</p>
@@ -431,7 +428,7 @@ defineExpose({
             v-else
             type="button"
             class="btn btn-secondary"
-            @click="showModal = false"
+            @click="handleModalCancel"
           >
             Close
           </button>
@@ -530,23 +527,40 @@ button:hover {
   justify-content: center;
   align-items: center;
 }
+
 .modal-dialog {
   background-color: white;
   border-radius: 5px;
   max-width: 500px;
   width: 100%;
 }
+
+.modal-content {
+  border: none;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
 .modal-header {
   padding: 1rem;
   border-bottom: 1px solid #dee2e6;
 }
+
 .modal-body {
   padding: 1rem;
 }
+
 .modal-footer {
   padding: 1rem;
   border-top: 1px solid #dee2e6;
   text-align: right;
+}
+
+.close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 .text-danger {
