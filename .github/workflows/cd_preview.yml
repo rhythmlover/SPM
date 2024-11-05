@@ -1,4 +1,4 @@
-name: Vercel Preview Deployment
+name: Preview Deployment
 run-name: Deployment Preview for ${{ github.actor }} ${{ github.event_name }} on ${{ github.ref }} 🚀
 
 env:

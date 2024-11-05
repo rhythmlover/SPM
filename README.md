@@ -10,8 +10,8 @@ G3 Team 4's IS212 SPM Project.
 ## Table of Contents
 
 - [SPM G3T4](#spm-g3t4)
-  - [](#)
   - [Table of Contents](#table-of-contents)
+  - [Production Environment](#production-environment)
 - [Project Setup](#project-setup)
   - [Install Dependencies](#install-dependencies)
   - [Compile and Hot-Reload for Development](#compile-and-hot-reload-for-development)
@@ -36,7 +36,12 @@ G3 Team 4's IS212 SPM Project.
 | Staff                                 |      Apply for arrangement      |                              Apply for arrangement                               | :white_check_mark: |
 | Staff                                 |      Withdraw arrangement       |           Withdraw an approved arrangement or cancel a pending request           | :white_check_mark: |
 
-# Project Setup
+## Production Environment
+[Website](spmg3t4.vercel.app)
+
+Please note that we are using the free version of Render to host our backend, which will spin down with inactivity, which can delay requests by 50 seconds or more. Please be patient and give it sometime upon pressing the submit button on the login page.
+
+## Project Setup
 
 ### Install Dependencies
 
@@ -56,7 +61,7 @@ npm run dev
 npm run build
 ```
 
-# For Dev Checks
+## For Dev Checks
 
 You can run command below to run all CI checks locally before a push, or you can run the following checks individually
 
@@ -94,7 +99,7 @@ npm run format
 npm run coverage
 ```
 
-# Tech Stack
+## Tech Stack
 
 - Vue (Composition API)
 - [Bootstrap-vue-next](https://bootstrap-vue-next.github.io/bootstrap-vue-next/)
@@ -104,12 +109,12 @@ npm run coverage
 - Avien
 - GitHub Actions
 
-# Testing Stack
+## Testing Stack
 
 - Vitest + @Vue/Test-Utils@Next + JsDom (Frontend)
 - Jest + [Test Containers](https://testcontainers.com/) (Backend)
 
-# Scrum Processes Video
+## Scrum Processes Video
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=DTk_VyDDwBc
 " target="_blank"><img src="http://img.youtube.com/vi/DTk_VyDDwBc/0.jpg" 
