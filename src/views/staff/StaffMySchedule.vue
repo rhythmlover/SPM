@@ -25,31 +25,57 @@ const {
   isMonthView: isMonthView,
 });
 
-/**
- * Retrieve all of my WFH requests that have same date present in dateMap
- */
 const getWFHRequests = async () => {
   let staffID = localStorage.getItem('staffID');
 
   // Fetch requests
   let requestsMap = {};
   try {
-    let res = await axios.get(API_ROUTE + '/wfh-request/user', {
-      params: { staffID },
-    });
+    let res = await axios.get(
+      API_ROUTE + '/wfh-request/user-recurring-requests',
+      {
+        params: { staffID },
+      },
+    );
 
     for (let requestObj of res.data.results) {
-      // Convert MySQL date into JS Date object and String representations
-      let requestDateObj = new Date(requestObj['WFH_Date']);
-      let requestDateString = requestDateObj.toLocaleDateString('en-CA');
-      requestObj['WFH_Date'] = requestDateString;
+      // Check if the request is recurring
+      if (
+        requestObj.WFH_Date_Start &&
+        requestObj.WFH_Date_End &&
+        requestObj.WFH_Day
+      ) {
+        // Generate individual dates for recurring requests
+        const recurringDates = generateRecurringDates(
+          new Date(requestObj.WFH_Date_Start),
+          new Date(requestObj.WFH_Date_End),
+          parseInt(requestObj.WFH_Day),
+        );
 
-      // Date created before?
-      if (!(requestDateString in requestsMap)) {
-        requestsMap[requestDateString] = [];
+        for (const date of recurringDates) {
+          const dateString = date.toLocaleDateString('en-CA');
+          // Clone requestObj to avoid mutation and set WFH_Date
+          const clonedRequest = { ...requestObj, WFH_Date: dateString };
+
+          if (!(dateString in requestsMap)) {
+            requestsMap[dateString] = [];
+          }
+          // Add into map
+          requestsMap[dateString].push(clonedRequest);
+        }
+      } else {
+        // Handle non-recurring requests
+        let requestDateObj = new Date(requestObj['WFH_Date']);
+        let requestDateString = requestDateObj.toLocaleDateString('en-CA');
+        requestObj['WFH_Date'] = requestDateString;
+
+        // Date created before?
+        if (!(requestDateString in requestsMap)) {
+          requestsMap[requestDateString] = [];
+        }
+        // Add into map
+        requestsMap[requestDateString].push(requestObj);
       }
-      // Add into map
-      requestsMap[requestDateString].push(requestObj);
     }
   } catch (error) {
     console.error(error);
@@ -60,15 +86,24 @@ const getWFHRequests = async () => {
   return requestsMap;
 };
 
+// Function to generate individual WFH dates from the recurring request
+const generateRecurringDates = (start, end, dayOfWeek) => {
+  let dates = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    if (d.getDay() === dayOfWeek) {
+      dates.push(new Date(d)); // Clone the date to avoid mutation
+    }
+  }
+  return dates;
+};
+
 /**
  * Map WFH requests to dates in period from usePeriodChange() Hook
  */
 const mapRequestsToDates = () => {
   let dateMap = {};
   try {
-    // Get dates in period
     dateMap = { ...datesInPeriod.value };
-    // Map requests to date
     for (const datestr in dateMap) {
       if (!(datestr in myWFHRequests.value)) continue;
       dateMap[datestr]['requests'] = myWFHRequests.value[datestr];
@@ -76,8 +111,6 @@ const mapRequestsToDates = () => {
   } catch (error) {
     console.error(error);
   }
-
-  // Update ref
   myDates.value = dateMap;
 };
 
