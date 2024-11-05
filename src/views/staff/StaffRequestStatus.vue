@@ -327,9 +327,8 @@ defineExpose({
                     "
                     class="text-danger small"
                   >
-                    Cannot Cancel Request Due to Cancellation Policy (Can only
-                    cancel requests when you are more than 2 weeks before or
-                    after requested date)
+                    Can only cancel requests when you are more than 2 weeks
+                    before or after requested date
                   </span>
 
                   <!-- Withdraw Button -->
@@ -354,9 +353,8 @@ defineExpose({
                     "
                     class="text-danger small mt-2 d-block"
                   >
-                    Cannot Withdraw Request Due to Withdrawal Policy (Can only
-                    withdraw requests when you are more than 2 weeks before or
-                    after requested date)
+                    Can only withdraw requests when you are more than 2 weeks
+                    before or after requested date
                   </span>
                   <span
                     v-if="request.Status.toLowerCase() === 'withdrawal pending'"
