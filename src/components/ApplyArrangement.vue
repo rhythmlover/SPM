@@ -89,8 +89,7 @@ export default {
       } catch (error) {
         console.error('Error fetching WFH dates:', error);
         this.modalTitle = 'Error';
-        this.modalMessage =
-          'Failed to fetch existing WFH dates';
+        this.modalMessage = 'Failed to fetch existing WFH dates';
         this.showAlertModal = true;
         console.log(error);
       }

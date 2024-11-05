@@ -332,7 +332,7 @@
 
 <script>
 import StatusButton from './StatusButton.vue';
-import { BSpinner, BBadge, BContainer, BTable } from 'bootstrap-vue-next';
+import { BSpinner, BBadge, BContainer } from 'bootstrap-vue-next';
 
 export default {
   name: 'RequestTable',
@@ -340,7 +340,7 @@ export default {
     requests: Array,
     status: String,
   },
-  components: { StatusButton, BSpinner, BBadge, BContainer, BTable },
+  components: { StatusButton, BSpinner, BBadge, BContainer },
   data() {
     return {
       isRejecting: {},
