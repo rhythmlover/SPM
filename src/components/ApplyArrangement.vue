@@ -315,24 +315,30 @@ export default {
   justify-content: center;
   align-items: center;
 }
+
 .modal-dialog {
   background-color: white;
   border-radius: 5px;
   max-width: 500px;
   width: 100%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
+
 .modal-header {
   padding: 1rem;
   border-bottom: 1px solid #dee2e6;
 }
+
 .modal-body {
   padding: 1rem;
 }
+
 .modal-footer {
   padding: 1rem;
   border-top: 1px solid #dee2e6;
   text-align: right;
 }
+
 .close {
   background: none;
   border: none;
