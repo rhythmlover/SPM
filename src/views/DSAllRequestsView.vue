@@ -1,7 +1,6 @@
 <script setup>
 import axios from 'axios';
-import { inject, ref, onMounted } from 'vue';
-import { BSpinner, BContainer } from 'bootstrap-vue-next';
+import { inject, ref, onMounted, watch } from 'vue';
 
 const employees = ref([]);
 const wfhRequests = ref([]);
@@ -13,6 +12,11 @@ const loading = ref(true);
 const staffID = inject('staffID');
 
 const API_ROUTE = inject('API_ROUTE');
+
+// Modal state
+const showPolicyModal = ref(false);
+const modalMessage = ref('');
+let proceedCallback = null;
 
 const fetchEmployees = async () => {
   try {
@@ -174,14 +178,28 @@ const updateRequestStatus = async (
       `${API_ROUTE}/wfh-request/request/get-wfh-date-period-by-request-id`,
       { params: { requestID } },
     );
-
     const wfhDate = wfhDatePeriod.data.data.WFH_Date.split('T')[0];
     const requestPeriod = wfhDatePeriod.data.data.Request_Period;
 
     if (newStatus === 'Approved') {
-      await checkWFHPolicy(staffID.value, wfhDate, requestPeriod);
+      const policyViolated = await checkWFHPolicy(
+        staffID.value,
+        wfhDate,
+        requestPeriod,
+      );
+      if (policyViolated) {
+        modalMessage.value =
+          'Accepting this request will violate the 50% WFH policy.';
+        showPolicyModal.value = true;
+        await new Promise((resolve) => {
+          proceedCallback = resolve;
+        });
+      }
     }
-    if (commentsAdded !== null && commentsAdded !== '') {
+
+    if (proceedCallback) proceedCallback();
+
+    if (commentsAdded) {
       await axios.put(
         `${API_ROUTE}/wfh-request/request/updateComments`,
         { comments: commentsAdded },
@@ -197,6 +215,18 @@ const updateRequestStatus = async (
   } catch (error) {
     console.error('Error updating request status:', error);
   }
+};
+
+const cancelPolicyViolation = () => {
+  showPolicyModal.value = false;
+  proceedCallback && proceedCallback();
+  proceedCallback = null;
+};
+
+const proceedPolicyViolation = () => {
+  showPolicyModal.value = false;
+  proceedCallback && proceedCallback();
+  proceedCallback = null;
 };
 
 const updateRecurringRequestStatus = async (
@@ -241,11 +271,33 @@ const updateRecurringRequestStatus = async (
       const requestReason = requestDetails.data.Request_Reason;
       const requestStaffID = requestDetails.data.Staff_ID;
 
+      const datesWithViolation = [];
+
+      for (const date of wfhDates) {
+        const policyViolated = await checkWFHPolicy(
+          staffID.value,
+          date,
+          requestPeriod,
+        );
+        if (policyViolated) {
+          datesWithViolation.push(date);
+        }
+      }
+
+      if (datesWithViolation.length > 0) {
+        modalMessage.value = `Accepting this request will violate the 50% WFH policy for the following dates: ${datesWithViolation.join(
+          ', ',
+        )}.`;
+        showPolicyModal.value = true;
+        await new Promise((resolve) => {
+          proceedCallback = resolve;
+        });
+      }
+
       for (const date of wfhDates) {
         let dateObj = new Date(date);
         dateObj.setDate(dateObj.getDate() + 1);
         const dateInsert = dateObj.toISOString().split('T')[0];
-        await checkWFHPolicy(staffID, date, requestPeriod);
         const results = await axios.post(
           `${API_ROUTE}/wfh-request/recurring-request/insert-approved-recurring-dates`,
           {
@@ -300,15 +352,34 @@ const updateWithdrawalStatus = async (
       `${API_ROUTE}/wfh-request/request/get-wfh-date-period-by-request-id`,
       { params: { requestID } },
     );
-    console.log('WFH DATE PERIOD 2: ', wfhDatePeriod);
-    const wfhDate = wfhDatePeriod.data.data.WFH_Date;
+
+    const wfhDate = wfhDatePeriod.data.data.WFH_Date.split('T')[0];
     const requestPeriod = wfhDatePeriod.data.data.Request_Period;
 
-    // if withdrawal is rejected, check if policy allows
-    if (newStatus === 'Approved') {
-      await checkWFHPolicy(staffID.value, wfhDate, requestPeriod);
+    // Check the policy before rejecting the withdrawal
+    if (newStatus === 'Rejected') {
+      const policyViolated = await checkWFHPolicy(
+        staffID.value,
+        wfhDate,
+        requestPeriod,
+      );
+      if (policyViolated) {
+        modalMessage.value =
+          'Rejecting this withdrawal will violate the 50% WFH policy.';
+        showPolicyModal.value = true;
+        await new Promise((resolve) => {
+          const unwatch = watch(showPolicyModal, (val) => {
+            if (!val) {
+              unwatch();
+              resolve();
+            }
+          });
+        });
+      }
     }
-    if (commentsAdded !== null && commentsAdded !== '') {
+
+    // Proceed to update the withdrawal status
+    if (commentsAdded) {
       await axios.put(
         `${API_ROUTE}/wfh-request/withdrawal/updateComments`,
         { comments: commentsAdded },
@@ -322,89 +393,64 @@ const updateWithdrawalStatus = async (
     );
     await fetchWFHRequests();
   } catch (error) {
-    console.error('Error updating request status:', error);
+    console.error('Error updating withdrawal status:', error);
   }
 };
 
 const checkWFHPolicy = async (reportingManagerID, wfhDate, requestPeriod) => {
   try {
-    const staffIDs = await axios.get(
+    const staffResponse = await axios.get(
       `${API_ROUTE}/employee/get-staff-under-reporting-manager`,
       {
         params: { reportingManagerID },
       },
     );
+    const staffIDs = staffResponse.data.results.map((emp) => emp.Staff_ID);
+    const staffTotal = staffIDs.length + 1;
 
-    if (requestPeriod === 'AM' || requestPeriod === 'PM') {
-      const approvedRequests = await axios.get(
-        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
-        {
-          params: {
-            Approver_ID: reportingManagerID,
-            WFH_Date: wfhDate,
-            Request_Period: requestPeriod,
-          },
-        },
-      );
-      const approvedRequestsFull = await axios.get(
-        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
-        {
-          params: {
-            Approver_ID: reportingManagerID,
-            WFH_Date: wfhDate,
-            Request_Period: 'FULL',
-          },
-        },
-      );
-      const approvedRequestsTotal =
-        approvedRequests.data.length + approvedRequestsFull.data.length + 1;
-      if (staffIDs.data.length * 0.5 < approvedRequestsTotal) {
-        alert('Accepting this request will violate the 50% WFH policy.');
-      }
+    // Get all approved requests for the same date
+    const approvedRequestsResponse = await axios.get(
+      `${API_ROUTE}/wfh-request/all`,
+    );
+
+    // Filter approved requests of staff under this manager for the given date
+    const approvedRequests = approvedRequestsResponse.data.results.filter(
+      (request) =>
+        staffIDs.includes(request.Staff_ID) &&
+        request.WFH_Date.split('T')[0] === wfhDate &&
+        request.Status === 'Approved',
+    );
+
+    // Count the number of staff who will be WFH on that date, including the current request
+    let approvedRequestsAM = approvedRequests.filter(
+      (request) =>
+        request.Request_Period === 'AM' || request.Request_Period === 'FULL',
+    ).length;
+    let approvedRequestsPM = approvedRequests.filter(
+      (request) =>
+        request.Request_Period === 'PM' || request.Request_Period === 'FULL',
+    ).length;
+
+    // Include the current request
+    if (requestPeriod === 'AM' || requestPeriod === 'FULL') {
+      approvedRequestsAM += 1;
+    }
+    if (requestPeriod === 'PM' || requestPeriod === 'FULL') {
+      approvedRequestsPM += 1;
+    }
+
+    // Check if WFH staff would exceed 50% of total staff
+    if (
+      approvedRequestsAM + 1 > Math.floor(staffTotal / 2) ||
+      approvedRequestsPM + 1 > Math.floor(staffTotal / 2)
+    ) {
+      return true; // Policy would be violated
     } else {
-      const approvedRequestsFull = await axios.get(
-        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
-        {
-          params: {
-            Approver_ID: reportingManagerID,
-            WFH_Date: wfhDate,
-            Request_Period: 'FULL',
-          },
-        },
-      );
-      const approvedRequestsAM = await axios.get(
-        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
-        {
-          params: {
-            Approver_ID: reportingManagerID,
-            WFH_Date: wfhDate,
-            Request_Period: 'AM',
-          },
-        },
-      );
-      const approvedRequestsPM = await axios.get(
-        `${API_ROUTE}/wfh-request/request/get-approved-requests-by-approver-id-and-wfh-date-period`,
-        {
-          params: {
-            Approver_ID: reportingManagerID,
-            WFH_Date: wfhDate,
-            Request_Period: 'PM',
-          },
-        },
-      );
-      const approvedRequestsTotalAM =
-        approvedRequestsAM.data.length + approvedRequestsFull.data.length + 1;
-      const approvedRequestsTotalPM =
-        approvedRequestsPM.data.length + approvedRequestsFull.data.length + 1;
-      if (
-        staffIDs.data.length * 0.5 < approvedRequestsTotalAM ||
-        staffIDs.data.length * 0.5 < approvedRequestsTotalPM
-      ) {
-        alert('Accepting this request will violate the 50% WFH policy.');
-      }
+      return false; // Policy not violated
     }
   } catch (error) {
-    console.error('Error fetching dates:', error);
+    console.error('Error fetching data:', error);
+    return false;
   }
 };
 
@@ -446,6 +492,15 @@ onMounted(async () => {
       />
     </div>
   </BContainer>
+  <BModal v-model="showPolicyModal" title="Policy Violation">
+    <p>{{ modalMessage }}</p>
+    <template #footer>
+      <BButton variant="primary" @click="cancelPolicyViolation">Cancel</BButton>
+      <BButton variant="danger" @click="proceedPolicyViolation"
+        >Proceed</BButton
+      >
+    </template>
+  </BModal>
 </template>
 
 <style scoped>
