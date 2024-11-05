@@ -125,7 +125,7 @@ const updateAllSubordinateWFH = async (managerId = null) => {
     }
 
     // Calculate total team count and store original count
-    totalTeamCount.value = countAllSubordinates(subordinateHierarchy.value) + 1;
+    totalTeamCount.value = countAllSubordinates(subordinateHierarchy.value);
     originalTotalTeamCount.value = totalTeamCount.value; // Set original count
 
     // Reset and collect all requests
