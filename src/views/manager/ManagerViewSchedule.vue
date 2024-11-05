@@ -47,6 +47,7 @@ const {
 const allApprovedRequests = ref([]);
 
 // Calculate WFH counts based on all approved requests for a specific date
+// Modify the calculateWFHCount function to also return in-office counts
 const calculateWFHCount = (date) => {
   const wfhCounts = {
     AM: new Set(),
@@ -89,15 +90,63 @@ const calculateWFHCount = (date) => {
     }
   });
 
-  console.log(`WFH Counts for ${date}:`, wfhCounts);
-  console.log('Original Team Count:', originalTotalTeamCount.value);
+  // Calculate in-office counts (total team - WFH count)
+  const inOfficeCounts = {
+    AM: originalTotalTeamCount.value - wfhCounts.AM.size,
+    PM: originalTotalTeamCount.value - wfhCounts.PM.size,
+    FULL: originalTotalTeamCount.value - wfhCounts.FULL.size,
+  };
 
   return {
-    AM: `${wfhCounts.AM.size}/${originalTotalTeamCount.value}`,
-    PM: `${wfhCounts.PM.size}/${originalTotalTeamCount.value}`,
-    FULL: `${wfhCounts.FULL.size}/${originalTotalTeamCount.value}`,
+    wfhCounts: {
+      AM: `${wfhCounts.AM.size}/${originalTotalTeamCount.value}`,
+      PM: `${wfhCounts.PM.size}/${originalTotalTeamCount.value}`,
+      FULL: `${wfhCounts.FULL.size}/${originalTotalTeamCount.value}`,
+    },
+    inOfficeCounts: {
+      AM: `${inOfficeCounts.AM}/${originalTotalTeamCount.value}`,
+      PM: `${inOfficeCounts.PM}/${originalTotalTeamCount.value}`,
+      FULL: `${inOfficeCounts.FULL}/${originalTotalTeamCount.value}`,
+    }
   };
 };
+
+// Update the filteredDates computed property
+const filteredDates = computed(() => {
+  const filtered = {};
+
+  Object.entries(datesInPeriod.value).forEach(([date, dayInfo]) => {
+    const filteredRequests = allRequests.value.filter((request) => {
+      const dateMatch =
+        new Date(request.WFH_Date).toLocaleDateString('en-CA') === date;
+      const statusMatch =
+        selectedStatuses.value.length === 0 ||
+        selectedStatuses.value.includes(request.Status);
+      const timeMatch =
+        selectedWfhTimes.value.length === 0 ||
+        selectedWfhTimes.value.includes(request.Request_Period);
+
+      return dateMatch && statusMatch && timeMatch;
+    });
+
+    const counts = calculateWFHCount(date);
+
+    filtered[date] = {
+      ...dayInfo,
+      requests: filteredRequests,
+      office_count_table: {
+        headers: ['AM', 'PM', 'FULL'],
+        counts: counts.wfhCounts, // WFH counts
+      },
+      inoffice_count_table: {
+        headers: ['AM', 'PM', 'FULL'],
+        counts: counts.inOfficeCounts, // In-office counts
+      },
+    };
+  });
+
+  return filtered;
+});
 
 const updateAllSubordinateWFH = async (managerId = null) => {
   isLoading.value = true;
@@ -229,35 +278,6 @@ const countAllSubordinates = (manager) => {
   }, 0);
 };
 
-const filteredDates = computed(() => {
-  const filtered = {};
-
-  Object.entries(datesInPeriod.value).forEach(([date, dayInfo]) => {
-    const filteredRequests = allRequests.value.filter((request) => {
-      const dateMatch =
-        new Date(request.WFH_Date).toLocaleDateString('en-CA') === date;
-      const statusMatch =
-        selectedStatuses.value.length === 0 ||
-        selectedStatuses.value.includes(request.Status);
-      const timeMatch =
-        selectedWfhTimes.value.length === 0 ||
-        selectedWfhTimes.value.includes(request.Request_Period);
-
-      return dateMatch && statusMatch && timeMatch;
-    });
-
-    filtered[date] = {
-      ...dayInfo,
-      requests: filteredRequests,
-      office_count_table: {
-        headers: ['AM', 'PM', 'FULL'],
-        counts: calculateWFHCount(date), // Pass the specific date
-      },
-    };
-  });
-
-  return filtered;
-});
 
 const managerOptions = computed(() => {
   if (!managerSubordinates.value) return [];
