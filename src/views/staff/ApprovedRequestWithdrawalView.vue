@@ -55,17 +55,17 @@ export default {
     },
     async withdrawRequest() {
       try {
+        const formattedReason = this.Request_Reason.replace(/'/g, "\\'"); // Escapes apostrophes
         await axios.post(`${this.API_ROUTE}/wfh-request/withdraw/post/id`, {
           Staff_Name: this.Staff_Name,
           Staff_Position: this.Staff_Position,
           Request_ID: this.Request_ID,
           Request_Period: this.Request_Period,
-          Request_Reason: this.Request_Reason,
+          Request_Reason: formattedReason,
           Status: 'Pending',
           Approver_Name: this.Approver_Name,
           WFH_Date: this.WFH_Date,
         });
-
         this.modalTitle = 'Success';
         this.modalMessage = 'Withdrawal Request Submitted Successfully';
         this.showAlertModal = true;

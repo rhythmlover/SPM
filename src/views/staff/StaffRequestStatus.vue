@@ -160,6 +160,7 @@ const getWFHRequests = async (staffID) => {
               showCancelButton:
                 request.Status.toLowerCase() === 'pending' &&
                 canCancel(request.WFH_Date),
+              Is_Recurring: false,
             };
           }),
       );
@@ -170,6 +171,48 @@ const getWFHRequests = async (staffID) => {
     }
   } catch (error) {
     console.error('Error fetching WFH requests:', error);
+  }
+};
+
+function getDay(dayOfWeek) {
+  const days = {
+    1: 'Mon',
+    2: 'Tue',
+    3: 'Wed',
+    4: 'Thu',
+    5: 'Fri',
+    6: 'Sat',
+    7: 'Sun',
+  };
+
+  return days[dayOfWeek];
+}
+
+// Fetch WFH recurring requests for the correct staff
+const fetchWFHRecurringRequests = async (staffID) => {
+  try {
+    const res = await axios.get(`${API_ROUTE}/wfh-request/staff-recurring`, {
+      params: { staffID },
+    });
+    if (res.data?.results && Array.isArray(res.data.results)) {
+      const processedRequests = res.data.results.map((request) => ({
+        Staff_ID: request.Staff_ID,
+        Request_ID: request.Request_ID,
+        Request_Date: formatRequestDate(request.Request_Date),
+        WFH_Date: `${formatRequestDate(request.WFH_Date_Start)} to ${formatRequestDate(request.WFH_Date_End)} | Every ${getDay(request.WFH_Day)}, ${get_WFH_period(request.Request_Period)}`,
+        Reason: request.Request_Reason,
+        Status: request.Status,
+        Comments: request.Comments || '',
+        Is_Recurring: true,
+      }));
+
+      localRequests.value.push(...processedRequests); // Combine with non-recurring requests
+      console.log('RESULTS: ', localRequests);
+    } else {
+      console.warn('No valid results found in the response.');
+    }
+  } catch (error) {
+    console.error('Error fetching recurring WFH requests:', error);
   }
 };
 
@@ -252,6 +295,7 @@ const openWithdrawForm = async (Request_ID, WFH_Date, Request_Period) => {
 onMounted(async () => {
   if (staffID) {
     await getWFHRequests(staffID);
+    await fetchWFHRecurringRequests(staffID);
   } else {
     console.error('Staff ID is not available.');
   }
@@ -323,7 +367,8 @@ defineExpose({
                   <span
                     v-if="
                       request.Status.toLowerCase() === 'pending' &&
-                      !canCancel(request.WFH_Date)
+                      !canCancel(request.WFH_Date) &&
+                      request.Is_Recurring == false
                     "
                     class="text-danger small"
                   >
@@ -362,6 +407,10 @@ defineExpose({
                   >
                     Withdrawal Pending
                   </span>
+                  <span
+                    v-if="request.Is_Recurring == true"
+                    class="text-danger small mt-2 d-block"
+                  ></span>
                 </td>
                 <td>
                   <template

@@ -384,66 +384,103 @@ export default {
       this.modalMessage = '';
     },
     submitRejection(requestID, status) {
+      // Check if the rejection reason is provided and is not empty
       if (!this.rejectionReason[requestID]?.trim()) {
         this.showModalPopup('Error', 'Rejection reason is required');
         return;
       }
+
+      // Escape special characters in the rejection reason
+      const escapedRejectionReason = this.rejectionReason[requestID].replace(
+        /'/g,
+        "\\'",
+      );
+
+      // Start the loading indicator
       this.isLoading = true;
-      if (status == 'Pending') {
+
+      // Update request status based on the status parameter
+      if (status === 'Pending') {
         this.$emit(
           'updateRequestStatus',
           requestID,
           'Rejected',
-          this.rejectionReason[requestID],
+          escapedRejectionReason,
         );
-      }
-      if (status == 'Withdrawal Pending') {
+      } else if (status === 'Withdrawal Pending') {
         this.$emit(
           'updateRequestStatus',
           requestID,
           'Approved',
-          this.rejectionReason[requestID],
+          escapedRejectionReason,
         );
         this.$emit(
           'updateWithdrawalStatus',
           requestID,
           'Rejected',
-          this.rejectionReason[requestID],
+          escapedRejectionReason,
         );
       }
 
+      // Cancel the rejection process and stop the loading indicator
       this.cancelRejection(requestID);
       this.isLoading = false;
     },
     submitRecurringRejection(requestID, status) {
+      // Check if the rejection reason is provided and is not empty
       if (!this.rejectionReason[requestID]?.trim()) {
         this.showModalPopup('Error', 'Rejection reason is required');
         return;
       }
+
+      // Escape special characters, including apostrophes, in the rejection reason
+      const escapedRejectionReason = this.rejectionReason[requestID].replace(
+        /'/g,
+        "\\'",
+      );
+
+      // Start the loading indicator
       this.isLoading = true;
-      if (status == 'Pending') {
+
+      // Update recurring request status based on the status parameter
+      if (status === 'Pending') {
         this.$emit(
           'updateRecurringRequestStatus',
           requestID,
           'Rejected',
-          this.rejectionReason[requestID],
+          escapedRejectionReason,
         );
       }
+
+      // Cancel the rejection process and stop the loading indicator
       this.cancelRejection(requestID);
       this.isLoading = false;
     },
     submitWithdrawal(requestID) {
+      // Check if the withdrawal reason is provided and is not empty
       if (!this.withdrawalReason[requestID]?.trim()) {
         alert('Withdrawal reason is required');
         return;
       }
+
+      // Escape special characters, including apostrophes, in the withdrawal reason
+      const escapedWithdrawalReason = this.withdrawalReason[requestID].replace(
+        /'/g,
+        "\\'",
+      );
+
+      // Start the loading indicator
       this.isLoading = true;
+
+      // Emit the event to update the request status
       this.$emit(
         'updateRequestStatus',
         requestID,
         'Withdrawn',
-        this.withdrawalReason[requestID],
+        escapedWithdrawalReason,
       );
+
+      // Cancel the withdrawal process and stop the loading indicator
       this.cancelWithdrawal(requestID);
       this.isLoading = false;
     },
