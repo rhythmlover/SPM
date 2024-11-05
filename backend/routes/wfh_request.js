@@ -3,29 +3,116 @@ import { executeQuery } from '../mysqlConnection.js';
 
 const router = express.Router();
 
+function getDatesBetween(startDate, endDate) {
+  const dates = [];
+  let currentDate = new Date(startDate);
+
+  // Ensure the endDate is a date object
+  endDate = new Date(endDate);
+
+  // Loop through dates until we reach the endDate
+  while (currentDate <= endDate) {
+    dates.push(new Date(currentDate)); // Push a copy of the current date
+    currentDate.setDate(currentDate.getDate() + 1); // Increment by one day
+  }
+
+  return dates;
+}
+
 router.get('/all', async (req, res, next) => {
+  let employeeCache = {};
+  let deparmentCache = {};
+
   try {
     let [results, _] = await executeQuery('SELECT * FROM `WFH_Request`');
 
     // Attach other info into request
     for (let r of results) {
       // Query Staff_ID and Approver_ID for more info on Employee
-      let [approverresults] = await executeQuery(
-        `SELECT * FROM Employee WHERE Staff_ID = ${r['Approver_ID']}`,
-      );
+      let approverresults = [''];
+      let currstaffresults = [''];
+      let departmentresults = [''];
+      if (!(r['Approver_ID'] in employeeCache)) {
+        [approverresults] = await executeQuery(
+          `SELECT * FROM Employee WHERE Staff_ID = ${r['Approver_ID']}`,
+        );
+        employeeCache[r['Approver_ID']] = approverresults[0];
+      } else {
+        approverresults[0] = employeeCache[r['Approver_ID']];
+      }
 
       // Fetch current staff information
-      let [currstaffresults] = await executeQuery(
-        `SELECT * FROM Employee WHERE Staff_ID = ${r['Staff_ID']}`,
-      );
-      // Map department ID to name
-      let [departmentresults] = await executeQuery(
-        `SELECT * FROM Department WHERE Dept_ID = ${currstaffresults[0]['Dept_ID']}`,
-      );
-      currstaffresults[0]['Department'] = departmentresults[0];
+      if (!(r['Staff_ID'] in employeeCache)) {
+        [currstaffresults] = await executeQuery(
+          `SELECT * FROM Employee WHERE Staff_ID = ${r['Staff_ID']}`,
+        );
+        employeeCache[r['Staff_ID']] = currstaffresults[0];
+      } else {
+        currstaffresults[0] = employeeCache[r['Staff_ID']];
+      }
 
+      // Map department ID to name
+      if (!(currstaffresults[0]['Dept_ID'] in deparmentCache)) {
+        [departmentresults] = await executeQuery(
+          `SELECT * FROM Department WHERE Dept_ID = ${currstaffresults[0]['Dept_ID']}`,
+        );
+        deparmentCache[currstaffresults[0]['Dept_ID']] = departmentresults[0];
+      } else {
+        departmentresults[0] = deparmentCache[currstaffresults[0]['Dept_ID']];
+      }
+
+      currstaffresults[0]['Department'] = departmentresults[0];
       r['Staff'] = currstaffresults[0];
       r['Approver'] = approverresults[0];
+    }
+
+    let [recurring_results] = await executeQuery(
+      'SELECT * FROM `WFH_Request_Recurring`',
+    );
+    // Attach other info into request
+    for (let r of recurring_results) {
+      // Query Staff_ID and Approver_ID for more info on Employee
+      let approverresults = [''];
+      let currstaffresults = [''];
+      let departmentresults = [''];
+      if (!(r['Approver_ID'] in employeeCache)) {
+        [approverresults] = await executeQuery(
+          `SELECT * FROM Employee WHERE Staff_ID = ${r['Approver_ID']}`,
+        );
+        employeeCache[r['Approver_ID']] = approverresults[0];
+      } else {
+        approverresults[0] = employeeCache[r['Approver_ID']];
+      }
+
+      // Fetch current staff information
+      if (!(r['Staff_ID'] in employeeCache)) {
+        [currstaffresults] = await executeQuery(
+          `SELECT * FROM Employee WHERE Staff_ID = ${r['Staff_ID']}`,
+        );
+        employeeCache[r['Staff_ID']] = currstaffresults[0];
+      } else {
+        currstaffresults[0] = employeeCache[r['Staff_ID']];
+      }
+
+      // Map department ID to name
+      if (!(currstaffresults[0]['Dept_ID'] in deparmentCache)) {
+        [departmentresults] = await executeQuery(
+          `SELECT * FROM Department WHERE Dept_ID = ${currstaffresults[0]['Dept_ID']}`,
+        );
+        deparmentCache[currstaffresults[0]['Dept_ID']] = departmentresults[0];
+      } else {
+        departmentresults[0] = deparmentCache[currstaffresults[0]['Dept_ID']];
+      }
+      currstaffresults[0]['Department'] = departmentresults[0];
+      r['Staff'] = currstaffresults[0];
+      r['Approver'] = approverresults[0];
+
+      let datesToAdd = getDatesBetween(r['WFH_Date_Start'], r['WFH_Date_End']);
+      for (let d of datesToAdd) {
+        let newR = { ...r };
+        newR['WFH_Date'] = d;
+        results.push(newR);
+      }
     }
 
     res.json({ results });

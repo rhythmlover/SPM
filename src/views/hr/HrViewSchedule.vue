@@ -152,8 +152,10 @@ const filterRequests = async () => {
         // Passes all filters
         validRequests.push(r);
 
-        // Calculate how many employees WFH
-        wfh_count.add(r['Staff_ID']);
+        // Calculate how many employees WFH, only if their status is ...
+        // Approved, Withdrawal Pending
+        if (r['Status'] == 'Approved' || r['Status'] == 'Withdrawal Pending')
+          wfh_count.add(r['Staff_ID']);
       }
       // Assign back
       dateObj['requests'] = validRequests;
