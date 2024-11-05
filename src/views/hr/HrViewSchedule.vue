@@ -143,11 +143,13 @@ const filterRequests = async () => {
         )
           continue;
         // Fiter by only that period
-        if (
-          periodView.value != 'All' &&
-          r['Request_Period'] != periodView.value
-        )
-          continue;
+        if (periodView.value != 'All') {
+          if (r['Request_Period'] != 'FULL') {
+            if (r['Request_Period'] != periodView.value) {
+              continue;
+            }
+          }
+        }
 
         // Passes all filters
         validRequests.push(r);
