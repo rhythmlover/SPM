@@ -193,13 +193,15 @@ const updateRequestStatus = async (
         modalMessage.value =
           'Accepting this request will violate the 50% WFH policy.';
         showPolicyModal.value = true;
-        await new Promise((resolve) => {
+        const shouldProceed = await new Promise((resolve) => {
           proceedCallback = resolve;
         });
+
+        if (!shouldProceed) {
+          return;
+        }
       }
     }
-
-    if (proceedCallback) proceedCallback();
 
     if (commentsAdded) {
       await axios.put(
@@ -221,13 +223,13 @@ const updateRequestStatus = async (
 
 const cancelPolicyViolation = () => {
   showPolicyModal.value = false;
-  proceedCallback && proceedCallback();
+  proceedCallback && proceedCallback(false);
   proceedCallback = null;
 };
 
 const proceedPolicyViolation = () => {
   showPolicyModal.value = false;
-  proceedCallback && proceedCallback();
+  proceedCallback && proceedCallback(true);
   proceedCallback = null;
 };
 
@@ -366,14 +368,13 @@ const updateWithdrawalStatus = async (
         modalMessage.value =
           'Rejecting this withdrawal will violate the 50% WFH policy.';
         showPolicyModal.value = true;
-        await new Promise((resolve) => {
-          const unwatch = watch(showPolicyModal, (val) => {
-            if (!val) {
-              unwatch();
-              resolve();
-            }
-          });
+        const shouldProceed = await new Promise((resolve) => {
+          proceedCallback = resolve;
         });
+
+        if (!shouldProceed) {
+          return;
+        }
       }
     }
 
