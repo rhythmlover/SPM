@@ -623,8 +623,9 @@ textarea {
 .section-header {
   background-color: #f4f4f4;
   font-weight: bold;
-  text-align: left;
+  text-align: center;
   border-top: 2px solid #000;
+  font-size: 18px;
 }
 
 .modal-overlay {
