@@ -87,7 +87,7 @@ describe('RequestLinks.vue', () => {
       const links = wrapper.findAll('.link');
       expect(links).toHaveLength(3);
       expect(links.at(0).text()).toBe('Incoming Requests');
-      expect(links.at(1).text()).toBe('Previously Accepted');
+      expect(links.at(1).text()).toBe('Previously Approved');
       expect(links.at(2).text()).toBe('Previously Rejected');
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -103,7 +103,7 @@ describe('RequestLinks.vue', () => {
       await wrapper.findAll('.link').at(1).trigger('click');
       expect(wrapper.vm.activeLink).toBe('/previously-accepted');
       const activeLink = wrapper.find('.link.active');
-      expect(activeLink.text()).toBe('Previously Accepted');
+      expect(activeLink.text()).toBe('Previously Approved');
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
