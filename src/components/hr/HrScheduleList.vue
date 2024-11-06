@@ -82,7 +82,7 @@ onMounted(() => {
               </div>
               <div v-else>
                 <h5>No WFH requests for this day</h5>
-                <p>In Office: 554</p>
+                <p>In Office: {{ ['total_count'] }}</p>
               </div>
             </BCard>
           </BCol>
