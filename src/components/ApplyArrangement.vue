@@ -85,7 +85,6 @@ export default {
         const recurringDates = recurringResponse.data.recurringDates;
 
         this.existingWFHDates = [...nonRecurringDates, ...recurringDates];
-        console.log('Existing WFH Dates:', this.existingWFHDates);
       } catch (error) {
         console.error('Error fetching WFH dates:', error);
         this.modalTitle = 'Error';
@@ -136,10 +135,6 @@ export default {
         }),
       );
 
-      console.log('Valid Dates Period:', this.validDatesPeriod);
-      console.log('Clashing Dates:', clashingDates);
-      console.log('Existing WFH Dates:', this.existingWFHDates);
-
       if (clashingDates.length > 0) {
         this.modalTitle = 'Error';
         this.modalMessage =
@@ -174,8 +169,6 @@ export default {
         this.modalTitle = 'Success';
         this.modalMessage = 'Request Submitted Successfully';
         this.showAlertModal = true;
-
-        console.log(response);
         setTimeout(() => {
           this.resetForm();
         }, 3000);

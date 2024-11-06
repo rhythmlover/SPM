@@ -313,7 +313,6 @@ const fetchWFHRecurringRequests = async (staffID) => {
       }));
 
       localRequests.value.push(...processedRequests); // Combine with non-recurring requests
-      console.log('RESULTS: ', localRequests);
     } else {
       console.warn('No valid results found in the response.');
     }

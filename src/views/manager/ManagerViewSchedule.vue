@@ -261,8 +261,6 @@ const updateAllSubordinateWFH = async (managerId = null) => {
       );
     }
 
-    console.log('All Approved Requests:', allApprovedRequests.value);
-
     // After collecting all approved requests, counts are handled in filteredDates
   } catch (error) {
     console.error('Error fetching data:', error);

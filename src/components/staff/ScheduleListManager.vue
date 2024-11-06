@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { formatDateFromStr, getRequestStatusPillColor } from '@/utils/utils';
 
 const props = defineProps({
@@ -9,6 +9,19 @@ const props = defineProps({
       return {};
     },
   },
+});
+
+const sortedWfhRequests = computed(() => {
+  const sorted = JSON.parse(JSON.stringify(props.wfhRequests));
+  for (const dateKey in sorted) {
+    const dateObject = sorted[dateKey];
+    if (dateObject.requests && dateObject.requests.length > 0) {
+      dateObject.requests.sort(
+        (a, b) => new Date(a.Request_Date) - new Date(b.Request_Date),
+      );
+    }
+  }
+  return sorted;
 });
 
 onMounted(() => {
@@ -21,7 +34,7 @@ onMounted(() => {
     <BRow>
       <BCol>
         <BRow
-          v-for="(dateObject, dateKeyStr) in wfhRequests"
+          v-for="(dateObject, dateKeyStr) in sortedWfhRequests"
           :key="dateKeyStr"
           class="mb-4"
         >
