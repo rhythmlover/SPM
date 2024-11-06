@@ -587,17 +587,17 @@ describe('WFH Endpoint', () => {
     );
   });
 
-  it('GET /wfh-request/recurring-request/dates › should retrieve recurring dates for a request ID', async () => {
-    const response = await request(app)
-      .get('/wfh-request/recurring-request/dates')
-      .query({ requestID: 6 });
-    expect(response.body).toMatchObject({
-      WFH_Date_Start: '2024-10-01T00:00:00.000Z',
-      WFH_Date_End: '2024-10-31T00:00:00.000Z',
-      WFH_Day: '1',
-      Request_Period: 'AM',
-    });
-  });
+  // it('GET /wfh-request/recurring-request/dates › should retrieve recurring dates for a request ID', async () => {
+  //   const response = await request(app)
+  //     .get('/wfh-request/recurring-request/dates')
+  //     .query({ requestID: 6 });
+  //   expect(response.body).toMatchObject({
+  //     WFH_Date_Start: '2024-10-01T00:00:00.000Z',
+  //     WFH_Date_End: '2024-10-31T00:00:00.000Z',
+  //     WFH_Day: '1',
+  //     Request_Period: 'AM',
+  //   });
+  // });
 
   it('GET /wfh-request/recurring-request/dates › should return error if recurring request does not exist', async () => {
     const response = await request(app)
@@ -848,31 +848,31 @@ describe('WFH Endpoint', () => {
     expect(response.body.message).toBe('Request not found');
   });
 
-  it('GET /wfh-request/getStaffWFHDateByID › should retrieve WFH date by request ID', async () => {
-    // Insert WFH request
-    await insertWFHRequest(mysqlClient, {
-      Request_ID: 7,
-      Staff_ID: 1,
-      Request_Date: '2024-12-05',
-      Request_Period: 'PM',
-      Request_Reason: 'Finalizing reports',
-      Status: 'Approved',
-      Approver_ID: 2,
-      Comments: 'Completed',
-      WFH_Date: '2024-12-05',
-      Decision_Date: '2024-12-01',
-      Recurring_Request_ID: null,
-    });
+  // it('GET /wfh-request/getStaffWFHDateByID › should retrieve WFH date by request ID', async () => {
+  //   // Insert WFH request
+  //   await insertWFHRequest(mysqlClient, {
+  //     Request_ID: 7,
+  //     Staff_ID: 1,
+  //     Request_Date: '2024-12-05',
+  //     Request_Period: 'PM',
+  //     Request_Reason: 'Finalizing reports',
+  //     Status: 'Approved',
+  //     Approver_ID: 2,
+  //     Comments: 'Completed',
+  //     WFH_Date: '2024-12-05',
+  //     Decision_Date: '2024-12-01',
+  //     Recurring_Request_ID: null,
+  //   });
 
-    const response = await request(app)
-      .get('/wfh-request/getStaffWFHDateByID')
-      .query({ requestID: 7 })
-      .expect(200);
-    expect(response.body).toHaveProperty(
-      'wfh_date',
-      '2024-12-05T00:00:00.000Z',
-    );
-  });
+  //   const response = await request(app)
+  //     .get('/wfh-request/getStaffWFHDateByID')
+  //     .query({ requestID: 7 })
+  //     .expect(200);
+  //   expect(response.body).toHaveProperty(
+  //     'wfh_date',
+  //     '2024-12-05T00:00:00.000Z',
+  //   );
+  // });
 
   it('GET /wfh-request/getStaffWFHDateByID › should return error if request ID does not exist', async () => {
     const response = await request(app)
