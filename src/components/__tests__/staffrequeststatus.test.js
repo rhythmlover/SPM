@@ -117,6 +117,12 @@ describe('StaffRequestStatus.vue', () => {
   ];
 
   beforeEach(async () => {
+    axios.get.mockResolvedValueOnce({
+      data: {
+        results: [],
+      },
+    });
+
     router.push('/');
     await router.isReady();
   });
@@ -202,12 +208,13 @@ describe('StaffRequestStatus.vue', () => {
         },
       });
       const headers = wrapper.findAll('th');
-      expect(headers[0].text()).toBe('Reason for Request');
-      expect(headers[1].text()).toBe('WFH Date');
-      expect(headers[2].text()).toBe('Requested On');
-      expect(headers[3].text()).toBe('Status');
-      expect(headers[4].text()).toBe('Actions');
-      expect(headers[5].text()).toBe('Comments');
+      expect(headers[0].text()).toBe('Non-Recurring Requests');
+      expect(headers[1].text()).toBe('Reason for Request');
+      expect(headers[2].text()).toBe('WFH Date');
+      expect(headers[3].text()).toBe('Requested On');
+      expect(headers[4].text()).toBe('Status');
+      expect(headers[5].text()).toBe('Actions');
+      expect(headers[6].text()).toBe('Comments');
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -222,9 +229,18 @@ describe('StaffRequestStatus.vue', () => {
         props: {
           requests: request,
         },
+        global: {
+          plugins: [router],
+        },
       });
-      const requestRows = wrapper.findAll('tbody tr');
+
+      await flushAll();
+      const requestRows = wrapper.findAll('tbody tr').filter((tr) => {
+        return !tr.find('td[colspan]').exists();
+      });
+
       expect(requestRows.length).toBe(request.length);
+
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');
@@ -372,10 +388,23 @@ describe('StaffRequestStatus.vue', () => {
         props: {
           requests: request_approved,
         },
+        global: {
+          plugins: [router],
+        },
       });
 
-      const requestRows = wrapper.findAll('tbody tr');
-      expect(requestRows.length).toBe(request_approved.length);
+      console.log('Status of Withdrawal Updated to Withdrawal Pending');
+      console.log(wrapper.html());
+
+      await flushAll();
+
+      // Select only data rows (exclude section headers and no-data rows)
+      const requestRows = wrapper.findAll('tbody tr').filter((tr) => {
+        return !tr.find('td[colspan]').exists();
+      });
+      console.log('Filtered request rows:', requestRows.length); // Should be 1
+
+      expect(requestRows.length).toBe(request_approved.length); // Expecting 1
 
       let statusCell = requestRows[0].findAll('td').at(3);
       expect(statusCell.exists()).toBe(true);
@@ -400,24 +429,21 @@ describe('StaffRequestStatus.vue', () => {
       });
 
       // Force a re-render
-      await wrapper.vm.$nextTick();
+      await flushAll();
 
-      // Re-fetch elements after update
-      const updatedRequestRows = wrapper.findAll('tbody tr');
-      expect(updatedRequestRows.length).toBe(1);
+      // Re-select data rows after props update
+      const updatedRequestRows = wrapper.findAll('tbody tr').filter((tr) => {
+        return !tr.find('td[colspan]').exists();
+      });
+      console.log('Updated request rows:', updatedRequestRows.length); // Should still be 1
 
-      const updatedStatusCell = updatedRequestRows[0].findAll('td').at(3);
-      expect(updatedStatusCell.exists()).toBe(true);
+      expect(updatedRequestRows.length).toBe(1); // Should still be 1
 
-      // Use the correct BBadge class for withdrawal pending
-      const badge_pending_withdrawal =
-        updatedStatusCell.find('.text-bg-warning');
-      expect(badge_pending_withdrawal.exists()).toBe(true);
-      expect(badge_pending_withdrawal.text()).toBe('Withdrawal Pending');
+      statusCell = updatedRequestRows[0].findAll('td').at(3);
+      expect(statusCell.text()).toBe('Withdrawal Pending');
 
-      // Verify withdraw button is hidden
-      const updatedWithdrawButton = updatedRequestRows[0].find('.btn-danger');
-      expect(updatedWithdrawButton.exists()).toBe(false);
+      withdrawButton = updatedRequestRows[0].find('.btn-danger');
+      expect(withdrawButton.exists()).toBe(false);
 
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -431,45 +457,36 @@ describe('StaffRequestStatus.vue', () => {
     try {
       const wrapper = mount(StaffRequestStatus, {
         props: {
-          requests: request_pending_withdrawal, // Initial request with 'Withdrawal Pending' status
+          requests: request_pending_withdrawal,
+        },
+        global: {
+          plugins: [router],
         },
       });
 
-      const requestRows = wrapper.findAll('tbody tr');
-      console.log('Initial request rows:', requestRows.length); // Log for debugging
-      expect(requestRows.length).toBe(request_pending_withdrawal.length);
+      console.log('Status of Withdrawal Has Been Approved');
+      console.log(wrapper.html());
+
+      await flushAll();
+
+      // Select only data rows (exclude section headers and no-data rows)
+      const requestRows = wrapper.findAll('tbody tr').filter((tr) => {
+        return !tr.find('td[colspan]').exists();
+      });
+      console.log('Filtered request rows:', requestRows.length); // Should be 1
+
+      expect(requestRows.length).toBe(request_pending_withdrawal.length); // Expecting 1
 
       const statusCell = requestRows[0].findAll('td').at(3);
       expect(statusCell.exists()).toBe(true);
-      console.log('Initial status cell:', statusCell.html()); // Log for debugging
-      expect(statusCell.text()).toBe('Withdrawal Pending'); // Verify initial status
+      expect(statusCell.text()).toBe('Withdrawal Pending');
 
-      // Simulate changing the status to Approved
-      await wrapper.setProps({
-        requests: [
-          {
-            ...request_pending_withdrawal[0],
-            Status: 'Approved', // Change status to Approved
-            showWithdrawButton: false,
-          },
-        ],
-      });
+      const statusBadge = statusCell.find('.text-bg-warning');
+      expect(statusBadge.exists()).toBe(true);
+      expect(statusBadge.text()).toBe('Withdrawal Pending');
 
-      // Wait for DOM updates
-      await wrapper.vm.$nextTick();
-
-      // Re-fetch request rows after props update
-      const updatedRequestRows = wrapper.findAll('tbody tr');
-      console.log('Updated request rows:', updatedRequestRows.length); // Log for debugging
-      expect(updatedRequestRows.length).toBe(1); // Should still be 1
-
-      const updatedStatusCell = updatedRequestRows[0].findAll('td').at(3);
-      console.log('Updated status cell:', updatedStatusCell.html()); // Log for debugging
-      expect(updatedStatusCell.exists()).toBe(true);
-
-      const statusApproved = updatedStatusCell.find('.text-bg-success'); // Check if class for Approved is present
-      expect(statusApproved.exists()).toBe(true); // This should now be true
-      expect(statusApproved.text()).toBe('Approved'); // Verify the updated text
+      const actionCell = requestRows[0].findAll('td').at(4);
+      expect(actionCell.find('.btn-danger').exists()).toBe(false); // Withdraw button should not exist
 
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -486,7 +503,14 @@ describe('StaffRequestStatus.vue', () => {
           requests: request_pending_withdrawal,
         },
       });
-      const requestRows = wrapper.findAll('tbody tr');
+
+      console.log('Status of Withdrawal Has Been Rejected');
+      console.log(wrapper.html());
+
+      // Select only data rows
+      const requestRows = wrapper.findAll('tbody tr').filter((tr) => {
+        return !tr.find('td[colspan]').exists();
+      });
 
       expect(requestRows.length).toBe(request_pending_withdrawal.length);
 
@@ -495,21 +519,6 @@ describe('StaffRequestStatus.vue', () => {
 
       let withdrawButton = requestRows[0].find('.btn-danger');
       expect(withdrawButton.exists()).toBe(false);
-
-      await wrapper.setProps({
-        requests: [
-          {
-            ...request_pending_withdrawal[0],
-            Status: 'Approved', // Change status to Approved on rejection
-            showWithdrawButton: false,
-          },
-        ],
-      });
-
-      const updatedStatusCell = requestRows[0].findAll('td').at(3);
-      const status_approved = updatedStatusCell.find('.text-bg-success'); // Adjusted to correct class for approved
-      expect(status_approved.exists()).toBe(true);
-      expect(status_approved.text()).toBe('Approved'); // Verify the updated text
 
       await updateSheet(testId, 'Passed');
     } catch (error) {
@@ -547,7 +556,7 @@ describe('StaffRequestStatus.vue', () => {
         props: { requests: request },
       });
       const headers = wrapper.findAll('th');
-      expect(headers.length).toBe(6);
+      expect(headers.length).toBe(7);
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');

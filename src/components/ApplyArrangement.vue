@@ -153,18 +153,15 @@ export default {
       this.isLoading = true;
 
       try {
-        const response = await axios.post(
-          `${this.API_ROUTE}/wfh-request/apply`,
-          {
-            Staff_ID: this.Staff_ID,
-            Request_Date: this.Request_Date,
-            Request_Period: this.Request_Period,
-            Request_Reason: this.Request_Reason,
-            Status: this.Status,
-            Approver_ID: this.Approver_ID,
-            WFH_Date: this.WFH_Date,
-          },
-        );
+        await axios.post(`${this.API_ROUTE}/wfh-request/apply`, {
+          Staff_ID: this.Staff_ID,
+          Request_Date: this.Request_Date,
+          Request_Period: this.Request_Period,
+          Request_Reason: this.Request_Reason,
+          Status: this.Status,
+          Approver_ID: this.Approver_ID,
+          WFH_Date: this.WFH_Date,
+        });
 
         this.modalTitle = 'Success';
         this.modalMessage = 'Request Submitted Successfully';

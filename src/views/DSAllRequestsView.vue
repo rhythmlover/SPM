@@ -1,6 +1,6 @@
 <script setup>
 import axios from 'axios';
-import { inject, ref, onMounted, watch } from 'vue';
+import { inject, ref, onMounted } from 'vue';
 
 const employees = ref([]);
 const wfhRequests = ref([]);
@@ -300,7 +300,7 @@ const updateRecurringRequestStatus = async (
         let dateObj = new Date(date);
         dateObj.setDate(dateObj.getDate() + 1);
         const dateInsert = dateObj.toISOString().split('T')[0];
-        const results = await axios.post(
+        await axios.post(
           `${API_ROUTE}/wfh-request/recurring-request/insert-approved-recurring-dates`,
           {
             Staff_ID: requestStaffID,
