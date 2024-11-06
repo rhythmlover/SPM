@@ -132,6 +132,9 @@ export { get_WFH_period, moreThanTwoMonths, formatRequestDate };
               <td class="col-1" v-if="request.Status == 'Rejected'">
                 <BBadge pill variant="danger">Rejected</BBadge>
               </td>
+              <td class="col-1" v-if="request.Status == 'Cancelled'">
+                <BBadge pill variant="secondary">Cancelled</BBadge>
+              </td>
               <td class="col-3">{{ request.Comments }}</td>
             </tr>
           </tbody>

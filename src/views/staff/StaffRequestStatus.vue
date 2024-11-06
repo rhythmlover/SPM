@@ -274,9 +274,13 @@ const cancelRequest = async (requestID) => {
       { params: { requestID } },
     );
 
-    localRequests.value = localRequests.value.filter(
-      (request) => request.Request_ID !== requestID,
+    const request = localRequests.value.find(
+      (request) => request.Request_ID === requestID,
     );
+
+    if (request) {
+      request.Status = 'Cancelled';
+    }
 
     showAlert('Success', `Request has been successfully cancelled.`);
   } catch (error) {
