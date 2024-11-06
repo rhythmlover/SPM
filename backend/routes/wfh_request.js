@@ -3,17 +3,16 @@ import { executeQuery } from '../mysqlConnection.js';
 
 const router = express.Router();
 
-function getDatesBetween(startDate, endDate) {
+function getDatesBetween(startDate, endDate, dayOfWeek) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const targetDay = dayOfWeek % 7; // Convert 7 (Sunday) to 0
   const dates = [];
-  let currentDate = new Date(startDate);
-
-  // Ensure the endDate is a date object
-  endDate = new Date(endDate);
-
-  // Loop through dates until we reach the endDate
-  while (currentDate <= endDate) {
-    dates.push(new Date(currentDate)); // Push a copy of the current date
-    currentDate.setDate(currentDate.getDate() + 1); // Increment by one day
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const currentDay = d.getDay();
+    if (currentDay === targetDay) {
+      dates.push(new Date(d));
+    }
   }
 
   return dates;
@@ -67,7 +66,7 @@ router.get('/all', async (req, res, next) => {
     }
 
     let [recurring_results] = await executeQuery(
-      'SELECT * FROM `WFH_Request_Recurring`',
+      `SELECT * FROM "WFH_Request_Recurring" WHERE Status IN ('Pending', 'Rejected', 'Cancelled')`,
     );
     // Attach other info into request
     for (let r of recurring_results) {
@@ -107,7 +106,11 @@ router.get('/all', async (req, res, next) => {
       r['Staff'] = currstaffresults[0];
       r['Approver'] = approverresults[0];
 
-      let datesToAdd = getDatesBetween(r['WFH_Date_Start'], r['WFH_Date_End']);
+      let datesToAdd = getDatesBetween(
+        r['WFH_Date_Start'],
+        r['WFH_Date_End'],
+        r['WFH_Day'],
+      );
       for (let d of datesToAdd) {
         let newR = { ...r };
         newR['WFH_Date'] = d;
