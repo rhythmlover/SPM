@@ -41,7 +41,7 @@ const fetchWFHRequests = async () => {
     const staffIds = employees.value.map((employee) => employee.Staff_ID);
 
     // Fetch non-recurring WFH requests
-    const res = await axios.get(`${API_ROUTE}/wfh-request/all`);
+    const res = await axios.get(`${API_ROUTE}/wfh-request/ds-non-recurring`);
     wfhRequests.value = res.data.results.filter((request) =>
       staffIds.includes(request.Staff_ID),
     );
@@ -58,13 +58,16 @@ const fetchWFHRequests = async () => {
       staffIds.includes(request.Staff_ID),
     );
 
+    pendingRequests.value = [];
+    acceptedRequests.value = [];
+    rejectedRequests.value = [];
+
     // Now join both requests to employees
-    joinEmployeesToWFHRequests();
+    await joinEmployeesToWFHRequests();
     joinEmployeesToWFHRecurringRequests();
     loading.value = false;
 
     // Output combined pending requests
-    console.log('OUTPUTS: ', pendingRequests);
   } catch (error) {
     console.error('Error fetching WFH requests:', error);
     loading.value = false;
@@ -88,9 +91,6 @@ const fetchWithdrawalReason = async (request_ID) => {
 };
 
 const joinEmployeesToWFHRequests = async () => {
-  pendingRequests.value = [];
-  acceptedRequests.value = [];
-  rejectedRequests.value = [];
   for (const request of wfhRequests.value) {
     const employee = employees.value.find(
       (emp) => emp.Staff_ID === request.Staff_ID,
@@ -146,7 +146,6 @@ const joinEmployeesToWFHRecurringRequests = () => {
       pendingRequests.value.push(combinedRequest);
     }
   });
-  console.log('PENDING REQUESTS: ', pendingRequests);
 };
 
 const formatRequestDate = (isoDate) => {
@@ -236,14 +235,12 @@ const updateRecurringRequestStatus = async (
 ) => {
   try {
     if (newStatus === 'Approved') {
-      console.log(requestID);
       const result = await axios.get(
         `${API_ROUTE}/wfh-request/recurring-request/dates`,
         {
           params: { requestID },
         },
       );
-      console.log('RESULT: ', result);
       const wfhDateStart = result.data.WFH_Date_Start;
       const wfhDateEnd = result.data.WFH_Date_End;
       const wfhDay = result.data.WFH_Day;
@@ -312,7 +309,6 @@ const updateRecurringRequestStatus = async (
             Recurring_Request_ID: requestID,
           },
         );
-        console.log('RESULTS: ', results);
       }
     }
 
@@ -410,7 +406,7 @@ const checkWFHPolicy = async (reportingManagerID, wfhDate, requestPeriod) => {
 
     // Get all approved requests for the same date
     const approvedRequestsResponse = await axios.get(
-      `${API_ROUTE}/wfh-request/all`,
+      `${API_ROUTE}/wfh-request/ds-non-recurring`,
     );
 
     // Filter approved requests of staff under this manager for the given date
@@ -462,7 +458,9 @@ onMounted(async () => {
 
 <template>
   <BContainer>
-    <h2>Requests from My Direct Subordinates</h2>
+    <h2 style="text-align: center; font-weight: bold; margin: 20px">
+      Requests from My Direct Subordinates
+    </h2>
 
     <RequestLinks @linkChange="setActiveLink" />
 
