@@ -121,6 +121,37 @@ router.get('/all', async (req, res, next) => {
   }
 });
 
+router.get('/ds-non-recurring', async (req, res, next) => {
+  try {
+    let [results, _] = await executeQuery('SELECT * FROM `WFH_Request`');
+
+    // Attach other info into request
+    for (let r of results) {
+      // Query Staff_ID and Approver_ID for more info on Employee
+      let [approverresults] = await executeQuery(
+        `SELECT * FROM Employee WHERE Staff_ID = ${r['Approver_ID']}`,
+      );
+
+      // Fetch current staff information
+      let [currstaffresults] = await executeQuery(
+        `SELECT * FROM Employee WHERE Staff_ID = ${r['Staff_ID']}`,
+      );
+      // Map department ID to name
+      let [departmentresults] = await executeQuery(
+        `SELECT * FROM Department WHERE Dept_ID = ${currstaffresults[0]['Dept_ID']}`,
+      );
+      currstaffresults[0]['Department'] = departmentresults[0];
+
+      r['Staff'] = currstaffresults[0];
+      r['Approver'] = approverresults[0];
+    }
+
+    res.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/user', async (req, res, next) => {
   const staffID = req.query.staffID;
 
@@ -851,18 +882,18 @@ router.get('/user-recurring-requests', async (req, res, next) => {
   try {
     // Fetch current staff information
     let [currstaffresults] = await executeQuery(
-      `SELECT * FROM Employee WHERE Staff_ID = ${staffID}`
+      `SELECT * FROM Employee WHERE Staff_ID = ${staffID}`,
     );
 
     // Fetch non-recurring requests
     let [nonRecurringResults] = await executeQuery(
-      `SELECT * FROM WFH_Request WHERE Staff_ID = ${staffID}`
+      `SELECT * FROM WFH_Request WHERE Staff_ID = ${staffID}`,
     );
 
     // Fetch recurring requests
     let [recurringResults] = await executeQuery(
       `SELECT * FROM WFH_Request_Recurring WHERE Staff_ID = ${staffID} 
-       AND (Status = 'Pending' OR Status = 'Rejected')`
+       AND (Status = 'Pending' OR Status = 'Rejected')`,
     );
 
     // Combine both results
@@ -872,7 +903,7 @@ router.get('/user-recurring-requests', async (req, res, next) => {
     for (let r of combinedResults) {
       let approverId = r.Approver_ID || r.Approver_ID; // Use the approver ID from the appropriate request
       let [approverresults] = await executeQuery(
-        `SELECT * FROM Employee WHERE Staff_ID = ${approverId}`
+        `SELECT * FROM Employee WHERE Staff_ID = ${approverId}`,
       );
 
       // Attach current staff and approver details to the request
@@ -894,8 +925,7 @@ router.get('/staff-recurring', async (req, res, next) => {
       `SELECT * FROM WFH_Request_Recurring WHERE Staff_ID = ${staffID}
        AND (Status = 'Pending' OR Status = 'Rejected')`,
     );
-    return res.json({ results });  
-    
+    return res.json({ results });
   } catch (error) {
     next(error);
   }
