@@ -238,7 +238,10 @@
             </tr>
           </tbody>
           <tbody v-else-if="status === 'accepted'">
-            <tr v-for="request in requests" :key="request.Request_ID">
+            <tr
+              v-for="request in sortedAcceptedRequests"
+              :key="request.Request_ID"
+            >
               <td class="col-2">
                 {{ request.Staff_FName }} {{ request.Staff_LName }}
               </td>
@@ -288,7 +291,10 @@
             </tr>
           </tbody>
           <tbody v-if="status === 'rejected'">
-            <tr v-for="request in requests" :key="request.Request_ID">
+            <tr
+              v-for="request in sortedRejectedRequests"
+              :key="request.Request_ID"
+            >
               <td class="col-2">
                 {{ request.Staff_FName }} {{ request.Staff_LName }}
               </td>
@@ -566,6 +572,19 @@ export default {
       return this.requests
         .filter((request) => request.Status === 'Withdrawal Pending')
         .sort((a, b) => new Date(a.WFH_Date) - new Date(b.WFH_Date));
+    },
+    sortedAcceptedRequests() {
+      return this.requests
+        .filter(
+          (request) =>
+            request.Status === 'Approved' || request.Status === 'Withdrawn',
+        )
+        .sort((b, a) => new Date(a.Decision_Date) - new Date(b.Decision_Date));
+    },
+    sortedRejectedRequests() {
+      return this.requests
+        .filter((request) => request.Status === 'Rejected')
+        .sort((b, a) => new Date(a.Decision_Date) - new Date(b.Decision_Date));
     },
   },
 };
