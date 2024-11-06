@@ -42,6 +42,18 @@ const formatRequestDate = (isoDate) => {
   return `${month} ${day}, ${year} (${weekday})`;
 };
 
+const formatRecurringRequestDate = (isoDate) => {
+  const date = new Date(isoDate);
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  const day = date.getUTCDate();
+  const month = date.toLocaleString('en-US', {
+    month: 'long',
+    timeZone: 'UTC',
+  });
+  const year = date.getUTCFullYear();
+  return `${month} ${day}, ${year}`;
+};
+
 const canWithdraw = (WFH_Date) => {
   const currentDate = new Date();
   const targetDate = new Date(WFH_Date);
@@ -199,7 +211,7 @@ const fetchWFHRecurringRequests = async (staffID) => {
         Staff_ID: request.Staff_ID,
         Request_ID: request.Request_ID,
         Request_Date: formatRequestDate(request.Request_Date),
-        WFH_Date: `${formatRequestDate(request.WFH_Date_Start)} to ${formatRequestDate(request.WFH_Date_End)} | Every ${getDay(request.WFH_Day)}, ${get_WFH_period(request.Request_Period)}`,
+        WFH_Date: `${formatRecurringRequestDate(request.WFH_Date_Start)} to ${formatRecurringRequestDate(request.WFH_Date_End)} | Every ${getDay(request.WFH_Day)}, ${get_WFH_period(request.Request_Period)}`,
         Reason: request.Request_Reason,
         Status: request.Status,
         Comments: request.Comments || '',
@@ -329,7 +341,7 @@ defineExpose({
               <tr v-for="(request, index) in sortedRequests" :key="index">
                 <td>{{ request.Reason }}</td>
                 <td>
-                  {{ request.WFH_Date }},
+                  {{ request.WFH_Date }}
                   {{ get_WFH_period(request.Request_Period) }}
                 </td>
                 <td>{{ request.Request_Date }}</td>

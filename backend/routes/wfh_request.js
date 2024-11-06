@@ -886,4 +886,19 @@ router.get('/user-recurring-requests', async (req, res, next) => {
   }
 });
 
+router.get('/staff-recurring', async (req, res, next) => {
+  const staffID = req.query.staffID;
+
+  try {
+    let [results] = await executeQuery(
+      `SELECT * FROM WFH_Request_Recurring WHERE Staff_ID = ${staffID}
+       AND (Status = 'Pending' OR Status = 'Rejected')`,
+    );
+    return res.json({ results });  
+    
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

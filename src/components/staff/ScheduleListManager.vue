@@ -41,6 +41,7 @@ onMounted(() => {
               >
                 <BThead>
                   <BTr>
+                    <BTh>Type</BTh>
                     <BTh
                       v-for="header in dateObject.office_count_table.headers"
                       :key="header"
@@ -52,8 +53,19 @@ onMounted(() => {
                 </BThead>
                 <BTbody>
                   <BTr>
+                    <BTd>WFH:</BTd>
                     <BTd
                       v-for="(count, index) in dateObject.office_count_table
+                        .counts"
+                      :key="index"
+                    >
+                      {{ count }}
+                    </BTd>
+                  </BTr>
+                  <BTr>
+                    <BTd>In Office:</BTd>
+                    <BTd
+                      v-for="(count, index) in dateObject.inoffice_count_table
                         .counts"
                       :key="index"
                     >
