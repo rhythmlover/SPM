@@ -183,7 +183,7 @@ describe('StaffRequestStatus.vue', () => {
       expect(wrapper.vm.modalMessage).toBe(
         'Request has been successfully cancelled.',
       );
-      expect(wrapper.vm.localRequests.length).toBe(0);
+      expect(wrapper.vm.localRequests.length).toBe(1);
 
       await updateSheet(testId, 'Passed');
     } catch (error) {

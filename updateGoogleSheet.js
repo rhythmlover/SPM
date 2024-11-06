@@ -50,7 +50,7 @@ export async function updateSheet(testId, status) {
     const rowIndex = rows.findIndex((row) => row[0] === testId);
 
     if (rowIndex !== -1) {
-      const rowNumber = rowIndex + 3;
+      const rowNumber = rowIndex + 2;
       const statusRange = `UNITTESTS!K${rowNumber}`;
       const dateRange = `UNITTESTS!P${rowNumber}`;
 
