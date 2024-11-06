@@ -17,7 +17,7 @@
         :class="{ active: isActive('/previously-accepted') }"
         @click.prevent="setActiveLink('/previously-accepted')"
       >
-        Previously Accepted
+        Previously Approved
       </router-link>
     </div>
     <div class="link-container">
