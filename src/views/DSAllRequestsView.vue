@@ -145,6 +145,9 @@ const joinEmployeesToWFHRecurringRequests = () => {
     if (combinedRequest.Status === 'Pending') {
       pendingRequests.value.push(combinedRequest);
     }
+    if (combinedRequest.Status === 'Rejected') {
+      rejectedRequests.value.push(combinedRequest);
+    }
   });
 };
 
