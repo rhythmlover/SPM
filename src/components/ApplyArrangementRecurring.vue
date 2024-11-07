@@ -84,7 +84,6 @@ export default {
         const recurringDates = recurringResponse.data.recurringDates;
 
         this.existingWFHDates = [...nonRecurringDates, ...recurringDates];
-        console.log('Existing WFH Dates:', this.existingWFHDates);
       } catch (error) {
         console.log(error);
         this.modalTitle = 'Error';
@@ -182,10 +181,6 @@ export default {
           return dateMatches && periodMatches;
         }),
       );
-
-      console.log('Valid Dates Period:', this.validDatesPeriod);
-      console.log('Clashing Dates:', clashingDates);
-      console.log('Existing WFH Dates:', this.existingWFHDates);
 
       if (clashingDates.length > 0) {
         this.errorMessage = `You have a clashing request for the following dates:\n`;
@@ -408,6 +403,7 @@ export default {
   border-radius: 5px;
   max-width: 500px;
   width: 100%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 .modal-header {
   padding: 1rem;

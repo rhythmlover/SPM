@@ -85,7 +85,6 @@ export default {
         const recurringDates = recurringResponse.data.recurringDates;
 
         this.existingWFHDates = [...nonRecurringDates, ...recurringDates];
-        console.log('Existing WFH Dates:', this.existingWFHDates);
       } catch (error) {
         console.error('Error fetching WFH dates:', error);
         this.modalTitle = 'Error';
@@ -136,10 +135,6 @@ export default {
         }),
       );
 
-      console.log('Valid Dates Period:', this.validDatesPeriod);
-      console.log('Clashing Dates:', clashingDates);
-      console.log('Existing WFH Dates:', this.existingWFHDates);
-
       if (clashingDates.length > 0) {
         this.modalTitle = 'Error';
         this.modalMessage =
@@ -158,24 +153,19 @@ export default {
       this.isLoading = true;
 
       try {
-        const response = await axios.post(
-          `${this.API_ROUTE}/wfh-request/apply`,
-          {
-            Staff_ID: this.Staff_ID,
-            Request_Date: this.Request_Date,
-            Request_Period: this.Request_Period,
-            Request_Reason: this.Request_Reason,
-            Status: this.Status,
-            Approver_ID: this.Approver_ID,
-            WFH_Date: this.WFH_Date,
-          },
-        );
+        await axios.post(`${this.API_ROUTE}/wfh-request/apply`, {
+          Staff_ID: this.Staff_ID,
+          Request_Date: this.Request_Date,
+          Request_Period: this.Request_Period,
+          Request_Reason: this.Request_Reason,
+          Status: this.Status,
+          Approver_ID: this.Approver_ID,
+          WFH_Date: this.WFH_Date,
+        });
 
         this.modalTitle = 'Success';
         this.modalMessage = 'Request Submitted Successfully';
         this.showAlertModal = true;
-
-        console.log(response);
         setTimeout(() => {
           this.resetForm();
         }, 3000);
@@ -315,24 +305,30 @@ export default {
   justify-content: center;
   align-items: center;
 }
+
 .modal-dialog {
   background-color: white;
   border-radius: 5px;
   max-width: 500px;
   width: 100%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
+
 .modal-header {
   padding: 1rem;
   border-bottom: 1px solid #dee2e6;
 }
+
 .modal-body {
   padding: 1rem;
 }
+
 .modal-footer {
   padding: 1rem;
   border-top: 1px solid #dee2e6;
   text-align: right;
 }
+
 .close {
   background: none;
   border: none;

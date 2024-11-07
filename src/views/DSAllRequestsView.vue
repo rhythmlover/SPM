@@ -1,6 +1,6 @@
 <script setup>
 import axios from 'axios';
-import { inject, ref, onMounted, watch } from 'vue';
+import { inject, ref, onMounted } from 'vue';
 
 const employees = ref([]);
 const wfhRequests = ref([]);
@@ -41,7 +41,7 @@ const fetchWFHRequests = async () => {
     const staffIds = employees.value.map((employee) => employee.Staff_ID);
 
     // Fetch non-recurring WFH requests
-    const res = await axios.get(`${API_ROUTE}/wfh-request/all`);
+    const res = await axios.get(`${API_ROUTE}/wfh-request/ds-non-recurring`);
     wfhRequests.value = res.data.results.filter((request) =>
       staffIds.includes(request.Staff_ID),
     );
@@ -58,13 +58,16 @@ const fetchWFHRequests = async () => {
       staffIds.includes(request.Staff_ID),
     );
 
+    pendingRequests.value = [];
+    acceptedRequests.value = [];
+    rejectedRequests.value = [];
+
     // Now join both requests to employees
-    joinEmployeesToWFHRequests();
+    await joinEmployeesToWFHRequests();
     joinEmployeesToWFHRecurringRequests();
     loading.value = false;
 
     // Output combined pending requests
-    console.log('OUTPUTS: ', pendingRequests);
   } catch (error) {
     console.error('Error fetching WFH requests:', error);
     loading.value = false;
@@ -88,9 +91,6 @@ const fetchWithdrawalReason = async (request_ID) => {
 };
 
 const joinEmployeesToWFHRequests = async () => {
-  pendingRequests.value = [];
-  acceptedRequests.value = [];
-  rejectedRequests.value = [];
   for (const request of wfhRequests.value) {
     const employee = employees.value.find(
       (emp) => emp.Staff_ID === request.Staff_ID,
@@ -145,8 +145,10 @@ const joinEmployeesToWFHRecurringRequests = () => {
     if (combinedRequest.Status === 'Pending') {
       pendingRequests.value.push(combinedRequest);
     }
+    if (combinedRequest.Status === 'Rejected') {
+      rejectedRequests.value.push(combinedRequest);
+    }
   });
-  console.log('PENDING REQUESTS: ', pendingRequests);
 };
 
 const formatRequestDate = (isoDate) => {
@@ -191,13 +193,15 @@ const updateRequestStatus = async (
         modalMessage.value =
           'Accepting this request will violate the 50% WFH policy.';
         showPolicyModal.value = true;
-        await new Promise((resolve) => {
+        const shouldProceed = await new Promise((resolve) => {
           proceedCallback = resolve;
         });
+
+        if (!shouldProceed) {
+          return;
+        }
       }
     }
-
-    if (proceedCallback) proceedCallback();
 
     if (commentsAdded) {
       await axios.put(
@@ -219,13 +223,13 @@ const updateRequestStatus = async (
 
 const cancelPolicyViolation = () => {
   showPolicyModal.value = false;
-  proceedCallback && proceedCallback();
+  proceedCallback && proceedCallback(false);
   proceedCallback = null;
 };
 
 const proceedPolicyViolation = () => {
   showPolicyModal.value = false;
-  proceedCallback && proceedCallback();
+  proceedCallback && proceedCallback(true);
   proceedCallback = null;
 };
 
@@ -236,14 +240,12 @@ const updateRecurringRequestStatus = async (
 ) => {
   try {
     if (newStatus === 'Approved') {
-      console.log(requestID);
       const result = await axios.get(
         `${API_ROUTE}/wfh-request/recurring-request/dates`,
         {
           params: { requestID },
         },
       );
-      console.log('RESULT: ', result);
       const wfhDateStart = result.data.WFH_Date_Start;
       const wfhDateEnd = result.data.WFH_Date_End;
       const wfhDay = result.data.WFH_Day;
@@ -298,7 +300,7 @@ const updateRecurringRequestStatus = async (
         let dateObj = new Date(date);
         dateObj.setDate(dateObj.getDate() + 1);
         const dateInsert = dateObj.toISOString().split('T')[0];
-        const results = await axios.post(
+        await axios.post(
           `${API_ROUTE}/wfh-request/recurring-request/insert-approved-recurring-dates`,
           {
             Staff_ID: requestStaffID,
@@ -312,7 +314,6 @@ const updateRecurringRequestStatus = async (
             Recurring_Request_ID: requestID,
           },
         );
-        console.log('RESULTS: ', results);
       }
     }
 
@@ -367,14 +368,13 @@ const updateWithdrawalStatus = async (
         modalMessage.value =
           'Rejecting this withdrawal will violate the 50% WFH policy.';
         showPolicyModal.value = true;
-        await new Promise((resolve) => {
-          const unwatch = watch(showPolicyModal, (val) => {
-            if (!val) {
-              unwatch();
-              resolve();
-            }
-          });
+        const shouldProceed = await new Promise((resolve) => {
+          proceedCallback = resolve;
         });
+
+        if (!shouldProceed) {
+          return;
+        }
       }
     }
 
@@ -410,7 +410,7 @@ const checkWFHPolicy = async (reportingManagerID, wfhDate, requestPeriod) => {
 
     // Get all approved requests for the same date
     const approvedRequestsResponse = await axios.get(
-      `${API_ROUTE}/wfh-request/all`,
+      `${API_ROUTE}/wfh-request/ds-non-recurring`,
     );
 
     // Filter approved requests of staff under this manager for the given date
@@ -462,7 +462,9 @@ onMounted(async () => {
 
 <template>
   <BContainer>
-    <h2>Requests from My Direct Subordinates</h2>
+    <h2 style="text-align: center; font-weight: bold; margin: 20px">
+      Requests from My Direct Subordinates
+    </h2>
 
     <RequestLinks @linkChange="setActiveLink" />
 
@@ -515,6 +517,48 @@ onMounted(async () => {
   height: 100%;
   background-color: rgba(255, 255, 255, 0.8);
   z-index: 10;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-dialog {
+  background-color: white;
+  border-radius: 5px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-body {
+  padding: 1rem;
+}
+
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  text-align: right;
+}
+
+.close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 </style>
 

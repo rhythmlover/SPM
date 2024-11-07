@@ -3,6 +3,8 @@ import RequestTable from '@/components/RequestTable.vue';
 import StatusButton from '../StatusButton.vue';
 import { describe, it, expect } from 'vitest';
 import { updateSheet } from '../../../updateGoogleSheet';
+import { flushPromises } from '@vue/test-utils';
+import { nextTick } from 'vue';
 
 describe('RequestTable.vue', () => {
   const request = [
@@ -44,6 +46,21 @@ describe('RequestTable.vue', () => {
       Request_Date: '2023-08-28',
       Comments: 'Yes, approved',
       Status: 'Withdrawal Pending',
+    },
+  ];
+
+  const request_rejected = [
+    {
+      Request_ID: 2,
+      Staff_FName: 'Alice',
+      Staff_LName: 'Johnson',
+      Request_Reason: 'Health',
+      Request_Period: 'Morning',
+      WFH_Date: '2023-09-10',
+      Request_Date: '2023-09-01',
+      Rejected_On: '2023-09-05',
+      Comments: 'Not applicable',
+      Status: 'Rejected',
     },
   ];
 
@@ -169,10 +186,34 @@ describe('RequestTable.vue', () => {
     const testId = 'TC-013';
     try {
       const wrapper = mount(RequestTable, {
-        props: { requests: request, status: 'rejected' },
+        props: { requests: request_rejected, status: 'rejected' },
+        components: { StatusButton }, // Register necessary components if any
       });
-      const commentText = wrapper.findAll('td.col-2').at(5).text();
+
+      console.log('should display the request comments if status is rejected');
+      console.log(wrapper.html());
+
+      // Wait for all asynchronous updates to complete
+      await flushPromises();
+      await nextTick();
+
+      // Select only data rows (exclude section headers and no-data rows)
+      const requestRows = wrapper.findAll('tbody tr').filter((tr) => {
+        return !tr.find('td[colspan]').exists();
+      });
+
+      console.log('Filtered request rows:', requestRows.length); // Should be 1
+
+      // Assert the number of data rows
+      expect(requestRows.length).toBe(request_rejected.length); // Expecting 1
+
+      // Access the Comments `<td>` at index 5
+      const commentCell = requestRows[0].findAll('td').at(5);
+      expect(commentCell).toBeDefined();
+
+      const commentText = commentCell.text();
       expect(commentText).toBe('Not applicable');
+
       await updateSheet(testId, 'Passed');
     } catch (error) {
       await updateSheet(testId, 'Failed');

@@ -90,11 +90,19 @@ const calculateWFHCount = (date) => {
     }
   });
 
+  // number of staff in office for FULL should be count of staff with no requests for the day
+  // but can get min number of inofficecount for AM/PM as well?
+  const inOfficeFull =
+    originalTotalTeamCount.value - wfhCounts.AM.size <
+    originalTotalTeamCount.value - wfhCounts.PM.size
+      ? originalTotalTeamCount.value - wfhCounts.AM.size
+      : originalTotalTeamCount.value - wfhCounts.PM.size;
+
   // Calculate in-office counts (total team - WFH count)
   const inOfficeCounts = {
     AM: originalTotalTeamCount.value - wfhCounts.AM.size,
     PM: originalTotalTeamCount.value - wfhCounts.PM.size,
-    FULL: originalTotalTeamCount.value - wfhCounts.FULL.size,
+    FULL: inOfficeFull,
   };
 
   return {
@@ -260,8 +268,6 @@ const updateAllSubordinateWFH = async (managerId = null) => {
         collectSubordinateRequests(sub),
       );
     }
-
-    console.log('All Approved Requests:', allApprovedRequests.value);
 
     // After collecting all approved requests, counts are handled in filteredDates
   } catch (error) {

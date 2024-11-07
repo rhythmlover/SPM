@@ -143,17 +143,21 @@ const filterRequests = async () => {
         )
           continue;
         // Fiter by only that period
-        if (
-          periodView.value != 'All' &&
-          r['Request_Period'] != periodView.value
-        )
-          continue;
+        if (periodView.value != 'All') {
+          if (r['Request_Period'] != 'FULL') {
+            if (r['Request_Period'] != periodView.value) {
+              continue;
+            }
+          }
+        }
 
         // Passes all filters
         validRequests.push(r);
 
-        // Calculate how many employees WFH
-        wfh_count.add(r['Staff_ID']);
+        // Calculate how many employees WFH, only if their status is ...
+        // Approved, Withdrawal Pending
+        if (r['Status'] == 'Approved' || r['Status'] == 'Withdrawal Pending')
+          wfh_count.add(r['Staff_ID']);
       }
       // Assign back
       dateObj['requests'] = validRequests;

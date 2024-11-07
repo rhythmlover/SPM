@@ -238,7 +238,10 @@
             </tr>
           </tbody>
           <tbody v-else-if="status === 'accepted'">
-            <tr v-for="request in requests" :key="request.Request_ID">
+            <tr
+              v-for="request in sortedAcceptedRequests"
+              :key="request.Request_ID"
+            >
               <td class="col-2">
                 {{ request.Staff_FName }} {{ request.Staff_LName }}
               </td>
@@ -288,7 +291,10 @@
             </tr>
           </tbody>
           <tbody v-if="status === 'rejected'">
-            <tr v-for="request in requests" :key="request.Request_ID">
+            <tr
+              v-for="request in sortedRejectedRequests"
+              :key="request.Request_ID"
+            >
               <td class="col-2">
                 {{ request.Staff_FName }} {{ request.Staff_LName }}
               </td>
@@ -567,6 +573,19 @@ export default {
         .filter((request) => request.Status === 'Withdrawal Pending')
         .sort((a, b) => new Date(a.WFH_Date) - new Date(b.WFH_Date));
     },
+    sortedAcceptedRequests() {
+      return this.requests
+        .filter(
+          (request) =>
+            request.Status === 'Approved' || request.Status === 'Withdrawn',
+        )
+        .sort((b, a) => new Date(a.Decision_Date) - new Date(b.Decision_Date));
+    },
+    sortedRejectedRequests() {
+      return this.requests
+        .filter((request) => request.Status === 'Rejected')
+        .sort((b, a) => new Date(a.Decision_Date) - new Date(b.Decision_Date));
+    },
   },
 };
 </script>
@@ -623,8 +642,9 @@ textarea {
 .section-header {
   background-color: #f4f4f4;
   font-weight: bold;
-  text-align: left;
+  text-align: center;
   border-top: 2px solid #000;
+  font-size: 18px;
 }
 
 .modal-overlay {
@@ -638,22 +658,34 @@ textarea {
   justify-content: center;
   align-items: center;
 }
+
 .modal-dialog {
   background-color: white;
   border-radius: 5px;
   max-width: 500px;
   width: 100%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
+
 .modal-header {
   padding: 1rem;
   border-bottom: 1px solid #dee2e6;
 }
+
 .modal-body {
   padding: 1rem;
 }
+
 .modal-footer {
   padding: 1rem;
   border-top: 1px solid #dee2e6;
   text-align: right;
+}
+
+.close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 </style>

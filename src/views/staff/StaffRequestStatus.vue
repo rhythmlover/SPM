@@ -24,6 +24,7 @@ watch(
 );
 
 const API_ROUTE = inject('API_ROUTE');
+const isLoading = ref(false);
 
 const formatRequestDate = (isoDate) => {
   const date = new Date(isoDate);
@@ -52,6 +53,50 @@ const formatRecurringRequestDate = (isoDate) => {
   });
   const year = date.getUTCFullYear();
   return `${month} ${day}, ${year}`;
+};
+
+const extractAllRecurringDates = (startDate, endDate, dayOfWeek) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const targetDay = dayOfWeek % 7; // Convert 7 (Sunday) to 0
+  const dates = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const currentDay = d.getDay();
+    if (currentDay === targetDay) {
+      dates.push(new Date(d));
+    }
+  }
+
+  return dates;
+};
+
+const extractFirstRecurringDate = (startDate, endDate, dayOfWeek) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const targetDay = dayOfWeek % 7; // Convert 7 (Sunday) to 0
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const currentDay = d.getDay();
+    if (currentDay === targetDay) {
+      return new Date(d);
+    }
+  }
+  return null;
+};
+
+const cantCancelRecurring = (dates) => {
+  const currentDate = new Date();
+  const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
+
+  for (let i = 0; i < dates.length; i++) {
+    const requestDate = new Date(dates[i]);
+    const diff = Math.abs(requestDate - currentDate);
+
+    if (diff <= twoWeeksInMs) {
+      return true;
+    }
+  }
+  return false;
 };
 
 const canWithdraw = (WFH_Date) => {
@@ -116,6 +161,52 @@ let modalResolve;
 const sortedRequests = computed(() => {
   return [...localRequests.value].sort((a, b) => {
     return new Date(b.WFH_Date) - new Date(a.WFH_Date);
+  });
+});
+
+const sortedRecurringRequests = computed(() => {
+  const recurringRequests = localRequests.value.filter(
+    (request) => request.Is_Recurring,
+  );
+
+  const requestsWithDates = recurringRequests.map((request) => {
+    const firstRecurringDate = extractFirstRecurringDate(
+      request.WFH_Date_Start,
+      request.WFH_Date_End,
+      request.WFH_Day,
+    );
+    return {
+      ...request,
+      firstRecurringDate,
+    };
+  });
+
+  requestsWithDates.sort((a, b) => {
+    const firstDateA = new Date(a.firstRecurringDate);
+    const firstDateB = new Date(b.firstRecurringDate);
+    return firstDateA - firstDateB;
+  });
+
+  return requestsWithDates;
+});
+
+const sortedNonRecurringRequests = computed(() => {
+  return sortedRequests.value.filter((request) => !request.Is_Recurring);
+});
+
+const upcomingNonRecurringRequests = computed(() => {
+  return sortedNonRecurringRequests.value.filter((request) => {
+    const requestDate = new Date(request.WFH_Date);
+    const currentDate = new Date();
+    return requestDate >= currentDate;
+  });
+});
+
+const pastNonRecurringRequests = computed(() => {
+  return sortedNonRecurringRequests.value.filter((request) => {
+    const requestDate = new Date(request.WFH_Date);
+    const currentDate = new Date();
+    return requestDate < currentDate;
   });
 });
 
@@ -211,6 +302,9 @@ const fetchWFHRecurringRequests = async (staffID) => {
         Staff_ID: request.Staff_ID,
         Request_ID: request.Request_ID,
         Request_Date: formatRequestDate(request.Request_Date),
+        WFH_Date_Start: request.WFH_Date_Start,
+        WFH_Date_End: request.WFH_Date_End,
+        WFH_Day: request.WFH_Day,
         WFH_Date: `${formatRecurringRequestDate(request.WFH_Date_Start)} to ${formatRecurringRequestDate(request.WFH_Date_End)} | Every ${getDay(request.WFH_Day)}, ${get_WFH_period(request.Request_Period)}`,
         Reason: request.Request_Reason,
         Status: request.Status,
@@ -219,7 +313,6 @@ const fetchWFHRecurringRequests = async (staffID) => {
       }));
 
       localRequests.value.push(...processedRequests); // Combine with non-recurring requests
-      console.log('RESULTS: ', localRequests);
     } else {
       console.warn('No valid results found in the response.');
     }
@@ -274,6 +367,41 @@ const cancelRequest = async (requestID) => {
       { params: { requestID } },
     );
 
+    const request = localRequests.value.find(
+      (request) => request.Request_ID === requestID,
+    );
+
+    if (request) {
+      request.Status = 'Cancelled';
+    }
+
+    showAlert('Success', `Request has been successfully cancelled.`);
+  } catch (error) {
+    console.error('Error updating WFH request', error);
+    showAlert('Error', 'Failed to cancel the request.');
+  }
+};
+
+const cancelRecurringRequest = async (requestID) => {
+  try {
+    const confirmed = await showConfirm(
+      'Confirm Cancellation',
+      'Confirm cancellation of this recurring request?',
+    );
+    if (!confirmed) return;
+
+    await axios.put(
+      `${API_ROUTE}/wfh-request/recurring-request/update-decision-date`,
+      { Decision_Date: new Date().toISOString().split('T')[0] },
+      { params: { requestID } },
+    );
+
+    await axios.put(
+      `${API_ROUTE}/wfh-request/recurring-request/status`,
+      { status: 'Cancelled' },
+      { params: { requestID } },
+    );
+
     localRequests.value = localRequests.value.filter(
       (request) => request.Request_ID !== requestID,
     );
@@ -305,11 +433,18 @@ const openWithdrawForm = async (Request_ID, WFH_Date, Request_Period) => {
 };
 
 onMounted(async () => {
-  if (staffID) {
-    await getWFHRequests(staffID);
-    await fetchWFHRecurringRequests(staffID);
-  } else {
-    console.error('Staff ID is not available.');
+  try {
+    if (staffID) {
+      isLoading.value = true;
+      await getWFHRequests(staffID);
+      await fetchWFHRecurringRequests(staffID);
+    } else {
+      console.error('Staff ID is not available.');
+    }
+  } catch (error) {
+    console.error('Error fetching WFH requests:', error);
+  } finally {
+    isLoading.value = false;
   }
 });
 
@@ -320,136 +455,415 @@ defineExpose({
 </script>
 
 <template>
-  <BContainer fluid class="py-4">
-    <BRow class="justify-content-center">
-      <BCol lg="10" xl="8">
-        <h1 class="mb-4 text-center">My WFH Requests</h1>
+  <div v-if="localRequests.length > 0">
+    <BContainer fluid class="py-4">
+      <BRow class="justify-content-center">
+        <BCol lg="10" xl="18">
+          <div v-if="isLoading" class="loader-container">
+            <BSpinner label="Loading requests..." />
+          </div>
+          <div v-else>
+            <h1 class="mb-4 text-center title-header-text">My WFH Requests</h1>
 
-        <div class="table-responsive">
-          <table class="table table-striped table-hover">
-            <thead class="thead-dark">
-              <tr>
-                <th>Reason for Request</th>
-                <th>WFH Date</th>
-                <th>Requested On</th>
-                <th>Status</th>
-                <th>Actions</th>
-                <th>Comments</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(request, index) in sortedRequests" :key="index">
-                <td>{{ request.Reason }}</td>
-                <td>
-                  {{ request.WFH_Date }}
-                  {{ get_WFH_period(request.Request_Period) }}
-                </td>
-                <td>{{ request.Request_Date }}</td>
+            <div class="table-responsive">
+              <table
+                v-if="sortedRecurringRequests.length > 0"
+                class="request-table"
+              >
+                <thead>
+                  <tr>
+                    <th colspan="6" class="table-title-header">
+                      Recurring Requests
+                    </th>
+                  </tr>
+                  <tr>
+                    <th>Reason for Request</th>
+                    <th>WFH Date</th>
+                    <th>Requested On</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                    <th>Comments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(request, index) in sortedRecurringRequests"
+                    :key="index"
+                  >
+                    <td>{{ request.Reason }}</td>
+                    <td>
+                      {{ request.WFH_Date }}
+                      {{ get_WFH_period(request.Request_Period) }}
+                    </td>
+                    <td>{{ request.Request_Date }}</td>
 
-                <td>
-                  <BBadge
-                    :variant="
-                      {
-                        Pending: 'info',
-                        Withdrawn: 'secondary',
-                        'Withdrawal Pending': 'warning',
-                        Approved: 'success',
-                        Rejected: 'danger',
-                      }[request.Status]
-                    "
-                    pill
-                  >
-                    {{ request.Status }}
-                  </BBadge>
-                </td>
+                    <td>
+                      <BBadge
+                        :variant="
+                          {
+                            Pending: 'info',
+                            Withdrawn: 'secondary',
+                            'Withdrawal Pending': 'warning',
+                            Approved: 'success',
+                            Rejected: 'danger',
+                          }[request.Status]
+                        "
+                        pill
+                      >
+                        {{ request.Status }}
+                      </BBadge>
+                    </td>
 
-                <td>
-                  <!-- Cancel Button -->
-                  <button
-                    v-if="
-                      request.Status.toLowerCase() === 'pending' &&
-                      canCancel(request.WFH_Date)
-                    "
-                    @click="cancelRequest(request.Request_ID)"
-                    class="btn btn-warning btn-sm mb-2"
-                    :disabled="!canCancel(request.WFH_Date)"
-                  >
-                    Cancel
-                  </button>
-                  <span
-                    v-if="
-                      request.Status.toLowerCase() === 'pending' &&
-                      !canCancel(request.WFH_Date) &&
-                      request.Is_Recurring == false
-                    "
-                    class="text-danger small"
-                  >
-                    Can only cancel requests when you are more than 2 weeks
-                    before or after requested date
-                  </span>
+                    <td>
+                      <!-- Cancel Button -->
+                      <button
+                        v-if="
+                          request.Status.toLowerCase() === 'pending' &&
+                          !cantCancelRecurring(
+                            extractAllRecurringDates(
+                              request.WFH_Date_Start,
+                              request.WFH_Date_End,
+                              request.WFH_Day,
+                            ),
+                          )
+                        "
+                        @click="cancelRecurringRequest(request.Request_ID)"
+                        class="btn btn-warning btn-sm mb-2"
+                        :disabled="
+                          cantCancelRecurring(
+                            extractAllRecurringDates(
+                              request.WFH_Date_Start,
+                              request.WFH_Date_End,
+                              request.WFH_Day,
+                            ),
+                          )
+                        "
+                      >
+                        Cancel
+                      </button>
+                      <span
+                        v-if="
+                          request.Status.toLowerCase() === 'pending' &&
+                          cantCancelRecurring(
+                            extractAllRecurringDates(
+                              request.WFH_Date_Start,
+                              request.WFH_Date_End,
+                              request.WFH_Day,
+                            ),
+                          )
+                        "
+                        class="text-danger small"
+                      >
+                        Can only cancel requests when you are more than 2 weeks
+                        before or after requested WFH start/end date
+                      </span>
+                      <span
+                        v-if="request.Is_Recurring == true"
+                        class="text-danger small mt-2 d-block"
+                      ></span>
+                    </td>
+                    <td>
+                      <template
+                        v-if="
+                          request.Comments &&
+                          request.Comments.startsWith(
+                            'Withdrawal Request Rejection Remarks:',
+                          )
+                        "
+                      >
+                        <div class="withdrawal-remarks">
+                          <strong>Withdrawal Request Rejection Remarks:</strong>
+                          <br />
+                          {{ request.Comments.split('\n')[1] }}
+                        </div>
+                      </template>
+                      <template v-else>
+                        {{ request.Comments }}
+                      </template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-                  <!-- Withdraw Button -->
-                  <button
-                    v-if="request.showWithdrawButton"
-                    @click="
-                      openWithdrawForm(
-                        request.Request_ID,
-                        request.WFH_Date,
-                        request.Request_Period,
-                      )
-                    "
-                    class="btn btn-danger btn-sm"
-                    :disabled="!canWithdraw(request.WFH_Date)"
+            <div class="table-responsive">
+              <table
+                class="request-table"
+                v-if="sortedNonRecurringRequests.length > 0"
+              >
+                <thead>
+                  <tr>
+                    <th colspan="6" class="table-title-header">
+                      Non-Recurring Requests
+                    </th>
+                  </tr>
+                  <tr>
+                    <th>Reason for Request</th>
+                    <th>WFH Date</th>
+                    <th>Requested On</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                    <th>Comments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="6" class="section-header">
+                      Upcoming Requests
+                    </td>
+                  </tr>
+                  <tr v-if="upcomingNonRecurringRequests.length == 0">
+                    <td
+                      colspan="6"
+                      class="text-center"
+                      style="font-weight: bold"
+                    >
+                      No upcoming requests
+                    </td>
+                  </tr>
+                  <tr
+                    v-for="(request, index) in upcomingNonRecurringRequests"
+                    :key="index"
                   >
-                    Withdraw
-                  </button>
-                  <span
-                    v-if="
-                      request.Status.toLowerCase() === 'approved' &&
-                      !canWithdraw(request.WFH_Date)
-                    "
-                    class="text-danger small mt-2 d-block"
+                    <td>{{ request.Reason }}</td>
+                    <td>
+                      {{ request.WFH_Date }}
+                      {{ get_WFH_period(request.Request_Period) }}
+                    </td>
+                    <td>{{ request.Request_Date }}</td>
+
+                    <td>
+                      <BBadge
+                        :variant="
+                          {
+                            Pending: 'info',
+                            Withdrawn: 'secondary',
+                            'Withdrawal Pending': 'warning',
+                            Approved: 'success',
+                            Rejected: 'danger',
+                          }[request.Status]
+                        "
+                        pill
+                      >
+                        {{ request.Status }}
+                      </BBadge>
+                    </td>
+
+                    <td>
+                      <!-- Cancel Button -->
+                      <button
+                        v-if="
+                          request.Status.toLowerCase() === 'pending' &&
+                          canCancel(request.WFH_Date)
+                        "
+                        @click="cancelRequest(request.Request_ID)"
+                        class="btn btn-warning btn-sm mb-2"
+                        :disabled="!canCancel(request.WFH_Date)"
+                      >
+                        Cancel
+                      </button>
+                      <span
+                        v-if="
+                          request.Status.toLowerCase() === 'pending' &&
+                          !canCancel(request.WFH_Date)
+                        "
+                        class="text-danger small"
+                      >
+                        Can only cancel requests when you are more than 2 weeks
+                        before or after requested WFH date
+                      </span>
+
+                      <!-- Withdraw Button -->
+                      <button
+                        v-if="request.showWithdrawButton"
+                        @click="
+                          openWithdrawForm(
+                            request.Request_ID,
+                            request.WFH_Date,
+                            request.Request_Period,
+                          )
+                        "
+                        class="btn btn-danger btn-sm"
+                        :disabled="!canWithdraw(request.WFH_Date)"
+                      >
+                        Withdraw
+                      </button>
+                      <span
+                        v-if="
+                          request.Status.toLowerCase() === 'approved' &&
+                          !canWithdraw(request.WFH_Date)
+                        "
+                        class="text-danger small mt-2 d-block"
+                      >
+                        Can only withdraw requests when you are more than 2
+                        weeks before or after requested WFH date
+                      </span>
+                      <span
+                        v-if="
+                          request.Status.toLowerCase() === 'withdrawal pending'
+                        "
+                        class="text-muted small d-block mt-1"
+                      >
+                        Withdrawal Pending
+                      </span>
+                      <span
+                        v-if="request.Is_Recurring == true"
+                        class="text-danger small mt-2 d-block"
+                      ></span>
+                    </td>
+                    <td>
+                      <template
+                        v-if="
+                          request.Comments &&
+                          request.Comments.startsWith(
+                            'Withdrawal Request Rejection Remarks:',
+                          )
+                        "
+                      >
+                        <div class="withdrawal-remarks">
+                          <strong>Withdrawal Request Rejection Remarks:</strong>
+                          <br />
+                          {{ request.Comments.split('\n')[1] }}
+                        </div>
+                      </template>
+                      <template v-else>
+                        {{ request.Comments }}
+                      </template>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="6" class="section-header">Past Requests</td>
+                  </tr>
+                  <tr v-if="pastNonRecurringRequests.length == 0">
+                    <td
+                      colspan="6"
+                      class="text-center"
+                      style="font-weight: bold"
+                    >
+                      No past requests
+                    </td>
+                  </tr>
+                  <tr
+                    v-for="(request, index) in pastNonRecurringRequests"
+                    :key="index"
                   >
-                    Can only withdraw requests when you are more than 2 weeks
-                    before or after requested date
-                  </span>
-                  <span
-                    v-if="request.Status.toLowerCase() === 'withdrawal pending'"
-                    class="text-muted small d-block mt-1"
-                  >
-                    Withdrawal Pending
-                  </span>
-                  <span
-                    v-if="request.Is_Recurring == true"
-                    class="text-danger small mt-2 d-block"
-                  ></span>
-                </td>
-                <td>
-                  <template
-                    v-if="
-                      request.Comments &&
-                      request.Comments.startsWith(
-                        'Withdrawal Request Rejection Remarks:',
-                      )
-                    "
-                  >
-                    <div class="withdrawal-remarks">
-                      <strong>Withdrawal Request Rejection Remarks:</strong>
-                      <br />
-                      {{ request.Comments.split('\n')[1] }}
-                    </div>
-                  </template>
-                  <template v-else>
-                    {{ request.Comments }}
-                  </template>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </BCol>
-    </BRow>
-  </BContainer>
+                    <td>{{ request.Reason }}</td>
+                    <td>
+                      {{ request.WFH_Date }}
+                      {{ get_WFH_period(request.Request_Period) }}
+                    </td>
+                    <td>{{ request.Request_Date }}</td>
+
+                    <td>
+                      <BBadge
+                        :variant="
+                          {
+                            Pending: 'info',
+                            Withdrawn: 'secondary',
+                            'Withdrawal Pending': 'warning',
+                            Approved: 'success',
+                            Rejected: 'danger',
+                          }[request.Status]
+                        "
+                        pill
+                      >
+                        {{ request.Status }}
+                      </BBadge>
+                    </td>
+
+                    <td>
+                      <!-- Cancel Button -->
+                      <button
+                        v-if="
+                          request.Status.toLowerCase() === 'pending' &&
+                          canCancel(request.WFH_Date)
+                        "
+                        @click="cancelRequest(request.Request_ID)"
+                        class="btn btn-warning btn-sm mb-2"
+                        :disabled="!canCancel(request.WFH_Date)"
+                      >
+                        Cancel
+                      </button>
+                      <span
+                        v-if="
+                          request.Status.toLowerCase() === 'pending' &&
+                          !canCancel(request.WFH_Date)
+                        "
+                        class="text-danger small"
+                      >
+                        Can only cancel requests when you are more than 2 weeks
+                        before or after requested WFH date
+                      </span>
+
+                      <!-- Withdraw Button -->
+                      <button
+                        v-if="request.showWithdrawButton"
+                        @click="
+                          openWithdrawForm(
+                            request.Request_ID,
+                            request.WFH_Date,
+                            request.Request_Period,
+                          )
+                        "
+                        class="btn btn-danger btn-sm"
+                        :disabled="!canWithdraw(request.WFH_Date)"
+                      >
+                        Withdraw
+                      </button>
+                      <span
+                        v-if="
+                          request.Status.toLowerCase() === 'approved' &&
+                          !canWithdraw(request.WFH_Date)
+                        "
+                        class="text-danger small mt-2 d-block"
+                      >
+                        Can only withdraw requests when you are more than 2
+                        weeks before or after requested WFH date
+                      </span>
+                      <span
+                        v-if="
+                          request.Status.toLowerCase() === 'withdrawal pending'
+                        "
+                        class="text-muted small d-block mt-1"
+                      >
+                        Withdrawal Pending
+                      </span>
+                      <span
+                        v-if="request.Is_Recurring == true"
+                        class="text-danger small mt-2 d-block"
+                      ></span>
+                    </td>
+                    <td>
+                      <template
+                        v-if="
+                          request.Comments &&
+                          request.Comments.startsWith(
+                            'Withdrawal Request Rejection Remarks:',
+                          )
+                        "
+                      >
+                        <div class="withdrawal-remarks">
+                          <strong>Withdrawal Request Rejection Remarks:</strong>
+                          <br />
+                          {{ request.Comments.split('\n')[1] }}
+                        </div>
+                      </template>
+                      <template v-else>
+                        {{ request.Comments }}
+                      </template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </BCol>
+      </BRow>
+    </BContainer>
+  </div>
+  <div v-else class="no-requests">
+    <p>No current requests</p>
+  </div>
 
   <!-- Modal -->
   <div v-if="showModal" class="modal-overlay">
@@ -464,9 +878,6 @@ defineExpose({
           }"
         >
           <h5 class="modal-title">{{ modalTitle }}</h5>
-          <button type="button" class="close" @click="showModal = false">
-            <span>&times;</span>
-          </button>
         </div>
         <div class="modal-body">
           <p>{{ modalMessage }}</p>
@@ -492,7 +903,7 @@ defineExpose({
             v-else
             type="button"
             class="btn btn-secondary"
-            @click="showModal = false"
+            @click="handleModalCancel"
           >
             Close
           </button>
@@ -503,9 +914,32 @@ defineExpose({
 </template>
 
 <style scoped>
-.centered-heading {
-  text-align: center;
-  margin-top: 20px;
+.no-requests {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 150px;
+  background-color: #f8f9fa;
+  color: black;
+}
+
+.no-requests p {
+  font-weight: bold;
+  font-size: 30px;
+}
+
+.title-header-text {
+  font-size: 30px;
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.section-header {
+  background-color: #cccccc9a;
+  font-weight: bold;
+  border-top: 2px solid #000;
+  font-size: 20px;
 }
 
 @media (min-width: 1024px) {
@@ -524,28 +958,6 @@ defineExpose({
     border-radius: 10px;
     margin-top: 20px;
   }
-}
-
-th,
-td {
-  padding: 12px 15px;
-  text-align: left;
-  vertical-align: middle;
-  border: 1px solid #ddd;
-  white-space: pre-line;
-}
-
-table th {
-  background-color: #f4f4f4;
-  font-weight: bold;
-}
-
-tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-tr:hover {
-  background-color: #f1f1f1;
 }
 
 /* Status tag styling */
@@ -579,7 +991,67 @@ button:hover {
   display: block;
 }
 
-/* Modal styles */
+.close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.text-danger {
+  margin-top: 0.5rem;
+}
+
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+
+.request-table {
+  width: 100%;
+  background-color: #fff;
+  border-collapse: collapse;
+  margin-top: 20px;
+  border: 2px solid #050505;
+}
+
+.request-table th,
+.request-table td {
+  padding: 12px 15px;
+  text-align: left;
+  vertical-align: middle;
+  border: 1px black;
+}
+
+.request-table th {
+  background-color: #daebff; /* Header background color */
+  color: #000000;
+  font-weight: bold;
+}
+
+.request-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.request-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+table.request-table th.table-title-header {
+  background-color: #c7e0f1;
+  font-weight: bold;
+  text-align: center;
+  font-size: 25px;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -591,26 +1063,34 @@ button:hover {
   justify-content: center;
   align-items: center;
 }
+
 .modal-dialog {
   background-color: white;
   border-radius: 5px;
   max-width: 500px;
   width: 100%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
+
 .modal-header {
   padding: 1rem;
   border-bottom: 1px solid #dee2e6;
 }
+
 .modal-body {
   padding: 1rem;
 }
+
 .modal-footer {
   padding: 1rem;
   border-top: 1px solid #dee2e6;
   text-align: right;
 }
 
-.text-danger {
-  margin-top: 0.5rem;
+.close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 </style>
